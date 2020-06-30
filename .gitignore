@@ -1,3 +1,4 @@
+.build/
 .serverless/
 node_modules/
 yarn-error.log
