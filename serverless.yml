@@ -1,0 +1,24 @@
+service: cfn-macro-datadog
+
+plugins:
+  - serverless-plugin-typescript
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-east-1
+
+functions:
+  datadog:
+    handler: src/index.handler
+
+resources:
+  Resources:
+    DatadogCfnMacro:
+      Type: AWS::CloudFormation::Macro
+      Properties:
+        Name: DDCloudformationMacro
+        FunctionName:
+          Fn::GetAtt:
+            - DatadogLambdaFunction
+            - Arn
