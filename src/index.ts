@@ -1,12 +1,14 @@
 import * as layers from "./layers.json";
 
 import { findLambdas, applyLayers } from "./layer";
-import { redirectHandlers } from "redirect";
+import { redirectHandlers } from "./redirect";
+import { getConfig, setEnvConfiguration } from "./env";
 
 const RESOURCES = "Resources";
 const REGION = "region";
 const FRAGMENT = "fragment";
 const REQUEST_ID = "requestId";
+const MAPPINGS = "Mappings";
 const SUCCESS = "success";
 
 export interface FunctionDefinition {
@@ -14,7 +16,7 @@ export interface FunctionDefinition {
   Runtime?: string;
   Timeout?: number;
   MemorySize?: number;
-  Environment?: { Variables?: { [key: string]: string } };
+  Environment?: { Variables?: { [key: string]: string | boolean } };
   Tags?: { [key: string]: string };
   Layers?: string[];
   TracingConfig?: { [key: string]: string };
@@ -23,10 +25,15 @@ export interface FunctionDefinition {
 export const handler = async (event: any, context: any) => {
   const fragment = event[FRAGMENT];
   const resources = fragment[RESOURCES];
+  const lambdas = findLambdas(resources);
+
+  const config = getConfig(event[MAPPINGS]);
+  setEnvConfiguration(config, lambdas);
 
   // Apply layers
-  const lambdas = findLambdas(resources);
-  applyLayers(event[REGION], lambdas, layers, resources);
+  if (config.addLayers) {
+    applyLayers(event[REGION], lambdas, layers, resources);
+  }
 
   // Redirect handlers
   redirectHandlers(lambdas);
