@@ -1,6 +1,7 @@
 import * as layers from "./layers.json";
 
 import { findLambdas, applyLayers } from "./layer";
+import { redirectHandlers } from "redirect";
 
 const RESOURCES = "Resources";
 const REGION = "region";
@@ -26,6 +27,9 @@ export const handler = async (event: any, context: any) => {
   // Apply layers
   const lambdas = findLambdas(resources);
   applyLayers(event[REGION], lambdas, layers, resources);
+
+  // Redirect handlers
+  redirectHandlers(lambdas);
 
   return {
     requestId: event[REQUEST_ID],
