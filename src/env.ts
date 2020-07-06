@@ -17,8 +17,10 @@ export interface Configuration {
   enableXrayTracing: boolean;
   // Enable tracing on Lambda function using dd-trace, datadog's APM library.
   enableDDTracing: boolean;
-  // When set, the plugin will subscribe the lambdas to the forwarder with the given arn.
+  // When set, the macro will subscribe the lambdas to the forwarder with the given arn.
   forwarder?: string;
+  // Enable enhanced metrics on Lambda functions. Defaults to true.
+  enableEnhancedMetrics: boolean;
 }
 
 const apiKeyEnvVar = "DD_API_KEY";
@@ -26,6 +28,7 @@ const apiKeyKMSEnvVar = "DD_KMS_API_KEY";
 const siteURLEnvVar = "DD_SITE";
 const logLevelEnvVar = "DD_LOG_LEVEL";
 const logForwardingEnvVar = "DD_FLUSH_TO_LOG";
+const enhancedMetricsEnvVar = "DD_ENHANCED_METRICS";
 const DATADOG = "datadog";
 
 export const defaultConfiguration: Configuration = {
@@ -35,6 +38,7 @@ export const defaultConfiguration: Configuration = {
   site: "datadoghq.com",
   enableXrayTracing: true,
   enableDDTracing: true,
+  enableEnhancedMetrics: true,
 };
 
 export function getConfig(mappings: any): Configuration {
@@ -66,12 +70,6 @@ export function setEnvConfiguration(
       envVariables[apiKeyEnvVar] = config.apiKey;
     }
     if (
-      config.apiKey !== undefined &&
-      envVariables[apiKeyEnvVar] === undefined
-    ) {
-      envVariables[apiKeyEnvVar] = config.apiKey;
-    }
-    if (
       config.apiKMSKey !== undefined &&
       envVariables[apiKeyKMSEnvVar] === undefined
     ) {
@@ -86,6 +84,7 @@ export function setEnvConfiguration(
     if (envVariables[logForwardingEnvVar] === undefined) {
       envVariables[logForwardingEnvVar] = config.flushMetricsToLogs;
     }
+    envVariables[enhancedMetricsEnvVar] = config.enableEnhancedMetrics;
 
     environment.Variables = envVariables;
     func.lambda.Environment = environment;
