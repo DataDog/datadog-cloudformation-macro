@@ -52,7 +52,7 @@ export function enableTracing(
       Resource: ["*"],
     };
 
-    funcs.forEach((func) => {
+    Array.from(funcs).forEach((func) => {
       const role = findIamRole(resources, func);
       if (role.Policies && role.Policies.length > 0) {
         role.Policies[0].PolicyDocument.Statement.push(xrayPolicies);
@@ -75,7 +75,7 @@ export function enableTracing(
     tracingMode === TracingMode.HYBRID ||
     tracingMode === TracingMode.DD_TRACE
   ) {
-    funcs.forEach((func) => {
+    Array.from(funcs).forEach((func) => {
       const environment = func.lambda.Environment ?? {};
       const envVariables = environment.Variables ?? {};
 
