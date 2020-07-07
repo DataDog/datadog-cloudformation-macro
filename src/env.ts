@@ -19,12 +19,20 @@ export interface Configuration {
   enableDDTracing: boolean;
   // When set, the macro will subscribe the lambdas to the forwarder with the given arn.
   forwarder?: string;
-  // When set, the macro will try to automatically add the env tag to lambdas, but will not
-  // override existing tags on the function or those set in the Globals section. Defaults to true.
-  // (Only successful if an AWS::Serverless::Api resource exists, since the macro uses the generated StageName property to tag env.)
-  enableEnvTag: boolean;
   // Enable enhanced metrics on Lambda functions. Defaults to true.
   enableEnhancedMetrics: boolean;
+  // When set, the macro will try to automatically add the env tag to lambdas, but will not
+  // override existing tags on the function or those set in the Globals section. Defaults to true.
+  // (Only successful if an AWS::Serverless::Api resource exists, since the macro uses the generated stage property to tag 'env'.)
+  enableAutoEnvTag: boolean;
+  // When set, the macro will use this value to add the 'service' tag to all lambdas,
+  // but will not override existing 'service' tags on individual lambdas or those set in Globals.
+  service?: string;
+  // When set, the macro will use this value to add the 'env' tag to all lambdas,
+  // but will not override existing 'env' tags on individual lambdas or those set in Globals.
+  // If this is set, the stage will not be used to automatically tag 'env', even if
+  // enableAutoEnvTag is set to true.
+  env?: string;
 }
 
 const apiKeyEnvVar = "DD_API_KEY";
@@ -43,7 +51,7 @@ export const defaultConfiguration: Configuration = {
   site: "datadoghq.com",
   enableXrayTracing: true,
   enableDDTracing: true,
-  enableEnvTag: true,
+  enableAutoEnvTag: true,
   enableEnhancedMetrics: true,
 };
 
@@ -94,7 +102,9 @@ export function setEnvConfiguration(
     if (envVariables[logForwardingEnvVar] === undefined) {
       envVariables[logForwardingEnvVar] = config.flushMetricsToLogs;
     }
-    envVariables[enhancedMetricsEnvVar] = config.enableEnhancedMetrics;
+    if (envVariables[enhancedMetricsEnvVar] === undefined) {
+      envVariables[enhancedMetricsEnvVar] = config.enableEnhancedMetrics;
+    }
 
     environment.Variables = envVariables;
     func.lambda.Environment = environment;
