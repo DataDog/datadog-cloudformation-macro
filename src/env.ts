@@ -19,6 +19,10 @@ export interface Configuration {
   enableDDTracing: boolean;
   // When set, the macro will subscribe the lambdas to the forwarder with the given arn.
   forwarder?: string;
+  // When set, the macro will try to automatically add the env tag to lambdas, but will not
+  // override existing tags on the function or those set in the Globals section. Defaults to true.
+  // (Only successful if an AWS::Serverless::Api resource exists, since the macro uses the generated StageName property to tag env.)
+  enableEnvTag: boolean;
   // Enable enhanced metrics on Lambda functions. Defaults to true.
   enableEnhancedMetrics: boolean;
 }
@@ -38,6 +42,7 @@ export const defaultConfiguration: Configuration = {
   site: "datadoghq.com",
   enableXrayTracing: true,
   enableDDTracing: true,
+  enableEnvTag: true,
   enableEnhancedMetrics: true,
 };
 

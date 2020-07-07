@@ -1,9 +1,10 @@
 import * as layers from "./layers.json";
 
-import { findLambdas, applyLayers } from "./layer";
-import { redirectHandlers } from "./redirect";
 import { getConfig, setEnvConfiguration } from "./env";
+import { findLambdas, applyLayers } from "./layer";
 import { getTracingMode, enableTracing } from "./tracing";
+import { addEnvTag } from "./tags";
+import { redirectHandlers } from "./redirect";
 
 const RESOURCES = "Resources";
 const REGION = "region";
@@ -11,6 +12,7 @@ const FRAGMENT = "fragment";
 const REQUEST_ID = "requestId";
 const MAPPINGS = "Mappings";
 const SUCCESS = "success";
+const GLOBALS = "Globals";
 export const TYPE = "Type";
 export const PROPERTIES = "Properties";
 
@@ -19,7 +21,7 @@ export interface FunctionDefinition {
   Runtime: string;
   Role: string | { [func: string]: string[] };
   Environment?: { Variables?: { [key: string]: string | boolean } };
-  Tags?: { [key: string]: string };
+  Tags?: { Value: string; Key: string }[];
   Layers?: string[];
   TracingConfig?: { [key: string]: string };
 }
@@ -40,6 +42,11 @@ export const handler = async (event: any, context: any) => {
   // Enable tracing
   const tracingMode = getTracingMode(config);
   enableTracing(tracingMode, fragment, lambdas);
+
+  // Add env tag if possible
+  if (config.enableEnvTag) {
+    addEnvTag(event[GLOBALS], resources, lambdas);
+  }
 
   // Redirect handlers
   redirectHandlers(lambdas);
