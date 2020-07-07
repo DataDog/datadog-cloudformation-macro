@@ -1,6 +1,10 @@
 import * as layers from "./layers.json";
 
-import { getConfig, setEnvConfiguration } from "./env";
+import {
+  getConfigFromMappings,
+  getConfigFromParams,
+  setEnvConfiguration,
+} from "./env";
 import { findLambdas, applyLayers } from "./layer";
 import { getTracingMode, enableTracing } from "./tracing";
 import { addEnvTag } from "./tags";
@@ -9,6 +13,7 @@ import { redirectHandlers } from "./redirect";
 const RESOURCES = "Resources";
 const REGION = "region";
 const FRAGMENT = "fragment";
+const PARAMS = "params";
 const REQUEST_ID = "requestId";
 const MAPPINGS = "Mappings";
 const SUCCESS = "success";
@@ -31,7 +36,13 @@ export const handler = async (event: any, context: any) => {
   const resources = fragment[RESOURCES];
   const lambdas = findLambdas(resources);
 
-  const config = getConfig(event[MAPPINGS]);
+  let config;
+  const transformParams = event[PARAMS];
+  if (transformParams !== undefined) {
+    config = getConfigFromParams(transformParams);
+  } else {
+    config = getConfigFromMappings(fragment[MAPPINGS]);
+  }
   setEnvConfiguration(config, lambdas);
 
   // Apply layers
