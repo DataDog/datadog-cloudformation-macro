@@ -33,6 +33,7 @@ const siteURLEnvVar = "DD_SITE";
 const logLevelEnvVar = "DD_LOG_LEVEL";
 const logForwardingEnvVar = "DD_FLUSH_TO_LOG";
 const enhancedMetricsEnvVar = "DD_ENHANCED_METRICS";
+const CUSTOM = "custom";
 const DATADOG = "datadog";
 
 export const defaultConfiguration: Configuration = {
@@ -46,11 +47,13 @@ export const defaultConfiguration: Configuration = {
   enableEnhancedMetrics: true,
 };
 
-export function getConfig(mappings: any): Configuration {
-  if (mappings === undefined) {
+export function getConfigFromMappings(mappings: any): Configuration {
+  if (mappings === undefined || mappings[CUSTOM] === undefined) {
     return defaultConfiguration;
   }
-  let datadogConfig = mappings[DATADOG] as Partial<Configuration> | undefined;
+  let datadogConfig = mappings[CUSTOM][DATADOG] as
+    | Partial<Configuration>
+    | undefined;
   if (datadogConfig === undefined) {
     datadogConfig = {};
   }
