@@ -7,7 +7,7 @@ import {
 } from "./env";
 import { findLambdas, applyLayers } from "./layer";
 import { getTracingMode, enableTracing } from "./tracing";
-import { addEnvTag } from "./tags";
+import { addServiceAndEnvTags } from "./tags";
 import { redirectHandlers } from "./redirect";
 
 const RESOURCES = "Resources";
@@ -31,7 +31,7 @@ export interface FunctionDefinition {
   TracingConfig?: { [key: string]: string };
 }
 
-export const handler = async (event: any, context: any) => {
+export const handler = async (event: any, _: any) => {
   const fragment = event[FRAGMENT];
   const resources = fragment[RESOURCES];
   const lambdas = findLambdas(resources);
@@ -54,9 +54,16 @@ export const handler = async (event: any, context: any) => {
   const tracingMode = getTracingMode(config);
   enableTracing(tracingMode, fragment, lambdas);
 
-  // Add env tag if possible
-  if (config.enableEnvTag) {
-    addEnvTag(event[GLOBALS], resources, lambdas);
+  // Add service & env tags if possible/necessary
+  if (config.service || config.env || config.enableAutoEnvTag) {
+    addServiceAndEnvTags(
+      event[GLOBALS],
+      resources,
+      lambdas,
+      config.service,
+      config.env,
+      config.enableAutoEnvTag
+    );
   }
 
   // Redirect handlers
