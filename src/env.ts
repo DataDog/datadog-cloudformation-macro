@@ -41,8 +41,8 @@ const siteURLEnvVar = "DD_SITE";
 const logLevelEnvVar = "DD_LOG_LEVEL";
 const logForwardingEnvVar = "DD_FLUSH_TO_LOG";
 const enhancedMetricsEnvVar = "DD_ENHANCED_METRICS";
-const CUSTOM = "Custom";
 const DATADOG = "Datadog";
+const PARAMETERS = "Parameters";
 
 export const defaultConfiguration: Configuration = {
   addLayers: true,
@@ -56,10 +56,10 @@ export const defaultConfiguration: Configuration = {
 };
 
 export function getConfigFromMappings(mappings: any): Configuration {
-  if (mappings === undefined || mappings[CUSTOM] === undefined) {
+  if (mappings === undefined || mappings[DATADOG] === undefined) {
     return defaultConfiguration;
   }
-  return getConfigFromParams(mappings[CUSTOM][DATADOG]);
+  return getConfigFromParams(mappings[DATADOG][PARAMETERS]);
 }
 
 export function getConfigFromParams(params: { [_: string]: string }) {
