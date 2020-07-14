@@ -1,10 +1,8 @@
-import { FunctionDefinition } from "./index";
+import { FunctionProperties, TYPE, PROPERTIES } from "./index";
 
-const TYPE = "Type";
 const RUNTIME = "Runtime";
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
 const LAYERS = "Layers";
-const PROPERTIES = "Properties";
 
 export enum RuntimeType {
   NODE,
@@ -12,9 +10,9 @@ export enum RuntimeType {
   UNSUPPORTED,
 }
 
-export interface FunctionInfo {
-  lambda: FunctionDefinition;
-  name: string;
+export interface LambdaFunction {
+  properties: FunctionProperties;
+  key: string;
   type: RuntimeType;
   runtime: string;
 }
@@ -36,11 +34,9 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
 };
 
 export function findLambdas(resources: any) {
-  return Object.keys(resources)
-    .map((resourceKey) => {
-      const resource = resources[resourceKey];
-      const resourceType: string = resource[TYPE] ?? "";
-      if (resourceType !== LAMBDA_FUNCTION_RESOURCE_TYPE) {
+  return Object.entries(resources)
+    .map(([key, resource]: [string, any]) => {
+      if (resource[TYPE] !== LAMBDA_FUNCTION_RESOURCE_TYPE) {
         return;
       }
 
@@ -55,18 +51,18 @@ export function findLambdas(resources: any) {
       }
 
       return {
-        lambda: resource[PROPERTIES],
-        name: resourceKey,
-        type: type,
-        runtime: runtime,
-      } as FunctionInfo;
+        properties: resource[PROPERTIES],
+        key,
+        type,
+        runtime,
+      } as LambdaFunction;
     })
-    .filter((lambda) => lambda !== undefined) as FunctionInfo[];
+    .filter((lambda) => lambda !== undefined) as LambdaFunction[];
 }
 
 export function applyLayers(
   region: string,
-  lambdas: FunctionInfo[],
+  lambdas: LambdaFunction[],
   layers: LayerJSON,
   resources: any
 ) {
@@ -83,7 +79,7 @@ export function applyLayers(
     const layerARN =
       runtime !== undefined ? regionRuntimes[runtime] : undefined;
     if (layerARN !== undefined) {
-      const lambdaProperties: any = resources[lambda.name][PROPERTIES];
+      const lambdaProperties: any = resources[lambda.key][PROPERTIES];
       const currentLayers = lambdaProperties[LAYERS] ?? [];
       if (!new Set(currentLayers).has(layerARN)) {
         currentLayers.push(layerARN);

@@ -1,16 +1,17 @@
-import { FunctionInfo } from "./layer";
+import { LambdaFunction } from "./layer";
 import { Configuration } from "env";
 import { TYPE, PROPERTIES } from "./index";
 
+const FN_GET_ATT = "Fn::GetAtt";
+const IAM_ROLE_RESOURCE_TYPE = "AWS::IAM::Role";
 const ALLOW = "Allow";
 const PUT_TRACE_SEGMENTS = "xray:PutTraceSegments";
 const PUT_TELEMETRY_RECORDS = "xray:PutTelemetryRecords";
-const ddTraceEnabledEnvVar = "DD_TRACE_ENABLED";
-const ddMergeXrayTracesEnvVar = "DD_MERGE_XRAY_TRACES";
-const IAM_ROLE_RESOURCE_TYPE = "AWS::IAM::Role";
-const FN_GET_ATT = "Fn::GetAtt";
-const ACTIVE = "Active";
+const POLICY = "policy";
 const POLICY_DOCUMENT_VERSION = "2012-10-17";
+const ACTIVE = "Active";
+const DD_TRACE_ENABLED = "DD_TRACE_ENABLED";
+const DD_MERGE_XRAY_TRACES = "DD_MERGE_XRAY_TRACES";
 
 export enum TracingMode {
   XRAY,
@@ -19,8 +20,8 @@ export enum TracingMode {
   NONE,
 }
 
-function findIamRole(resources: any, func: FunctionInfo) {
-  const role = func.lambda.Role as any;
+function findIamRole(resources: any, lambda: LambdaFunction) {
+  const role = lambda.properties.Role as any;
   const roleComponents: string[] = role[FN_GET_ATT];
   if (roleComponents !== undefined) {
     const iamRoleResource = resources[roleComponents[0]];
@@ -42,7 +43,7 @@ export function getTracingMode(config: Configuration) {
 }
 export function enableTracing(
   tracingMode: TracingMode,
-  funcs: FunctionInfo[],
+  lambdas: LambdaFunction[],
   resources: any
 ) {
   if (tracingMode === TracingMode.XRAY || tracingMode === TracingMode.HYBRID) {
@@ -52,39 +53,36 @@ export function enableTracing(
       Resource: ["*"],
     };
 
-    Array.from(funcs).forEach((func) => {
-      const role = findIamRole(resources, func);
+    // TODO: why does this call need 'Array.from' when similar calls in other files don't?
+    Array.from(lambdas).forEach((lambda) => {
+      const role = findIamRole(resources, lambda);
       if (role.Policies && role.Policies.length > 0) {
         role.Policies[0].PolicyDocument.Statement.push(xrayPolicies);
       } else {
-        const policyName = {
-          "Fn::Join": ["-", [func.name, "policy"]],
-        };
-        const policyDocument = {
+        const PolicyName = { "Fn::Join": ["-", [lambda.key, POLICY]] };
+        const PolicyDocument = {
           Version: POLICY_DOCUMENT_VERSION,
           Statement: [xrayPolicies],
         };
-        role.Policies = [
-          { PolicyName: policyName, PolicyDocument: policyDocument },
-        ];
+        role.Policies = [{ PolicyName, PolicyDocument }];
       }
-      func.lambda.TracingConfig = { Mode: ACTIVE };
+      lambda.properties.TracingConfig = { Mode: ACTIVE };
     });
   }
   if (
     tracingMode === TracingMode.HYBRID ||
     tracingMode === TracingMode.DD_TRACE
   ) {
-    Array.from(funcs).forEach((func) => {
-      const environment = func.lambda.Environment ?? {};
+    // TODO: why does this call need 'Array.from' when similar calls in other files don't?
+    Array.from(lambdas).forEach((lambda) => {
+      const environment = lambda.properties.Environment ?? {};
       const envVariables = environment.Variables ?? {};
 
-      envVariables[ddTraceEnabledEnvVar] = true;
-      envVariables[ddMergeXrayTracesEnvVar] =
-        tracingMode === TracingMode.HYBRID;
+      envVariables[DD_TRACE_ENABLED] = true;
+      envVariables[DD_MERGE_XRAY_TRACES] = tracingMode === TracingMode.HYBRID;
 
       environment.Variables = envVariables;
-      func.lambda.Environment = environment;
+      lambda.properties.Environment = environment;
     });
   }
 }

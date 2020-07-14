@@ -1,19 +1,19 @@
-import { FunctionInfo, RuntimeType } from "./layer";
+import { LambdaFunction, RuntimeType } from "./layer";
 
-export const datadogHandlerEnvVar = "DD_LAMBDA_HANDLER";
-export const pythonHandler = "datadog_lambda.handler.handler";
-export const jsHandlerWithLayers =
+export const DD_HANDLER_ENV_VAR = "DD_LAMBDA_HANDLER";
+export const PYTHON_HANDLER = "datadog_lambda.handler.handler";
+export const JS_HANDLER_WITH_LAYERS =
   "/opt/nodejs/node_modules/datadog-lambda-js/handler.handler";
-export const jsHandler = "node_modules/datadog-lambda-js/dist/handler.handler";
+export const JS_HANDLER = "node_modules/datadog-lambda-js/dist/handler.handler";
 
-export function redirectHandlers(funcs: FunctionInfo[]) {
-  funcs.forEach((func) => {
-    setEnvDatadogHandler(func);
-    const handler = getDDHandler(func.type, true);
+export function redirectHandlers(lambdas: LambdaFunction[]) {
+  lambdas.forEach((lambda) => {
+    setEnvDatadogHandler(lambda);
+    const handler = getDDHandler(lambda.type, true);
     if (handler === undefined) {
       return;
     }
-    func.lambda.Handler = handler;
+    lambda.properties.Handler = handler;
   });
 }
 
@@ -26,19 +26,19 @@ function getDDHandler(
   }
   switch (lambdaRuntime) {
     case RuntimeType.NODE:
-      return addLayers ? jsHandlerWithLayers : jsHandler;
+      return addLayers ? JS_HANDLER_WITH_LAYERS : JS_HANDLER;
     case RuntimeType.PYTHON:
-      return pythonHandler;
+      return PYTHON_HANDLER;
   }
 }
 
-function setEnvDatadogHandler(func: FunctionInfo) {
-  const environment = func.lambda.Environment ?? {};
+function setEnvDatadogHandler(lambda: LambdaFunction) {
+  const environment = lambda.properties.Environment ?? {};
   const environmentVariables = environment.Variables ?? {};
 
-  const originalHandler = func.lambda.Handler;
-  environmentVariables[datadogHandlerEnvVar] = originalHandler;
+  const originalHandler = lambda.properties.Handler;
+  environmentVariables[DD_HANDLER_ENV_VAR] = originalHandler;
 
   environment.Variables = environmentVariables;
-  func.lambda.Environment = environment;
+  lambda.properties.Environment = environment;
 }

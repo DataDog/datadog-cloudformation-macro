@@ -21,7 +21,7 @@ const GLOBALS = "Globals";
 export const TYPE = "Type";
 export const PROPERTIES = "Properties";
 
-export interface FunctionDefinition {
+export interface FunctionProperties {
   Handler: string;
   Runtime: string;
   Role: string | { [func: string]: string[] };
@@ -29,9 +29,11 @@ export interface FunctionDefinition {
   Tags?: { Value: string; Key: string }[];
   Layers?: string[];
   TracingConfig?: { [key: string]: string };
+  FunctionName?: string;
 }
 
 export const handler = async (event: any, _: any) => {
+  const region = event[REGION];
   const fragment = event[FRAGMENT];
   const resources = fragment[RESOURCES];
   const lambdas = findLambdas(resources);
@@ -47,7 +49,7 @@ export const handler = async (event: any, _: any) => {
 
   // Apply layers
   if (config.addLayers) {
-    applyLayers(event[REGION], lambdas, layers, resources);
+    applyLayers(region, lambdas, layers, resources);
   }
 
   // Enable tracing

@@ -1,4 +1,4 @@
-import { FunctionInfo } from "./layer";
+import { LambdaFunction } from "./layer";
 import { TYPE, PROPERTIES } from "./index";
 
 const FUNCTION = "Function";
@@ -11,7 +11,7 @@ const STAGE_NAME = "StageName";
 export function addServiceAndEnvTags(
   globals: any,
   resources: any,
-  funcs: FunctionInfo[],
+  lambdas: LambdaFunction[],
   service: string | undefined,
   env: string | undefined,
   autoTagEnv: boolean
@@ -39,11 +39,11 @@ export function addServiceAndEnvTags(
   }
 
   // Add the tag for each function, unless an 'env' tag already exists.
-  funcs.forEach((func) => {
+  lambdas.forEach((lambda) => {
     let functionServiceTagExists = false;
     let functionEnvTagExists = false;
 
-    let tags = func.lambda.Tags;
+    let tags = lambda.properties.Tags;
     if (tags === undefined) {
       tags = [];
     }

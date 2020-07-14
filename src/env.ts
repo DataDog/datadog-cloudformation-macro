@@ -1,4 +1,4 @@
-import { FunctionInfo } from "layer";
+import { LambdaFunction } from "./layer";
 
 export interface Configuration {
   // Whether to add the lambda layers, or expect the user's to bring their own
@@ -75,10 +75,10 @@ export function getConfigFromParams(params: { [_: string]: string }) {
 
 export function setEnvConfiguration(
   config: Configuration,
-  funcs: FunctionInfo[]
+  lambdas: LambdaFunction[]
 ) {
-  funcs.forEach((func) => {
-    const environment = func.lambda.Environment ?? {};
+  lambdas.forEach((lambda) => {
+    const environment = lambda.properties.Environment ?? {};
     const envVariables = environment.Variables ?? {};
 
     if (
@@ -107,6 +107,6 @@ export function setEnvConfiguration(
     }
 
     environment.Variables = envVariables;
-    func.lambda.Environment = environment;
+    lambda.properties.Environment = environment;
   });
 }
