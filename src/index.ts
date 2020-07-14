@@ -9,6 +9,7 @@ import { findLambdas, applyLayers } from "./layer";
 import { getTracingMode, enableTracing } from "./tracing";
 import { addServiceAndEnvTags } from "./tags";
 import { redirectHandlers } from "./redirect";
+import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 
 const RESOURCES = "Resources";
 const REGION = "region";
@@ -55,6 +56,17 @@ export const handler = async (event: any, _: any) => {
   // Enable tracing
   const tracingMode = getTracingMode(config);
   enableTracing(tracingMode, fragment, lambdas);
+
+  // Cloudwatch forwarder subscriptions
+  if (config.stackName && config.forwarder) {
+    await addCloudWatchForwarderSubscriptions(
+      resources,
+      lambdas,
+      config.stackName,
+      config.forwarder,
+      region
+    );
+  }
 
   // Add service & env tags if values are provided
   if (config.service || config.env) {

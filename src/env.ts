@@ -27,6 +27,7 @@ export interface Configuration {
   // When set, the macro will use this value to add the 'env' tag to all lambdas,
   // but will not override existing 'env' tags on individual lambdas or those set in Globals.
   env?: string;
+  stackName?: string;
 }
 
 const apiKeyEnvVar = "DD_API_KEY";
