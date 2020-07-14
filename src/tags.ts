@@ -1,20 +1,15 @@
 import { LambdaFunction } from "./layer";
-import { TYPE, PROPERTIES } from "./index";
 
 const FUNCTION = "Function";
 const TAGS = "Tags";
 const SERVICE = "service";
 const ENV = "env";
-const API_GATEWAY_STAGE_TYPE = "AWS::ApiGateway::Stage";
-const STAGE_NAME = "StageName";
 
 export function addServiceAndEnvTags(
   globals: any,
-  resources: any,
   lambdas: LambdaFunction[],
   service: string | undefined,
-  env: string | undefined,
-  autoTagEnv: boolean
+  env: string | undefined
 ) {
   let globalServiceTagExists = false;
   let globalEnvTagExists = false;
@@ -29,13 +24,6 @@ export function addServiceAndEnvTags(
         globalEnvTagExists = globalTags[ENV] !== undefined;
       }
     }
-  }
-
-  // Find AWS stage name to use as the 'env' tag value.
-  // This only exists if an AWS::Serverless::Api resource was configured, which in turn creates
-  // an AWS::ApiGateway::Stage resource that has the 'StageName' property.
-  if (env === undefined && autoTagEnv) {
-    env = findAwsStage(resources);
   }
 
   // Add the tag for each function, unless an 'env' tag already exists.
@@ -64,14 +52,4 @@ export function addServiceAndEnvTags(
       tags.push({ Value: env, Key: ENV });
     }
   });
-}
-
-export function findAwsStage(resources: any) {
-  for (const resource of Object.values(resources) as any) {
-    const type = resource[TYPE];
-    if (type === API_GATEWAY_STAGE_TYPE) {
-      const properties = resource[PROPERTIES];
-      return properties[STAGE_NAME];
-    }
-  }
 }

@@ -21,17 +21,11 @@ export interface Configuration {
   forwarder?: string;
   // Enable enhanced metrics on Lambda functions. Defaults to true.
   enableEnhancedMetrics: boolean;
-  // When set, the macro will try to automatically add the env tag to lambdas, but will not
-  // override existing tags on the function or those set in the Globals section. Defaults to true.
-  // (Only successful if an AWS::Serverless::Api resource exists, since the macro uses the generated stage property to tag 'env'.)
-  enableAutoEnvTag: boolean;
   // When set, the macro will use this value to add the 'service' tag to all lambdas,
   // but will not override existing 'service' tags on individual lambdas or those set in Globals.
   service?: string;
   // When set, the macro will use this value to add the 'env' tag to all lambdas,
   // but will not override existing 'env' tags on individual lambdas or those set in Globals.
-  // If this is set, the stage will not be used to automatically tag 'env', even if
-  // enableAutoEnvTag is set to true.
   env?: string;
 }
 
@@ -51,7 +45,6 @@ export const defaultConfiguration: Configuration = {
   site: "datadoghq.com",
   enableXrayTracing: true,
   enableDDTracing: true,
-  enableAutoEnvTag: true,
   enableEnhancedMetrics: true,
 };
 

@@ -56,16 +56,9 @@ export const handler = async (event: any, _: any) => {
   const tracingMode = getTracingMode(config);
   enableTracing(tracingMode, fragment, lambdas);
 
-  // Add service & env tags if possible/necessary
-  if (config.service || config.env || config.enableAutoEnvTag) {
-    addServiceAndEnvTags(
-      event[GLOBALS],
-      resources,
-      lambdas,
-      config.service,
-      config.env,
-      config.enableAutoEnvTag
-    );
+  // Add service & env tags if values are provided
+  if (config.service || config.env) {
+    addServiceAndEnvTags(event[GLOBALS], lambdas, config.service, config.env);
   }
 
   // Redirect handlers
