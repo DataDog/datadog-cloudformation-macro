@@ -27,6 +27,10 @@ export interface Configuration {
   // When set, the macro will use this value to add the 'env' tag to all lambdas,
   // but will not override existing 'env' tags on individual lambdas or those set in Globals.
   env?: string;
+  // If a forwarder is provided and any lambdas have dynamically generated names,
+  // the stack name will be required to create the necessary CloudWatch subscriptions.
+  // If a forwarder is provided with dynamically named lambdas, and a stack name is not provided,
+  // the subscription will not be added.
   stackName?: string;
 }
 

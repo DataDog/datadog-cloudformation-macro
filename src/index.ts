@@ -58,7 +58,7 @@ export const handler = async (event: any, _: any) => {
   enableTracing(tracingMode, fragment, lambdas);
 
   // Cloudwatch forwarder subscriptions
-  if (config.stackName && config.forwarder) {
+  if (config.forwarder) {
     await addCloudWatchForwarderSubscriptions(
       resources,
       lambdas,

@@ -25,7 +25,7 @@ interface LogGroup {
 export async function addCloudWatchForwarderSubscriptions(
   resources: any,
   lambdas: LambdaFunction[],
-  stackName: string,
+  stackName: string | undefined,
   forwarderArn: string,
   region: string
 ) {
@@ -110,8 +110,12 @@ async function findLogGroupWithFunctionName(
 
 async function getExistingLambdaLogGroups(
   cloudWatchLogs: CloudWatchLogs,
-  stackName: string
+  stackName: string | undefined
 ) {
+  // If no stack name is provided, cannot search through all lambda log groups
+  if (stackName === undefined) {
+    return [];
+  }
   const args = {
     logGroupNamePrefix: `${LAMBDA_LOG_GROUP_PREFIX}${stackName}-`,
   };
