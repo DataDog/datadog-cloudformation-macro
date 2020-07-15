@@ -18,7 +18,6 @@ const PARAMS = "params";
 const REQUEST_ID = "requestId";
 const MAPPINGS = "Mappings";
 const SUCCESS = "success";
-const GLOBALS = "Globals";
 export const TYPE = "Type";
 export const PROPERTIES = "Properties";
 
@@ -70,7 +69,7 @@ export const handler = async (event: any, _: any) => {
 
   // Add service & env tags if values are provided
   if (config.service || config.env) {
-    addServiceAndEnvTags(event[GLOBALS], lambdas, config.service, config.env);
+    addServiceAndEnvTags(lambdas, config.service, config.env);
   }
 
   // Redirect handlers
