@@ -2,7 +2,6 @@ import { FunctionProperties, TYPE, PROPERTIES } from "./index";
 
 const RUNTIME = "Runtime";
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
-const LAYERS = "Layers";
 
 export enum RuntimeType {
   NODE,
@@ -44,8 +43,6 @@ export function findLambdas(resources: any) {
       let runtime = lambda[RUNTIME];
       let type = RuntimeType.UNSUPPORTED;
 
-      // TODO: determine default runtime?
-
       if (runtime !== undefined && runtime in runtimeLookup) {
         type = runtimeLookup[runtime];
       }
@@ -63,8 +60,7 @@ export function findLambdas(resources: any) {
 export function applyLayers(
   region: string,
   lambdas: LambdaFunction[],
-  layers: LayerJSON,
-  resources: any
+  layers: LayerJSON
 ) {
   const regionRuntimes = layers.regions[region];
   if (regionRuntimes === undefined) {
@@ -79,12 +75,11 @@ export function applyLayers(
     const layerARN =
       runtime !== undefined ? regionRuntimes[runtime] : undefined;
     if (layerARN !== undefined) {
-      const lambdaProperties: any = resources[lambda.key][PROPERTIES];
-      const currentLayers = lambdaProperties[LAYERS] ?? [];
+      const currentLayers = lambda.properties.Layers ?? [];
       if (!new Set(currentLayers).has(layerARN)) {
         currentLayers.push(layerARN);
       }
-      lambdaProperties[LAYERS] = currentLayers;
+      lambda.properties.Layers = currentLayers;
     }
   });
 }
