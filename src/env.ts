@@ -60,7 +60,7 @@ export function getConfigFromMappings(mappings: any): Configuration {
   return getConfigFromParams(mappings[DATADOG][PARAMETERS]);
 }
 
-export function getConfigFromParams(params: { [_: string]: string }) {
+export function getConfigFromParams(params: { [_: string]: string | boolean }) {
   let datadogConfig = params as Partial<Configuration> | undefined;
   if (datadogConfig === undefined) {
     datadogConfig = {};
