@@ -8,18 +8,11 @@ export function addServiceAndEnvTags(
   service: string | undefined,
   env: string | undefined
 ) {
-  let globalServiceTagExists = false;
-  let globalEnvTagExists = false;
-
   // Add the tag for each function, unless a 'service' or 'env' tag already exists.
   lambdas.forEach((lambda) => {
     let functionServiceTagExists = false;
     let functionEnvTagExists = false;
-
-    let tags = lambda.properties.Tags;
-    if (tags === undefined) {
-      tags = [];
-    }
+    let tags = lambda.properties.Tags ?? [];
 
     for (const tag of tags) {
       if (tag.Key === SERVICE) {
@@ -30,11 +23,15 @@ export function addServiceAndEnvTags(
       }
     }
 
-    if (!globalServiceTagExists && !functionServiceTagExists && service) {
+    if (service && !functionServiceTagExists) {
       tags.push({ Value: service, Key: SERVICE });
     }
-    if (!globalEnvTagExists && !functionEnvTagExists && env) {
+    if (env && !functionEnvTagExists) {
       tags.push({ Value: env, Key: ENV });
+    }
+
+    if (tags.length > 0) {
+      lambda.properties.Tags = tags;
     }
   });
 }
