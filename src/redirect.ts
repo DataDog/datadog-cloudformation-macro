@@ -6,10 +6,13 @@ export const JS_HANDLER_WITH_LAYERS =
   "/opt/nodejs/node_modules/datadog-lambda-js/handler.handler";
 export const JS_HANDLER = "node_modules/datadog-lambda-js/dist/handler.handler";
 
-export function redirectHandlers(lambdas: LambdaFunction[]) {
+export function redirectHandlers(
+  lambdas: LambdaFunction[],
+  addLayers: boolean
+) {
   lambdas.forEach((lambda) => {
     setEnvDatadogHandler(lambda);
-    const handler = getDDHandler(lambda.type, true);
+    const handler = getDDHandler(lambda.type, addLayers);
     if (handler === undefined) {
       return;
     }
