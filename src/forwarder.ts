@@ -1,18 +1,17 @@
 import { CloudWatchLogs } from "aws-sdk";
 import { LambdaFunction } from "./layer";
-import { TYPE, PROPERTIES } from "./index";
+import { TYPE } from "./index";
 
 const LOG_GROUP_TYPE = "AWS::Logs::LogGroup";
 const LOG_GROUP_SUBSCRIPTION_TYPE = "AWS::Logs::SubscriptionFilter";
 const LAMBDA_LOG_GROUP_PREFIX = "/aws/lambda/";
 const LOG_GROUP = "LogGroup";
-const LOG_GROUP_NAME = "LogGroupName";
 const SUBSCRIPTION = "Subscription";
 const FN_SUB = "Fn::Sub";
 const FN_JOIN = "Fn::Join";
 const REF = "Ref";
 
-interface LogGroup {
+export interface LogGroupDefinition {
   key: string;
   logGroupResource: {
     Type: string;
@@ -27,15 +26,10 @@ export async function addCloudWatchForwarderSubscriptions(
   lambdas: LambdaFunction[],
   stackName: string | undefined,
   forwarderArn: string,
-  region: string
+  cloudWatchLogs: CloudWatchLogs
 ) {
-  const cloudWatchLogs = new CloudWatchLogs({ region });
   let logGroupsOnStack: CloudWatchLogs.LogGroups | undefined;
-  let templateDeclaredLogGroups: LogGroup[] | undefined;
-  // TODO: these could be only in the template, or they could be already created
-  // (checking won't hurt, but will be double the work if they were already present
-  // - in which case they would be returned by the describeLogGroups call)
-  // Actually, not doing double the work, since if was already created we won't do the later check in the template?
+  let templateDeclaredLogGroups: LogGroupDefinition[] | undefined;
 
   for (const lambda of lambdas) {
     let logGroup: CloudWatchLogs.LogGroup | undefined;
@@ -43,24 +37,26 @@ export async function addCloudWatchForwarderSubscriptions(
 
     // Look for existing log group
     if (lambda.properties.FunctionName) {
-      logGroup = await findLogGroupWithFunctionName(
+      logGroup = await findExistingLogGroupWithFunctionName(
         cloudWatchLogs,
         lambda.properties.FunctionName
       );
     } else {
-      if (logGroupsOnStack === undefined) {
-        logGroupsOnStack = await getExistingLambdaLogGroups(
+      if (logGroupsOnStack === undefined && stackName !== undefined) {
+        logGroupsOnStack = await getExistingLambdaLogGroupsOnStack(
           cloudWatchLogs,
           stackName
         );
       }
-      logGroup = logGroupsOnStack.find(
-        (lg) =>
-          lg.logGroupName &&
-          lg.logGroupName.startsWith(
-            `${LAMBDA_LOG_GROUP_PREFIX}${stackName}-${lambda.key}-`
-          )
-      );
+      if (logGroupsOnStack !== undefined) {
+        logGroup = logGroupsOnStack.find(
+          (lg) =>
+            lg.logGroupName &&
+            lg.logGroupName.startsWith(
+              `${LAMBDA_LOG_GROUP_PREFIX}${stackName}-${lambda.key}`
+            )
+        );
+      }
     }
 
     // If log group exists, check if there are any subsciption filters
@@ -81,18 +77,20 @@ export async function addCloudWatchForwarderSubscriptions(
       }
       const declaredLogGroupName = findDeclaredLogGroupName(
         templateDeclaredLogGroups,
-        lambda.key
+        lambda.key,
+        lambda.properties.FunctionName
       );
       // Create new log group if it doesn't currently exist and was not declared in template
       logGroupName =
-        declaredLogGroupName || createNewLogGroup(resources, lambda);
+        declaredLogGroupName || declareNewLogGroup(resources, lambda);
     }
 
+    // TODO: check if correct subscription already exists?
     addSubscription(resources, forwarderArn, lambda.key, logGroupName);
   }
 }
 
-async function findLogGroupWithFunctionName(
+export async function findExistingLogGroupWithFunctionName(
   cloudWatchLogs: CloudWatchLogs,
   functionName: string
 ) {
@@ -108,23 +106,19 @@ async function findLogGroupWithFunctionName(
   return logGroups.find((lg) => lg.logGroupName === logGroupName);
 }
 
-async function getExistingLambdaLogGroups(
+export async function getExistingLambdaLogGroupsOnStack(
   cloudWatchLogs: CloudWatchLogs,
-  stackName: string | undefined
+  stackName: string
 ) {
-  // If no stack name is provided, cannot search through all lambda log groups
-  if (stackName === undefined) {
-    return [];
-  }
-  const args = {
-    logGroupNamePrefix: `${LAMBDA_LOG_GROUP_PREFIX}${stackName}-`,
-  };
+  const logGroupNamePrefix = `${LAMBDA_LOG_GROUP_PREFIX}${stackName}-`;
+  const args = { logGroupNamePrefix };
   const response = await cloudWatchLogs.describeLogGroups(args).promise();
   const { logGroups } = response;
-  return logGroups || [];
+
+  return logGroups ?? [];
 }
 
-async function canSubscribeLogGroup(
+export async function canSubscribeLogGroup(
   cloudWatchLogs: CloudWatchLogs,
   logGroupName: string
 ) {
@@ -140,39 +134,39 @@ async function canSubscribeLogGroup(
 
 function findLogGroupsInTemplate(resources: any) {
   return Object.entries(resources)
-    .filter(([_, resource]: [string, any]) => {
-      if (resource[TYPE] === LOG_GROUP_TYPE) {
-        const logGroupName: string = resource[PROPERTIES][LOG_GROUP_NAME];
-        return logGroupName.startsWith(LAMBDA_LOG_GROUP_PREFIX);
-      }
-      return false;
-    })
+    .filter(([_, resource]: [string, any]) => resource[TYPE] === LOG_GROUP_TYPE)
     .map(([key, resource]: [string, any]) => {
       return {
-        key, // TODO: do we need the key?
+        key,
         logGroupResource: resource,
       };
     });
 }
 
-function findDeclaredLogGroupName(logGroups: LogGroup[], functionKey: string) {
+export function findDeclaredLogGroupName(
+  logGroups: LogGroupDefinition[],
+  functionKey: string,
+  functionName?: string
+) {
   for (const [_, resource] of Object.entries(logGroups)) {
     const logGroupName = resource.logGroupResource.Properties.LogGroupName;
 
+    // If in this function, 'FunctionName' property doesn't exist on the lambda,
+    // so search through logGroupNames that use intrinsic functions ('Fn::Sub', 'Fn::Join') in definition
+
     if (typeof logGroupName === "string") {
-      if (logGroupName.includes(functionKey)) {
+      if (functionName && logGroupName.includes(functionName)) {
         return logGroupName;
       }
     } else {
-      // logGroupName is not necessary a string (cases: Fn::Sub, Fn::Join)
       if (logGroupName[FN_SUB] !== undefined) {
-        if (logGroupName[FN_SUB].includes(functionKey)) {
+        if (logGroupName[FN_SUB].includes(`\$\{${functionKey}\}`)) {
           return logGroupName;
         }
       } else if (logGroupName[FN_JOIN] !== undefined) {
         const params = logGroupName[FN_JOIN];
         for (const value of params[1]) {
-          if (value[REF] !== undefined && value[REF].includes(functionKey)) {
+          if (value[REF] !== undefined && value[REF] === functionKey) {
             return logGroupName;
           }
         }
@@ -181,11 +175,12 @@ function findDeclaredLogGroupName(logGroups: LogGroup[], functionKey: string) {
   }
 }
 
-function createNewLogGroup(resources: any, lambda: LambdaFunction) {
+function declareNewLogGroup(resources: any, lambda: LambdaFunction) {
   const functionKey = lambda.key;
   const logGroupKey = `${functionKey}${LOG_GROUP}`;
 
-  // The functionKey will either reference the FunctionName property, or the dynamically generated name
+  // ${functionKey} will either reference the FunctionName property if it exists,
+  // or the dynamically generated name
   const LogGroupName = {
     "Fn::Sub": `${LAMBDA_LOG_GROUP_PREFIX}\${${functionKey}}`,
   };
@@ -208,6 +203,7 @@ function addSubscription(
     Properties: {
       DestinationArn: forwarderArn,
       FilterPattern: "",
+      FilterName: "datadog-macro-filter",
       LogGroupName,
     },
   };
