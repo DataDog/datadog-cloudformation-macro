@@ -3,15 +3,42 @@ import { Configuration } from "env";
 import { TYPE, PROPERTIES } from "./index";
 
 const FN_GET_ATT = "Fn::GetAtt";
+const FN_JOIN = "Fn::Join";
 const IAM_ROLE_RESOURCE_TYPE = "AWS::IAM::Role";
 const ALLOW = "Allow";
 const PUT_TRACE_SEGMENTS = "xray:PutTraceSegments";
 const PUT_TELEMETRY_RECORDS = "xray:PutTelemetryRecords";
-const POLICY = "policy";
+const POLICY = "Policy";
 const POLICY_DOCUMENT_VERSION = "2012-10-17";
 const ACTIVE = "Active";
 const DD_TRACE_ENABLED = "DD_TRACE_ENABLED";
 const DD_MERGE_XRAY_TRACES = "DD_MERGE_XRAY_TRACES";
+
+interface Statement {
+  Sid?: string;
+  Effect: string;
+  Action: string[];
+  Resource?: string | string[];
+}
+
+export interface IamRoleProperties {
+  AssumeRolePolicyDocument: any;
+  ManagedPolicyArns?: string[];
+  Policies?: {
+    PolicyDocument: {
+      Version: string;
+      Statement: Statement | Statement[];
+    };
+    PolicyName: string | { [fn: string]: any };
+  }[];
+}
+
+export class MissingIamRoleError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "MissingIamRoleError";
+  }
+}
 
 export enum TracingMode {
   XRAY,
@@ -21,12 +48,19 @@ export enum TracingMode {
 }
 
 function findIamRole(resources: any, lambda: LambdaFunction) {
-  const role = lambda.properties.Role as any;
-  const roleComponents: string[] = role[FN_GET_ATT];
-  if (roleComponents !== undefined) {
-    const iamRoleResource = resources[roleComponents[0]];
+  const role = lambda.properties.Role;
+  let roleKey = undefined;
+  if (typeof role !== "string") {
+    const roleComponents: string[] = role[FN_GET_ATT];
+    if (roleComponents !== undefined) {
+      roleKey = roleComponents[0];
+    }
+  }
+
+  if (roleKey) {
+    const iamRoleResource = resources[roleKey];
     if (iamRoleResource[TYPE] === IAM_ROLE_RESOURCE_TYPE) {
-      return iamRoleResource[PROPERTIES];
+      return iamRoleResource[PROPERTIES] as IamRoleProperties;
     }
   }
 }
@@ -41,6 +75,7 @@ export function getTracingMode(config: Configuration) {
   }
   return TracingMode.NONE;
 }
+
 export function enableTracing(
   tracingMode: TracingMode,
   lambdas: LambdaFunction[],
@@ -53,16 +88,29 @@ export function enableTracing(
       Resource: ["*"],
     };
 
-    // TODO: why does this call need 'Array.from' when similar calls in other files don't?
-    Array.from(lambdas).forEach((lambda) => {
+    lambdas.forEach((lambda) => {
       const role = findIamRole(resources, lambda);
+
+      if (role === undefined) {
+        throw new MissingIamRoleError(
+          `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`
+        );
+      }
+
       if (role.Policies && role.Policies.length > 0) {
-        role.Policies[0].PolicyDocument.Statement.push(xrayPolicies);
+        const policy = role.Policies[0];
+        const policyDocument = policy.PolicyDocument;
+        if (policyDocument.Statement instanceof Array) {
+          policyDocument.Statement.push(xrayPolicies);
+        } else {
+          const statement = policyDocument.Statement;
+          policyDocument.Statement = [statement, xrayPolicies];
+        }
       } else {
-        const PolicyName = { "Fn::Join": ["-", [lambda.key, POLICY]] };
+        const PolicyName = { [FN_JOIN]: ["-", [lambda.key, POLICY]] };
         const PolicyDocument = {
           Version: POLICY_DOCUMENT_VERSION,
-          Statement: [xrayPolicies],
+          Statement: xrayPolicies,
         };
         role.Policies = [{ PolicyName, PolicyDocument }];
       }
@@ -73,8 +121,7 @@ export function enableTracing(
     tracingMode === TracingMode.HYBRID ||
     tracingMode === TracingMode.DD_TRACE
   ) {
-    // TODO: why does this call need 'Array.from' when similar calls in other files don't?
-    Array.from(lambdas).forEach((lambda) => {
+    lambdas.forEach((lambda) => {
       const environment = lambda.properties.Environment ?? {};
       const envVariables = environment.Variables ?? {};
 
