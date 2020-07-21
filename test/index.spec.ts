@@ -23,7 +23,9 @@ jest.mock("aws-sdk", () => {
           callback?: Function
         ) => {
           const response: DescribeLogGroupsResponse = {
-            logGroups: [{ logGroupName: "/aws/lambda/MyFunctionName" }],
+            logGroups: [
+              { logGroupName: `/aws/lambda/stack-name-${LAMBDA_KEY}` },
+            ],
           };
           return {
             promise: jest
@@ -34,7 +36,11 @@ jest.mock("aws-sdk", () => {
         describeSubscriptionFilters: (
           params: DescribeSubscriptionFiltersRequest,
           callback: any
-        ) => {},
+        ) => {
+          return {
+            promise: jest.fn().mockImplementation(() => Promise.resolve([])),
+          };
+        },
       };
     }),
   };
@@ -182,6 +188,10 @@ describe("Macro", () => {
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
 
+      // Mocked response includes implicitly created log group, should not redeclare
+      expect(output.fragment[RESOURCES]).not.toHaveProperty(
+        `${LAMBDA_KEY}LogGroup`
+      );
       expect(output.fragment[RESOURCES]).toHaveProperty(
         `${LAMBDA_KEY}Subscription`
       );
