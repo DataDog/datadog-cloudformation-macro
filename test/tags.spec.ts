@@ -17,6 +17,7 @@ function mockLambdaFunction(Tags: any) {
 
 describe("addServiceAndEnvTags", () => {
   it("does not override existing tags on function", () => {
+    // TODO: if provided tags differ from existing tags, should we output an error?
     const existingTags = [
       { Value: "dev", Key: "env" },
       { Value: "my-service", Key: "service" },

@@ -309,6 +309,8 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       },
     });
   });
+
+  // TODO: what if log group and a subscription are declared (not yet created)?
 });
 
 describe("findExistingLogGroupWithFunctionName", () => {
