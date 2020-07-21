@@ -1,5 +1,6 @@
 {
   "name": "datadog-cfn-macro",
+  "version": "0.1.0",
   "description": "Cloudformation macro to automatically instrument python and node functions with datadog tracing",
   "repository": "https://github.com/DataDog/datadog-cloudformation-macro",
   "scripts": {
@@ -39,7 +40,7 @@
       "lcovonly",
       "text-summary"
     ],
-    "testRegex": "(src\\/).*(\\.spec\\.ts)$",
+    "testRegex": "(test\\/).*(\\.spec\\.ts)$",
     "testPathIgnorePatterns": [
       "\\.snap$",
       "<rootDir>/node_modules/"

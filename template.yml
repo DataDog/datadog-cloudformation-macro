@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Datadog CloudFormation Macro
+
+Resources:
+  DatadogMacroFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/index.handler
+      Runtime: nodejs12.x
+      Policies:
+        - PolicyName: CloudWatchPermissions
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:DescribeLogGroups
+                  - logs:DescribeSubscriptionFilters
+                Resource: "*"
+  DatadogCfnMacro:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Name: DD::Serverless
+      FunctionName:
+        Fn::GetAtt:
+          - DatadogLambdaFunction
+          - Arn
