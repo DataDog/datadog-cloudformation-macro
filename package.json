@@ -1,7 +1,7 @@
 {
-  "name": "cfn-macro-datadog",
+  "name": "datadog-cfn-macro",
   "description": "Cloudformation macro to automatically instrument python and node functions with datadog tracing",
-  "repository": "https://github.com/DataDog/cfn-macro-datadog",
+  "repository": "https://github.com/DataDog/datadog-cloudformation-macro",
   "scripts": {
     "build": "tsc",
     "test": "jest",
