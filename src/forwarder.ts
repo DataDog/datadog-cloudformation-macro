@@ -85,7 +85,6 @@ export async function addCloudWatchForwarderSubscriptions(
         declaredLogGroupName || declareNewLogGroup(resources, lambda);
     }
 
-    // TODO: check if correct subscription already exists?
     addSubscription(resources, forwarderArn, lambda.key, logGroupName);
   }
 }
@@ -179,7 +178,7 @@ function declareNewLogGroup(resources: any, lambda: LambdaFunction) {
   const functionKey = lambda.key;
   const logGroupKey = `${functionKey}${LOG_GROUP}`;
 
-  // ${functionKey} will either reference the FunctionName property if it exists,
+  // '${functionKey}' will either reference the FunctionName property if it exists,
   // or the dynamically generated name
   const LogGroupName = {
     "Fn::Sub": `${LAMBDA_LOG_GROUP_PREFIX}\${${functionKey}}`,

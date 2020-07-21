@@ -124,7 +124,6 @@ function lambdaHasDynamicallyGeneratedName(lambdas: LambdaFunction[]) {
   return dynmicallyNamedLambdas;
 }
 
-// TODO: does this message need to vary for CDK?
 export function getMissingStackNameErrorMsg(lambdaKeys: string[]) {
   return (
     "A forwarder ARN was provided with one or more dynamically named lambda function resources, " +
