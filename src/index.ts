@@ -127,9 +127,8 @@ function lambdaHasDynamicallyGeneratedName(lambdas: LambdaFunction[]) {
 export function getMissingStackNameErrorMsg(lambdaKeys: string[]) {
   return (
     "A forwarder ARN was provided with one or more dynamically named lambda function resources, " +
-    "but the stack name was not provided. \n" +
-    "Without the stack name, the dynamically generated function cannot be predicted, " +
-    "and the corresponding CloudWatch subscriptions cannot be added. \n" +
+    "but the stack name was not provided. Without the stack name, " +
+    "the dynamically generated function cannot be predicted and corresponding CloudWatch subscriptions cannot be added." +
     "To fix this, either add 'stackName: ${AWS::StackName}' under the Datadog macro parameters, " +
     `or add a 'FunctionName' property to the following resources: ${lambdaKeys.toString()}`
   );
