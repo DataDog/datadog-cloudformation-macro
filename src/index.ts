@@ -13,15 +13,25 @@ import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 import { CloudWatchLogs } from "aws-sdk";
 
 export const RESOURCES = "Resources";
-const REGION = "region";
-const FRAGMENT = "fragment";
-const PARAMS = "params";
-const REQUEST_ID = "requestId";
-const MAPPINGS = "Mappings";
 const SUCCESS = "success";
 const FAILURE = "failure";
 export const TYPE = "Type";
 export const PROPERTIES = "Properties";
+
+interface CfnTemplate {
+  Mappings?: any;
+  Resources: any;
+}
+
+interface InputEvent {
+  region: string;
+  accountId: string;
+  fragment: CfnTemplate;
+  transformId: string; // Name of the macro
+  params: { [key: string]: any };
+  requestId: string;
+  templateParameterValues: { [key: string]: any };
+}
 
 export interface FunctionProperties {
   Handler: string;
@@ -35,18 +45,18 @@ export interface FunctionProperties {
   FunctionName?: string;
 }
 
-export const handler = async (event: any, _: any) => {
-  const region = event[REGION];
-  const fragment = event[FRAGMENT];
-  const resources = fragment[RESOURCES];
+export const handler = async (event: InputEvent, _: any) => {
+  const region = event.region;
+  const fragment = event.fragment;
+  const resources = fragment.Resources;
   const lambdas = findLambdas(resources);
 
   let config;
-  const transformParams = event[PARAMS];
+  const transformParams = event.params;
   if (Object.keys(transformParams).length > 0) {
     config = getConfigFromParams(transformParams);
   } else {
-    config = getConfigFromMappings(fragment[MAPPINGS]);
+    config = getConfigFromMappings(fragment.Mappings);
   }
   setEnvConfiguration(config, lambdas);
 
@@ -62,7 +72,7 @@ export const handler = async (event: any, _: any) => {
   } catch (err) {
     if (err instanceof MissingIamRoleError) {
       return {
-        requestId: event[REQUEST_ID],
+        requestId: event.requestId,
         status: FAILURE,
         fragment,
         errorMessage: err.message,
@@ -77,7 +87,7 @@ export const handler = async (event: any, _: any) => {
       const lambdaKeys = dynamicallyNamedLambdas.map((lambda) => lambda.key);
       const errorMessage = getMissingStackNameErrorMsg(lambdaKeys);
       return {
-        requestId: event[REQUEST_ID],
+        requestId: event.requestId,
         status: FAILURE,
         fragment,
         errorMessage,
@@ -103,7 +113,7 @@ export const handler = async (event: any, _: any) => {
   redirectHandlers(lambdas, config.addLayers);
 
   return {
-    requestId: event[REQUEST_ID],
+    requestId: event.requestId,
     status: SUCCESS,
     fragment,
   };
