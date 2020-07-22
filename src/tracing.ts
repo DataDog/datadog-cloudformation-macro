@@ -1,6 +1,6 @@
 import { LambdaFunction } from "./layer";
-import { Configuration } from "env";
-import { TYPE, PROPERTIES } from "./index";
+import { Configuration } from "./env";
+import { Resources } from "./index";
 
 const FN_GET_ATT = "Fn::GetAtt";
 const FN_JOIN = "Fn::Join";
@@ -47,7 +47,7 @@ export enum TracingMode {
   NONE,
 }
 
-function findIamRole(resources: any, lambda: LambdaFunction) {
+function findIamRole(resources: Resources, lambda: LambdaFunction) {
   const role = lambda.properties.Role;
   let roleKey = undefined;
   if (typeof role !== "string") {
@@ -59,8 +59,8 @@ function findIamRole(resources: any, lambda: LambdaFunction) {
 
   if (roleKey) {
     const iamRoleResource = resources[roleKey];
-    if (iamRoleResource[TYPE] === IAM_ROLE_RESOURCE_TYPE) {
-      return iamRoleResource[PROPERTIES] as IamRoleProperties;
+    if (iamRoleResource.Type === IAM_ROLE_RESOURCE_TYPE) {
+      return iamRoleResource.Properties as IamRoleProperties;
     }
   }
 }
@@ -79,7 +79,7 @@ export function getTracingMode(config: Configuration) {
 export function enableTracing(
   tracingMode: TracingMode,
   lambdas: LambdaFunction[],
-  resources: any
+  resources: Resources
 ) {
   if (tracingMode === TracingMode.XRAY || tracingMode === TracingMode.HYBRID) {
     const xrayPolicies = {

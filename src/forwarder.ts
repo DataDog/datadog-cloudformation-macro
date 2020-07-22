@@ -1,6 +1,6 @@
 import { CloudWatchLogs } from "aws-sdk";
 import { LambdaFunction } from "./layer";
-import { TYPE } from "./index";
+import { Resources } from "./index";
 
 const LOG_GROUP_TYPE = "AWS::Logs::LogGroup";
 const LOG_GROUP_SUBSCRIPTION_TYPE = "AWS::Logs::SubscriptionFilter";
@@ -22,7 +22,7 @@ export interface LogGroupDefinition {
 }
 
 export async function addCloudWatchForwarderSubscriptions(
-  resources: any,
+  resources: Resources,
   lambdas: LambdaFunction[],
   stackName: string | undefined,
   forwarderArn: string,
@@ -131,14 +131,11 @@ export async function canSubscribeLogGroup(
   return subscriptionFilters === undefined || subscriptionFilters.length === 0;
 }
 
-function findLogGroupsInTemplate(resources: any) {
+function findLogGroupsInTemplate(resources: Resources) {
   return Object.entries(resources)
-    .filter(([_, resource]: [string, any]) => resource[TYPE] === LOG_GROUP_TYPE)
-    .map(([key, resource]: [string, any]) => {
-      return {
-        key,
-        logGroupResource: resource,
-      };
+    .filter(([_, resource]) => resource.Type === LOG_GROUP_TYPE)
+    .map(([key, logGroupResource]) => {
+      return { key, logGroupResource };
     });
 }
 
@@ -174,7 +171,7 @@ export function findDeclaredLogGroupName(
   }
 }
 
-function declareNewLogGroup(resources: any, lambda: LambdaFunction) {
+function declareNewLogGroup(resources: Resources, lambda: LambdaFunction) {
   const functionKey = lambda.key;
   const logGroupKey = `${functionKey}${LOG_GROUP}`;
 
@@ -191,7 +188,7 @@ function declareNewLogGroup(resources: any, lambda: LambdaFunction) {
 }
 
 function addSubscription(
-  resources: any,
+  resources: Resources,
   forwarderArn: string,
   functionKey: string,
   LogGroupName: string | { [fn: string]: any }

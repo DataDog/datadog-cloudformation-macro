@@ -1,4 +1,4 @@
-import { FunctionProperties, TYPE, PROPERTIES } from "./index";
+import { FunctionProperties, Resources } from "./index";
 
 const RUNTIME = "Runtime";
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
@@ -32,15 +32,15 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.8": RuntimeType.PYTHON,
 };
 
-export function findLambdas(resources: any) {
+export function findLambdas(resources: Resources) {
   return Object.entries(resources)
-    .map(([key, resource]: [string, any]) => {
-      if (resource[TYPE] !== LAMBDA_FUNCTION_RESOURCE_TYPE) {
+    .map(([key, resource]) => {
+      if (resource.Type !== LAMBDA_FUNCTION_RESOURCE_TYPE) {
         return;
       }
 
-      const lambda = resource[PROPERTIES];
-      let runtime = lambda[RUNTIME];
+      const properties = resource.Properties;
+      let runtime = properties[RUNTIME];
       let type = RuntimeType.UNSUPPORTED;
 
       if (runtime !== undefined && runtime in runtimeLookup) {
@@ -48,7 +48,7 @@ export function findLambdas(resources: any) {
       }
 
       return {
-        properties: resource[PROPERTIES],
+        properties,
         key,
         type,
         runtime,

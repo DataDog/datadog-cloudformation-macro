@@ -18,9 +18,16 @@ const FAILURE = "failure";
 export const TYPE = "Type";
 export const PROPERTIES = "Properties";
 
+export interface Resources {
+  [logicalId: string]: {
+    Type: string;
+    Properties: any;
+  };
+}
+
 interface CfnTemplate {
   Mappings?: any;
-  Resources: any;
+  Resources: Resources;
 }
 
 interface InputEvent {
