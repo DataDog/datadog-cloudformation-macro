@@ -21,6 +21,19 @@ export interface LogGroupDefinition {
   };
 }
 
+/**
+ * To add the subscriptions for the provided forwarder ARN, we need the
+ * corresponding log group for each lambda function.
+ *
+ * We first check if there's an existing log group. If it exists, we then check if there
+ * are any existing subscriptions. We can go ahead and add the subscription to the forwarder ARN
+ * if no other subscriptions exist.
+ *
+ * If no log group exists, then we check if any are declared in the template (but not yet created).
+ * If it is not declared, we declare a log group for the given lambda. In both cases,
+ * we also declare a new subscription filter for the forwarder ARN on this log group that will
+ * be newly created.
+ */
 export async function addCloudWatchForwarderSubscriptions(
   resources: Resources,
   lambdas: LambdaFunction[],
@@ -35,13 +48,25 @@ export async function addCloudWatchForwarderSubscriptions(
     let logGroup: CloudWatchLogs.LogGroup | undefined;
     let logGroupName: string | { [fn: string]: any } | undefined;
 
-    // Look for existing log group
+    // If the lambda function has been run before, then a log group will already
+    // exist, with a logGroupName property in the format '/aws/lambda/{function name}'
+    // The function name could come from the 'FunctionName' property if the user explicitly named
+    // their resource, or it could be dynamically generated.
+
+    // Check if the 'FunctionName' property exists, and if it does, use that name
+    // to search for existing log groups.
     if (lambda.properties.FunctionName) {
       logGroup = await findExistingLogGroupWithFunctionName(
         cloudWatchLogs,
         lambda.properties.FunctionName
       );
     } else {
+      // If the lambda function is not explicity named, we search for existing log groups
+      // by using the known patterns for dynamically generated names.
+      // For SAM and CDK, the logGroupName will start with: '/aws/lambda/{stack name}-{function logical id}'
+
+      // To avoid making one call through the AWS SDK for each lambda, first find all the lambda
+      // related log groups on this stack, and search through that list after for a given lambda name.
       if (logGroupsOnStack === undefined && stackName !== undefined) {
         logGroupsOnStack = await getExistingLambdaLogGroupsOnStack(
           cloudWatchLogs,
@@ -59,9 +84,11 @@ export async function addCloudWatchForwarderSubscriptions(
       }
     }
 
-    // If log group exists, check if there are any subsciption filters
+    // If log group exists, we need to check if there are any existing subsciption filters.
+    // We will only add a new subscription to the provided forwarder ARN if no current subscriptions exist.
     if (logGroup !== undefined) {
-      // Given that the log group was found through the logGroupName, this cannot be undefined
+      // Since the log group exists in this case, the logGroupName must also be defined, since
+      // that's the property we used to find this log group.
       logGroupName = logGroup.logGroupName as string;
       const canSubscribe = await canSubscribeLogGroup(
         cloudWatchLogs,
@@ -71,7 +98,13 @@ export async function addCloudWatchForwarderSubscriptions(
         return;
       }
     } else {
-      // Check if user is already explicitly declaring log group resource in template
+      // If we were unable to find an existing log group, there are two more cases:
+      // Either the user has declared a log group in their template explicitly, but has never
+      // initialized it, or the user's template has no log group resource declared, and they
+      // are relying on the implicit creation of log groups once they run their lambdas.
+
+      // First check if user is already explicitly declaring log group resource in template,
+      // so we avoid duplicate declarations (which would cause the deployment to fail).
       if (templateDeclaredLogGroups === undefined) {
         templateDeclaredLogGroups = findLogGroupsInTemplate(resources);
       }
@@ -80,7 +113,9 @@ export async function addCloudWatchForwarderSubscriptions(
         lambda.key,
         lambda.properties.FunctionName
       );
-      // Create new log group if it doesn't currently exist and was not declared in template
+
+      // If there's no existing log group and none were declared in the template for this lambda,
+      // then we create a new log group by declaring one in the template.
       logGroupName =
         declaredLogGroupName || declareNewLogGroup(resources, lambda);
     }
