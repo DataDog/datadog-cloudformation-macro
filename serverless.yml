@@ -1,4 +1,4 @@
-service: cfn-macro-datadog
+service: datadog-cfn-macro
 
 plugins:
   - serverless-plugin-typescript
@@ -64,7 +64,7 @@ resources:
     DatadogCfnMacro:
       Type: AWS::CloudFormation::Macro
       Properties:
-        Name: DDCloudformationMacro
+        Name: DatadogCfnMacro # name of the transform to use in your deployment
         FunctionName:
           Fn::GetAtt:
             - DatadogLambdaFunction
