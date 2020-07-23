@@ -18,7 +18,7 @@ export interface Configuration {
   // Enable tracing on Lambda function using dd-trace, datadog's APM library.
   enableDDTracing: boolean;
   // When set, the macro will subscribe the lambdas to the forwarder with the given arn.
-  forwarder?: string;
+  forwarderArn?: string;
   // Enable enhanced metrics on Lambda functions. Defaults to true.
   enableEnhancedMetrics: boolean;
   // When set, the macro will use this value to add the 'service' tag to all lambdas,

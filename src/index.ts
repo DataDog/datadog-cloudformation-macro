@@ -30,7 +30,7 @@ interface CfnTemplate {
   Resources: Resources;
 }
 
-interface InputEvent {
+export interface InputEvent {
   region: string;
   accountId: string;
   fragment: CfnTemplate;
@@ -88,7 +88,7 @@ export const handler = async (event: InputEvent, _: any) => {
   }
 
   // Cloudwatch forwarder subscriptions
-  if (config.forwarder) {
+  if (config.forwarderArn) {
     const dynamicallyNamedLambdas = lambdaHasDynamicallyGeneratedName(lambdas);
     if (dynamicallyNamedLambdas.length > 0 && config.stackName === undefined) {
       const lambdaKeys = dynamicallyNamedLambdas.map((lambda) => lambda.key);
@@ -106,7 +106,7 @@ export const handler = async (event: InputEvent, _: any) => {
       resources,
       lambdas,
       config.stackName,
-      config.forwarder,
+      config.forwarderArn,
       cloudWatchLogs
     );
   }

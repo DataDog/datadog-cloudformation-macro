@@ -4,6 +4,7 @@ import {
   PROPERTIES,
   FunctionProperties,
   getMissingStackNameErrorMsg,
+  InputEvent,
 } from "../src/index";
 import { IamRoleProperties } from "../src/tracing";
 import {
@@ -109,7 +110,7 @@ function mockInputEvent(
     params: params || {},
     requestId: "test-requestId",
     templateParameterValues: {},
-  };
+  } as InputEvent;
 }
 
 describe("Macro", () => {
@@ -184,7 +185,7 @@ describe("Macro", () => {
 
   describe("CloudWatch subscriptions", () => {
     it("adds subscription filters when forwarder is provided", async () => {
-      const params = { forwarder: "forwarder-arn", stackName: "stack-name" };
+      const params = { forwarderArn: "forwarder-arn", stackName: "stack-name" };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
 
@@ -198,7 +199,7 @@ describe("Macro", () => {
     });
 
     it("macro fails when forwarder is provided & at least one lambda has a dynamically generated name, but no stack name is given", async () => {
-      const params = { forwarder: "forwarder-arn" };
+      const params = { forwarderArn: "forwarder-arn" };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
 
