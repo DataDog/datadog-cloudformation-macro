@@ -1,8 +1,8 @@
 import * as layers from "./layers.json";
 
 import {
-  getConfigFromMappings,
-  getConfigFromParams,
+  getConfigFromCfnMappings,
+  getConfigFromCfnParams,
   setEnvConfiguration,
 } from "./env";
 import { findLambdas, applyLayers, LambdaFunction } from "./layer";
@@ -59,11 +59,14 @@ export const handler = async (event: InputEvent, _: any) => {
   const lambdas = findLambdas(resources);
 
   let config;
+
+  // Use the parameters given for this specific transform/macro if it exists
   const transformParams = event.params;
   if (Object.keys(transformParams).length > 0) {
-    config = getConfigFromParams(transformParams);
+    config = getConfigFromCfnParams(transformParams);
   } else {
-    config = getConfigFromMappings(fragment.Mappings);
+    // If not, check the Mappings section for Datadog config parameters as well
+    config = getConfigFromCfnMappings(fragment.Mappings);
   }
   setEnvConfiguration(config, lambdas);
 

@@ -1,6 +1,6 @@
 import {
-  getConfigFromMappings,
-  getConfigFromParams,
+  getConfigFromCfnMappings,
+  getConfigFromCfnParams,
   defaultConfiguration,
   setEnvConfiguration,
 } from "../src/env";
@@ -13,12 +13,12 @@ describe("getConfig", () => {
       logLevel: "error",
     };
     const mappings = { Datadog: { Parameters: params } };
-    const config = getConfigFromMappings(mappings);
+    const config = getConfigFromCfnMappings(mappings);
     expect(config).toMatchObject(params);
   });
 
   it("gets default configuration when no parameters are specified", () => {
-    const config = getConfigFromParams({});
+    const config = getConfigFromCfnParams({});
     expect(config).toEqual(defaultConfiguration);
   });
 
@@ -27,7 +27,7 @@ describe("getConfig", () => {
       site: "my-site",
       enableXrayTracing: false,
     };
-    const config = getConfigFromParams(params);
+    const config = getConfigFromCfnParams(params);
     expect(config).toEqual({
       addLayers: true,
       flushMetricsToLogs: true,

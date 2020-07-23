@@ -34,6 +34,24 @@ export interface Configuration {
   stackName?: string;
 }
 
+// Same interface as Configuration above, except all parameters are optional, since user does
+// not have to provide the values (in which case we will use the default configuration below).
+interface CfnParams {
+  addLayers?: boolean;
+  apiKey?: string;
+  apiKMSKey?: string;
+  site?: string;
+  logLevel?: string;
+  flushMetricsToLogs?: boolean;
+  enableXrayTracing?: boolean;
+  enableDDTracing?: boolean;
+  forwarderArn?: string;
+  enableEnhancedMetrics?: boolean;
+  service?: string;
+  env?: string;
+  stackName?: string;
+}
+
 const apiKeyEnvVar = "DD_API_KEY";
 const apiKeyKMSEnvVar = "DD_KMS_API_KEY";
 const siteURLEnvVar = "DD_SITE";
@@ -53,14 +71,33 @@ export const defaultConfiguration: Configuration = {
   enableEnhancedMetrics: true,
 };
 
-export function getConfigFromMappings(mappings: any): Configuration {
+/**
+ * Parses the Mappings section for Datadog config parameters.
+ * Assumes that the parameters live under the Mappings section in this format:
+ *
+ * Mappings:
+ *  Datadog:
+ *    Parameters:
+ *      addLayers: true
+ *      ...
+ */
+export function getConfigFromCfnMappings(mappings: any): Configuration {
   if (mappings === undefined || mappings[DATADOG] === undefined) {
     return defaultConfiguration;
   }
-  return getConfigFromParams(mappings[DATADOG][PARAMETERS]);
+  return getConfigFromCfnParams(mappings[DATADOG][PARAMETERS]);
 }
 
-export function getConfigFromParams(params: { [_: string]: string | boolean }) {
+/**
+ * Takes a set of parameters from the CloudFormation template. This could come from either
+ * the Mappings section of the template, or directly from the Parameters under the transform/macro
+ * as the 'params' property under the original InputEvent to the handler in src/index.ts
+ *
+ * Uses these parameters as the Datadog configuration, and for values that are required in the
+ * configuration but not provided in the parameters, uses the default values from
+ * the defaultConfiguration above.
+ */
+export function getConfigFromCfnParams(params: CfnParams) {
   let datadogConfig = params as Partial<Configuration> | undefined;
   if (datadogConfig === undefined) {
     datadogConfig = {};
