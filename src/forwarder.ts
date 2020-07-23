@@ -234,7 +234,6 @@ function addSubscription(
     Properties: {
       DestinationArn: forwarderArn,
       FilterPattern: "",
-      FilterName: "datadog-macro-filter",
       LogGroupName,
     },
   };

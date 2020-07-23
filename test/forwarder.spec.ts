@@ -120,7 +120,6 @@ describe("addCloudWatchForwarderSubscriptions", () => {
         Properties: {
           DestinationArn: "forwarder-arn",
           FilterPattern: "",
-          FilterName: "datadog-macro-filter",
           LogGroupName: "/aws/lambda/MyLambdaFunction",
         },
       },
@@ -153,7 +152,6 @@ describe("addCloudWatchForwarderSubscriptions", () => {
         Properties: {
           DestinationArn: "forwarder-arn",
           FilterPattern: "",
-          FilterName: "datadog-macro-filter",
           LogGroupName: logGroupName,
         },
       },
@@ -260,7 +258,6 @@ describe("addCloudWatchForwarderSubscriptions", () => {
         Properties: {
           DestinationArn: "forwarder-arn",
           FilterPattern: "",
-          FilterName: "datadog-macro-filter",
           LogGroupName: "/aws/lambda/MyLambdaFunction",
         },
       },
@@ -269,7 +266,6 @@ describe("addCloudWatchForwarderSubscriptions", () => {
         Properties: {
           DestinationArn: "forwarder-arn",
           FilterPattern: "",
-          FilterName: "datadog-macro-filter",
           LogGroupName: { "Fn::Sub": "/aws/lambda/${FunctionTwoKey}" },
         },
       },
@@ -303,7 +299,6 @@ describe("addCloudWatchForwarderSubscriptions", () => {
         Properties: {
           DestinationArn: "forwarder-arn",
           FilterPattern: "",
-          FilterName: "datadog-macro-filter",
           LogGroupName: { "Fn::Sub": "/aws/lambda/${FunctionKey}" },
         },
       },
