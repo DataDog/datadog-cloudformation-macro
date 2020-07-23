@@ -10,7 +10,7 @@ function mockLambdaFunction(Tags: any) {
       Tags,
     },
     key: "FunctionKey",
-    type: RuntimeType.NODE,
+    runtimeType: RuntimeType.NODE,
     runtime: "nodejs12.x",
   } as LambdaFunction;
 }

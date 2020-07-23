@@ -18,7 +18,7 @@ function mockLambdaFunction() {
       },
     },
     key: "HelloWorldFunction",
-    type: RuntimeType.NODE,
+    runtimeType: RuntimeType.NODE,
     runtime: "nodejs10.x",
   } as LambdaFunction;
 }
@@ -154,7 +154,7 @@ describe("enableTracing", () => {
         },
       },
       key: "HelloWorldFunction",
-      type: RuntimeType.NODE,
+      runtimeType: RuntimeType.NODE,
       runtime: "nodejs10.x",
     };
     const resources: Record<string, any> = {

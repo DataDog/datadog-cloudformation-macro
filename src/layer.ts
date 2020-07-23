@@ -9,10 +9,12 @@ export enum RuntimeType {
   UNSUPPORTED,
 }
 
+// Self defined interface that only applies to the macro - the FunctionProperties interface
+// matches the CloudFormation AWS::Lambda::Function Properties interface.
 export interface LambdaFunction {
   properties: FunctionProperties;
   key: string;
-  type: RuntimeType;
+  runtimeType: RuntimeType;
   runtime: string;
 }
 
@@ -32,6 +34,14 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.8": RuntimeType.PYTHON,
 };
 
+/**
+ * Parse through the Resources section of the provided CloudFormation template to find all lambda
+ * function resources. Several modifications will be made later on to these resources, and
+ * storing them with a clearly defined interface will make it easier to implement changes.
+ *
+ * Also assigns a general runtime type to the output lambdas. This helps to determine which lambda
+ * layers to add & which handler to redirect to later on in the macro.
+ */
 export function findLambdas(resources: Resources) {
   return Object.entries(resources)
     .map(([key, resource]) => {
@@ -41,16 +51,16 @@ export function findLambdas(resources: Resources) {
 
       const properties = resource.Properties;
       let runtime = properties[RUNTIME];
-      let type = RuntimeType.UNSUPPORTED;
+      let runtimeType = RuntimeType.UNSUPPORTED;
 
       if (runtime !== undefined && runtime in runtimeLookup) {
-        type = runtimeLookup[runtime];
+        runtimeType = runtimeLookup[runtime];
       }
 
       return {
         properties,
         key,
-        type,
+        runtimeType,
         runtime,
       } as LambdaFunction;
     })
@@ -68,7 +78,7 @@ export function applyLayers(
   }
 
   lambdas.forEach((lambda) => {
-    if (lambda.type === RuntimeType.UNSUPPORTED) {
+    if (lambda.runtimeType === RuntimeType.UNSUPPORTED) {
       return;
     }
     const runtime = lambda.runtime;

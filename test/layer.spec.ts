@@ -17,7 +17,11 @@ function mockFunctionResource(Runtime: string) {
   };
 }
 
-function mockLambdaFunction(key: string, runtime: string, type: RuntimeType) {
+function mockLambdaFunction(
+  key: string,
+  runtime: string,
+  runtimeType: RuntimeType
+) {
   return {
     properties: {
       Handler: "app.handler",
@@ -25,7 +29,7 @@ function mockLambdaFunction(key: string, runtime: string, type: RuntimeType) {
       Role: "role-arn",
     },
     key,
-    type,
+    runtimeType,
     runtime,
   } as LambdaFunction;
 }

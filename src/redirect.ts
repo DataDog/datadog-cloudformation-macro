@@ -12,7 +12,7 @@ export function redirectHandlers(
 ) {
   lambdas.forEach((lambda) => {
     setEnvDatadogHandler(lambda);
-    const handler = getDDHandler(lambda.type, addLayers);
+    const handler = getDDHandler(lambda.runtimeType, addLayers);
     if (handler === undefined) {
       return;
     }
