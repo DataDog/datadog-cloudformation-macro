@@ -304,6 +304,43 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       },
     });
   });
+
+  it("log group and correct subscription already exists", async () => {
+    const lambda = mockLambdaFunction("FunctionKey", "MyLambdaFunction");
+    const resources = mockResources([lambda]);
+    const forwarderArn = "test-forwarder-arn";
+    const logGroupName = "/aws/lambda/MyLambdaFunction";
+    const cloudWatchLogs = mockCloudWatchLogs({
+      [logGroupName]: {
+        logGroup: { logGroupName },
+        filters: {
+          subscriptionFilters: [
+            {
+              destinationArn: forwarderArn,
+              filterName: "datadog-macro-filter",
+              logGroupName,
+            },
+          ],
+        },
+      },
+    });
+    await addCloudWatchForwarderSubscriptions(
+      resources,
+      [lambda],
+      undefined,
+      forwarderArn,
+      cloudWatchLogs as any
+    );
+
+    expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({
+      logGroupNamePrefix: "/aws/lambda/MyLambdaFunction",
+    });
+    expect(cloudWatchLogs.describeSubscriptionFilters).toHaveBeenCalledWith({
+      logGroupName,
+    });
+    expect(resources).not.toHaveProperty("FunctionKeyLogGroup");
+    expect(resources).not.toHaveProperty("FunctionKeySubscription");
+  });
 });
 
 describe("findExistingLogGroupWithFunctionName", () => {

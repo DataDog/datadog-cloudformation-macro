@@ -179,7 +179,7 @@ export function findDeclaredLogGroupName(
   functionKey: string,
   functionName?: string
 ) {
-  for (const [_, resource] of Object.entries(logGroups)) {
+  for (const resource of Object.values(logGroups)) {
     const logGroupName = resource.logGroupResource.Properties.LogGroupName;
 
     // If in this function, 'FunctionName' property doesn't exist on the lambda,
