@@ -158,7 +158,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     });
   });
 
-  it("does not overwrite existing subscription on log group", async () => {
+  it("does not overwrite existing unknown subscription on log group", async () => {
     const lambda = mockLambdaFunction("FunctionKey", "MyLambdaFunction");
     const resources = mockResources([lambda]);
     const logGroupName = "/aws/lambda/MyLambdaFunction";
@@ -305,7 +305,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     });
   });
 
-  it("log group and correct subscription already exists", async () => {
+  it("log group and correct subscription already previously created by macro", async () => {
     const lambda = mockLambdaFunction("FunctionKey", "MyLambdaFunction");
     const resources = mockResources([lambda]);
     const forwarderArn = "test-forwarder-arn";
@@ -317,7 +317,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
           subscriptionFilters: [
             {
               destinationArn: forwarderArn,
-              filterName: "datadog-macro-filter",
+              filterName: lambda.properties.FunctionName,
               logGroupName,
             },
           ],
@@ -338,8 +338,8 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     expect(cloudWatchLogs.describeSubscriptionFilters).toHaveBeenCalledWith({
       logGroupName,
     });
-    expect(resources).not.toHaveProperty("FunctionKeyLogGroup");
-    expect(resources).not.toHaveProperty("FunctionKeySubscription");
+    // Need to include this resource, since not including it would delete the already created sub
+    expect(resources).toHaveProperty("FunctionKeySubscription");
   });
 });
 
@@ -408,19 +408,22 @@ describe("getExistingLambdaLogGroupOnStack", () => {
 
 describe("canSubscribeLogGroup", () => {
   it("returns false if there's any existing subscription", async () => {
-    const logGroupName = "/aws/lambda/stack-name-MyLambdaFunction";
+    const functionNamePrefix = "stack-name-MyLambdaFunction";
+    const logGroupName = `/aws/lambda/${functionNamePrefix}`;
     const cloudWatchLogs = mockCloudWatchLogs({
       [logGroupName]: { logGroup: { logGroupName } },
     });
     const canSubscribe = await canSubscribeLogGroup(
       cloudWatchLogs as any,
-      logGroupName
+      logGroupName,
+      functionNamePrefix
     );
     expect(canSubscribe).toBeTruthy();
   });
 
-  it("returns true is there are no existing subscriptions", async () => {
-    const logGroupName = "/aws/lambda/stack-name-MyLambdaFunction";
+  it("returns true if there are no existing subscriptions", async () => {
+    const functionNamePrefix = "stack-name-MyLambdaFunction";
+    const logGroupName = `/aws/lambda/${functionNamePrefix}`;
     const cloudWatchLogs = mockCloudWatchLogs({
       [logGroupName]: {
         logGroup: { logGroupName },
@@ -437,9 +440,35 @@ describe("canSubscribeLogGroup", () => {
     });
     const canSubscribe = await canSubscribeLogGroup(
       cloudWatchLogs as any,
-      logGroupName
+      logGroupName,
+      functionNamePrefix
     );
     expect(canSubscribe).toBeFalsy();
+  });
+
+  it("returns true if the existing subscription is one created by the macro", async () => {
+    const functionNamePrefix = "stack-name-MyLambdaFunction";
+    const logGroupName = `/aws/lambda/${functionNamePrefix}`;
+    const cloudWatchLogs = mockCloudWatchLogs({
+      [logGroupName]: {
+        logGroup: { logGroupName },
+        filters: {
+          subscriptionFilters: [
+            {
+              destinationArn: "forwarder-arn",
+              filterName: `${functionNamePrefix}Subscription-randomlyGeneratedString`,
+              logGroupName,
+            },
+          ],
+        },
+      },
+    });
+    const canSubscribe = await canSubscribeLogGroup(
+      cloudWatchLogs as any,
+      logGroupName,
+      functionNamePrefix
+    );
+    expect(canSubscribe).toBeTruthy();
   });
 });
 

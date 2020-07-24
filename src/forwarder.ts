@@ -3,7 +3,7 @@ import { LambdaFunction } from "./layer";
 import { Resources } from "./index";
 
 const LOG_GROUP_TYPE = "AWS::Logs::LogGroup";
-const LOG_GROUP_SUBSCRIPTION_TYPE = "AWS::Logs::SubscriptionFilter";
+const SUBSCRIPTION_FILTER_TYPE = "AWS::Logs::SubscriptionFilter";
 const LAMBDA_LOG_GROUP_PREFIX = "/aws/lambda/";
 const LOG_GROUP = "LogGroup";
 const SUBSCRIPTION = "Subscription";
@@ -43,19 +43,21 @@ export async function addCloudWatchForwarderSubscriptions(
 ) {
   let logGroupsOnStack: CloudWatchLogs.LogGroups | undefined;
   let templateDeclaredLogGroups: LogGroupDefinition[] | undefined;
+  let functionNamePrefix: string;
 
   for (const lambda of lambdas) {
     let logGroup: CloudWatchLogs.LogGroup | undefined;
     let logGroupName: string | { [fn: string]: any } | undefined;
 
     // If the lambda function has been run before, then a log group will already
-    // exist, with a logGroupName property in the format '/aws/lambda/{function name}'
+    // exist, with a logGroupName property in the format '/aws/lambda/<function name>'
     // The function name could come from the 'FunctionName' property if the user explicitly named
     // their resource, or it could be dynamically generated.
 
     // Check if the 'FunctionName' property exists, and if it does, use that name
     // to search for existing log groups.
     if (lambda.properties.FunctionName) {
+      functionNamePrefix = lambda.properties.FunctionName;
       logGroup = await findExistingLogGroupWithFunctionName(
         cloudWatchLogs,
         lambda.properties.FunctionName
@@ -63,7 +65,8 @@ export async function addCloudWatchForwarderSubscriptions(
     } else {
       // If the lambda function is not explicity named, we search for existing log groups
       // by using the known patterns for dynamically generated names.
-      // For SAM and CDK, the logGroupName will start with: '/aws/lambda/{stack name}-{function logical id}'
+      // For SAM and CDK, the logGroupName will start with: '/aws/lambda/<stack name>-<lambda resource logical id>'
+      functionNamePrefix = `${stackName}-${lambda.key}`;
 
       // To avoid making one call through the AWS SDK for each lambda, first find all the lambda
       // related log groups on this stack, and search through that list after for a given lambda name.
@@ -92,7 +95,8 @@ export async function addCloudWatchForwarderSubscriptions(
       logGroupName = logGroup.logGroupName as string;
       const canSubscribe = await canSubscribeLogGroup(
         cloudWatchLogs,
-        logGroupName
+        logGroupName,
+        functionNamePrefix
       );
       if (!canSubscribe) {
         return;
@@ -108,16 +112,21 @@ export async function addCloudWatchForwarderSubscriptions(
       if (templateDeclaredLogGroups === undefined) {
         templateDeclaredLogGroups = findLogGroupsInTemplate(resources);
       }
-      const declaredLogGroupName = findDeclaredLogGroupName(
+      logGroupName = findDeclaredLogGroupName(
         templateDeclaredLogGroups,
         lambda.key,
         lambda.properties.FunctionName
       );
 
-      // If there's no existing log group and none were declared in the template for this lambda,
-      // then we create a new log group by declaring one in the template.
-      logGroupName =
-        declaredLogGroupName || declareNewLogGroup(resources, lambda);
+      if (logGroupName !== undefined) {
+        // If a log group has already been declared but not yet initialized, also check if any
+        // subscriptions are declared, so we don't overwrite them.
+        // TODO: check for declared subscriptions
+      } else {
+        // If there's no existing log group and none were declared in the template for this lambda,
+        // then we create a new log group by declaring one in the template.
+        logGroupName = declareNewLogGroup(resources, lambda);
+      }
     }
 
     addSubscription(resources, forwarderArn, lambda.key, logGroupName);
@@ -154,16 +163,40 @@ export async function getExistingLambdaLogGroupsOnStack(
 
 export async function canSubscribeLogGroup(
   cloudWatchLogs: CloudWatchLogs,
+  logGroupName: string,
+  expectedSubName: string
+) {
+  const subscriptionFilters = await describeSubscriptionFilters(
+    cloudWatchLogs,
+    logGroupName
+  );
+  let hasUnknownSubscriptions = false;
+
+  for (const subscription of subscriptionFilters) {
+    const filterName = subscription.filterName;
+    if (filterName && filterName.startsWith(expectedSubName)) {
+      // If this is a subscription filter this macro previously created for this lambda,
+      // it needs to be kept in the template so the SubscriptionFilter resource is not
+      // removed from the template and deleted.
+      return true;
+    }
+    // If there are any unknown subscriptions, it's possible we cannot add a subscription
+    // for the forwarder.
+    hasUnknownSubscriptions = true;
+  }
+  // If no unknown subscriptions exist, possible to subscribe.
+  return !hasUnknownSubscriptions;
+}
+
+async function describeSubscriptionFilters(
+  cloudWatchLogs: CloudWatchLogs,
   logGroupName: string
 ) {
   const request = { logGroupName };
   const response = await cloudWatchLogs
     .describeSubscriptionFilters(request)
     .promise();
-  const { subscriptionFilters } = response;
-
-  // Not possible to subscribe if there are existing subscriptions
-  return subscriptionFilters === undefined || subscriptionFilters.length === 0;
+  return response.subscriptionFilters ?? [];
 }
 
 function findLogGroupsInTemplate(resources: Resources) {
@@ -230,7 +263,7 @@ function addSubscription(
 ) {
   const subscriptionName = `${functionKey}${SUBSCRIPTION}`;
   const subscription = {
-    Type: LOG_GROUP_SUBSCRIPTION_TYPE,
+    Type: SUBSCRIPTION_FILTER_TYPE,
     Properties: {
       DestinationArn: forwarderArn,
       FilterPattern: "",
