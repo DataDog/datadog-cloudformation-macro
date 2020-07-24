@@ -3,7 +3,7 @@ import {
   findExistingLogGroupWithFunctionName,
   getExistingLambdaLogGroupsOnStack,
   canSubscribeLogGroup,
-  findDeclaredLogGroupName,
+  findDeclaredLogGroup,
   addCloudWatchForwarderSubscriptions,
   LogGroupDefinition,
 } from "../src/forwarder";
@@ -115,7 +115,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       logGroupName: "/aws/lambda/MyLambdaFunction",
     });
     expect(resources).toMatchObject({
-      FunctionKeySubscription: {
+      FunctionKeyLogGroupSubscription: {
         Type: "AWS::Logs::SubscriptionFilter",
         Properties: {
           DestinationArn: "forwarder-arn",
@@ -147,7 +147,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       logGroupName,
     });
     expect(resources).toMatchObject({
-      FunctionKeySubscription: {
+      FunctionKeyLogGroupSubscription: {
         Type: "AWS::Logs::SubscriptionFilter",
         Properties: {
           DestinationArn: "forwarder-arn",
@@ -253,7 +253,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       },
       FunctionOneKeyLogGroup: explicitlyNamedLogGroup.logGroupResource,
       FunctionTwoKeyLogGroup: dynamicallyNamedLogGroup.logGroupResource,
-      FunctionOneKeySubscription: {
+      FunctionOneKeyLogGroupSubscription: {
         Type: "AWS::Logs::SubscriptionFilter",
         Properties: {
           DestinationArn: "forwarder-arn",
@@ -261,7 +261,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
           LogGroupName: "/aws/lambda/MyLambdaFunction",
         },
       },
-      FunctionTwoKeySubscription: {
+      FunctionTwoKeyLogGroupSubscription: {
         Type: "AWS::Logs::SubscriptionFilter",
         Properties: {
           DestinationArn: "forwarder-arn",
@@ -294,7 +294,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
           LogGroupName: { "Fn::Sub": "/aws/lambda/${FunctionKey}" },
         },
       },
-      FunctionKeySubscription: {
+      FunctionKeyLogGroupSubscription: {
         Type: "AWS::Logs::SubscriptionFilter",
         Properties: {
           DestinationArn: "forwarder-arn",
@@ -339,7 +339,56 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       logGroupName,
     });
     // Need to include this resource, since not including it would delete the already created sub
-    expect(resources).toHaveProperty("FunctionKeySubscription");
+    expect(resources).toHaveProperty("FunctionKeyLogGroupSubscription");
+  });
+
+  it("log group and subscription are not initialized, but are declared", async () => {
+    const lambda = mockLambdaFunction("FunctionKey", "MyLambdaFunction");
+
+    const logGroup = {
+      key: "FunctionKeyLogGroup",
+      logGroupResource: {
+        Type: "AWS::Logs::LogGroup",
+        Properties: {
+          LogGroupName: "/aws/lambda/MyLambdaFunction",
+        },
+      },
+    };
+
+    const resources = mockResources([lambda], [logGroup]);
+    const declaredSubscription = {
+      Type: "AWS::Logs::SubscriptionFilter",
+      Properties: {
+        DestinationArn: "forwarder-arn",
+        FilterPattern: "",
+        LogGroupName: "/aws/lambda/MyLambdaFunction",
+      },
+    };
+    // The declared subcription has a slightly different key than the one the macro would use to
+    // create a new subscription, but the macro does not rely on the key to find existing subs.
+    resources["FunctionKeySubscription"] = declaredSubscription;
+    const cloudWatchLogs = mockCloudWatchLogs({});
+    await addCloudWatchForwarderSubscriptions(
+      resources,
+      [lambda],
+      undefined, // no need for stackName, lambda is explicitly named
+      "forwarder-arn",
+      cloudWatchLogs as any
+    );
+
+    expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({
+      logGroupNamePrefix: "/aws/lambda/MyLambdaFunction",
+    });
+    expect(cloudWatchLogs.describeSubscriptionFilters).not.toHaveBeenCalled();
+    expect(resources).toEqual({
+      // log groups and subscriptions are unchanged, no duplicates declared
+      FunctionKey: {
+        Type: "AWS::Lambda::Function",
+        Properties: lambda.properties,
+      },
+      FunctionKeyLogGroup: logGroup.logGroupResource,
+      FunctionKeySubscription: declaredSubscription,
+    });
   });
 });
 
@@ -472,7 +521,7 @@ describe("canSubscribeLogGroup", () => {
   });
 });
 
-describe("findDeclaredLogGroupName", () => {
+describe("findDeclaredLogGroup", () => {
   const logGroups = [
     mockLogGroupResource("LogGroupOne", "/aws/lambda/MyLambdaFunction"),
     mockLogGroupResource("LogGroupTwo", {
@@ -484,23 +533,35 @@ describe("findDeclaredLogGroupName", () => {
   ];
 
   it("finds log group when declared with 'FunctionName'", () => {
-    const logGroupName = findDeclaredLogGroupName(
+    const logGroup = findDeclaredLogGroup(
       logGroups,
       "FunctionKey",
       "MyLambdaFunction"
     );
+    let logGroupName: string | { [fn: string]: any } = "";
+    if (logGroup) {
+      logGroupName = logGroup.logGroupResource.Properties.LogGroupName;
+    }
     expect(logGroupName).toEqual("/aws/lambda/MyLambdaFunction");
   });
 
   it("finds log group when logGroupName uses 'Fn::Sub'", () => {
-    const logGroupName = findDeclaredLogGroupName(logGroups, "SubFunctionKey");
+    const logGroup = findDeclaredLogGroup(logGroups, "SubFunctionKey");
+    let logGroupName: string | { [fn: string]: any } = "";
+    if (logGroup) {
+      logGroupName = logGroup.logGroupResource.Properties.LogGroupName;
+    }
     expect(logGroupName).toEqual({
       "Fn::Sub": "/aws/lambda/${SubFunctionKey}",
     });
   });
 
   it("finds log group when logGroupName uses 'Fn::Join'", () => {
-    const logGroupName = findDeclaredLogGroupName(logGroups, "JoinFunctionKey");
+    const logGroup = findDeclaredLogGroup(logGroups, "JoinFunctionKey");
+    let logGroupName: string | { [fn: string]: any } = "";
+    if (logGroup) {
+      logGroupName = logGroup.logGroupResource.Properties.LogGroupName;
+    }
     expect(logGroupName).toEqual({
       "Fn::Join": ["", ["/aws/lambda/", { Ref: "JoinFunctionKey" }]],
     });

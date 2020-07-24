@@ -21,18 +21,30 @@ export interface LogGroupDefinition {
   };
 }
 
+export interface SubscriptionDefinition {
+  key: string;
+  subscriptionResource: {
+    Type: string;
+    Properties: {
+      DestinationArn: string;
+      FilterPattern: string;
+      LogGroupName: string | { [fn: string]: any };
+      RoleArn?: string;
+    };
+  };
+}
+
 /**
- * To add the subscriptions for the provided forwarder ARN, we need the
- * corresponding log group for each lambda function.
+ * To add the subscriptions for the provided forwarder ARN, we need the corresponding
+ * log group for each lambda function.
  *
- * We first check if there's an existing log group. If it exists, we then check if there
- * are any existing subscriptions. We can go ahead and add the subscription to the forwarder ARN
- * if no other subscriptions exist.
+ * We first check if there's an existing log group. If it exists, we then check if there are any
+ * existing subscriptions. We can go ahead and add the subscription to the forwarder ARN if no
+ * other unknown subscriptions exist.
  *
- * If no log group exists, then we check if any are declared in the template (but not yet created).
- * If it is not declared, we declare a log group for the given lambda. In both cases,
- * we also declare a new subscription filter for the forwarder ARN on this log group that will
- * be newly created.
+ * If no log group exists, then check if any are declared in the template (but not yet created).
+ * If none are declared, we add a log group for the given lambda. In both cases, we also declare a
+ * new subscription filter for the forwarder ARN on this log group.
  */
 export async function addCloudWatchForwarderSubscriptions(
   resources: Resources,
@@ -42,8 +54,10 @@ export async function addCloudWatchForwarderSubscriptions(
   cloudWatchLogs: CloudWatchLogs
 ) {
   let logGroupsOnStack: CloudWatchLogs.LogGroups | undefined;
-  let templateDeclaredLogGroups: LogGroupDefinition[] | undefined;
+  let logGroupsInTemplate: LogGroupDefinition[] | undefined;
+  let subscriptionsInTemplate: SubscriptionDefinition[] | undefined;
   let functionNamePrefix: string;
+  let addSubscription: boolean;
 
   for (const lambda of lambdas) {
     let logGroup: CloudWatchLogs.LogGroup | undefined;
@@ -93,14 +107,11 @@ export async function addCloudWatchForwarderSubscriptions(
       // Since the log group exists in this case, the logGroupName must also be defined, since
       // that's the property we used to find this log group.
       logGroupName = logGroup.logGroupName as string;
-      const canSubscribe = await canSubscribeLogGroup(
+      addSubscription = await canSubscribeLogGroup(
         cloudWatchLogs,
         logGroupName,
         functionNamePrefix
       );
-      if (!canSubscribe) {
-        return;
-      }
     } else {
       // If we were unable to find an existing log group, there are two more cases:
       // Either the user has declared a log group in their template explicitly, but has never
@@ -109,27 +120,44 @@ export async function addCloudWatchForwarderSubscriptions(
 
       // First check if user is already explicitly declaring log group resource in template,
       // so we avoid duplicate declarations (which would cause the deployment to fail).
-      if (templateDeclaredLogGroups === undefined) {
-        templateDeclaredLogGroups = findLogGroupsInTemplate(resources);
+      if (logGroupsInTemplate === undefined) {
+        logGroupsInTemplate = findLogGroupsInTemplate(resources);
       }
-      logGroupName = findDeclaredLogGroupName(
-        templateDeclaredLogGroups,
+      const declaredLogGroup = findDeclaredLogGroup(
+        logGroupsInTemplate,
         lambda.key,
         lambda.properties.FunctionName
       );
 
-      if (logGroupName !== undefined) {
-        // If a log group has already been declared but not yet initialized, also check if any
+      if (declaredLogGroup) {
+        logGroupName =
+          declaredLogGroup?.logGroupResource.Properties.LogGroupName;
+        if (subscriptionsInTemplate === undefined) {
+          subscriptionsInTemplate = findSubscriptionsInTemplate(resources);
+        }
+        // If a log group has already been declared but not yet initialized, check if any
         // subscriptions are declared, so we don't overwrite them.
-        // TODO: check for declared subscriptions
+        addSubscription = !isSubscriptionAlreadyDeclared(
+          subscriptionsInTemplate,
+          logGroupName,
+          declaredLogGroup.key
+        );
       } else {
         // If there's no existing log group and none were declared in the template for this lambda,
         // then we create a new log group by declaring one in the template.
-        logGroupName = declareNewLogGroup(resources, lambda);
+        logGroupName = addLogGroupToTemplate(resources, lambda);
+        addSubscription = true;
       }
     }
 
-    addSubscription(resources, forwarderArn, lambda.key, logGroupName);
+    if (addSubscription) {
+      addSubscriptionToTemplate(
+        resources,
+        forwarderArn,
+        lambda.key,
+        logGroupName
+      );
+    }
   }
 }
 
@@ -207,7 +235,7 @@ function findLogGroupsInTemplate(resources: Resources) {
     });
 }
 
-export function findDeclaredLogGroupName(
+export function findDeclaredLogGroup(
   logGroups: LogGroupDefinition[],
   functionKey: string,
   functionName?: string
@@ -220,18 +248,18 @@ export function findDeclaredLogGroupName(
 
     if (typeof logGroupName === "string") {
       if (functionName && logGroupName.includes(functionName)) {
-        return logGroupName;
+        return resource;
       }
     } else {
       if (logGroupName[FN_SUB] !== undefined) {
         if (logGroupName[FN_SUB].includes(`\$\{${functionKey}\}`)) {
-          return logGroupName;
+          return resource;
         }
       } else if (logGroupName[FN_JOIN] !== undefined) {
         const params = logGroupName[FN_JOIN];
         for (const value of params[1]) {
           if (value[REF] !== undefined && value[REF] === functionKey) {
-            return logGroupName;
+            return resource;
           }
         }
       }
@@ -239,7 +267,36 @@ export function findDeclaredLogGroupName(
   }
 }
 
-function declareNewLogGroup(resources: Resources, lambda: LambdaFunction) {
+function findSubscriptionsInTemplate(resources: Resources) {
+  return Object.entries(resources)
+    .filter(([_, resource]) => resource.Type === SUBSCRIPTION_FILTER_TYPE)
+    .map(([key, subscriptionResource]) => {
+      return { key, subscriptionResource };
+    });
+}
+
+function isSubscriptionAlreadyDeclared(
+  subscriptions: SubscriptionDefinition[],
+  logGroupName: string | { [fn: string]: any },
+  logGroupKey: string
+) {
+  for (const subscription of subscriptions) {
+    const subscribedLogGroupName =
+      subscription.subscriptionResource.Properties.LogGroupName;
+    if (
+      typeof subscribedLogGroupName === "string" &&
+      subscribedLogGroupName.includes(logGroupKey)
+    ) {
+      return true;
+    }
+    if (subscribedLogGroupName === logGroupName) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function addLogGroupToTemplate(resources: Resources, lambda: LambdaFunction) {
   const functionKey = lambda.key;
   const logGroupKey = `${functionKey}${LOG_GROUP}`;
 
@@ -255,13 +312,13 @@ function declareNewLogGroup(resources: Resources, lambda: LambdaFunction) {
   return LogGroupName;
 }
 
-function addSubscription(
+function addSubscriptionToTemplate(
   resources: Resources,
   forwarderArn: string,
   functionKey: string,
   LogGroupName: string | { [fn: string]: any }
 ) {
-  const subscriptionName = `${functionKey}${SUBSCRIPTION}`;
+  const subscriptionName = `${functionKey}${LOG_GROUP}${SUBSCRIPTION}`;
   const subscription = {
     Type: SUBSCRIPTION_FILTER_TYPE,
     Properties: {
