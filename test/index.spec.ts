@@ -194,7 +194,7 @@ describe("Macro", () => {
         `${LAMBDA_KEY}LogGroup`
       );
       expect(output.fragment[RESOURCES]).toHaveProperty(
-        `${LAMBDA_KEY}Subscription`
+        `${LAMBDA_KEY}LogGroupSubscription`
       );
     });
 
