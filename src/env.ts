@@ -36,21 +36,7 @@ export interface Configuration {
 
 // Same interface as Configuration above, except all parameters are optional, since user does
 // not have to provide the values (in which case we will use the default configuration below).
-interface CfnParams {
-  addLayers?: boolean;
-  apiKey?: string;
-  apiKMSKey?: string;
-  site?: string;
-  logLevel?: string;
-  flushMetricsToLogs?: boolean;
-  enableXrayTracing?: boolean;
-  enableDDTracing?: boolean;
-  forwarderArn?: string;
-  enableEnhancedMetrics?: boolean;
-  service?: string;
-  env?: string;
-  stackName?: string;
-}
+interface CfnParams extends Partial<Configuration> {}
 
 const apiKeyEnvVar = "DD_API_KEY";
 const apiKeyKMSEnvVar = "DD_KMS_API_KEY";
