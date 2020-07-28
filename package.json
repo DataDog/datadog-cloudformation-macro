@@ -19,12 +19,11 @@
     "eslint": "^7.5.0",
     "jest": "^26.1.0",
     "prettier": "^2.0.5",
-    "ts-jest": "^26.1.2",
+    "ts-jest": "^26.1.4",
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "aws-sdk": "^2.712.0",
-    "serverless": "^1.74.1"
+    "aws-sdk": "^2.712.0"
   },
   "jest": {
     "verbose": true,
