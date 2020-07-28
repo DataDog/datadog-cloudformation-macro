@@ -50,7 +50,7 @@ describe("setEnvConfiguration", () => {
         Code: {},
       },
       key: "FunctionKey",
-      type: RuntimeType.PYTHON,
+      runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
     };
     const config = {
@@ -96,7 +96,7 @@ describe("setEnvConfiguration", () => {
         Environment: { Variables: originalEnvVars },
       },
       key: "FunctionKey",
-      type: RuntimeType.PYTHON,
+      runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
     };
     const config = {
