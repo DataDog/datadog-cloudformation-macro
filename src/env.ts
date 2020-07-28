@@ -13,25 +13,25 @@ export interface Configuration {
   logLevel: string;
   // Whether the log forwarder integration is enabled by default
   flushMetricsToLogs: boolean;
-  // Enable tracing on Lambda functions and API Gateway integrations using X-Ray. Defaults to true
+  // Enable enhanced metrics on Lambda functions. Defaults to true.
+  enableEnhancedMetrics: boolean;
+  // Enable tracing on Lambda functions using X-Ray. Defaults to true
   enableXrayTracing: boolean;
   // Enable tracing on Lambda function using dd-trace, datadog's APM library.
   enableDDTracing: boolean;
   // When set, the macro will subscribe the lambdas to the forwarder with the given arn.
   forwarderArn?: string;
-  // Enable enhanced metrics on Lambda functions. Defaults to true.
-  enableEnhancedMetrics: boolean;
+  // If a forwarder is provided and any lambdas have dynamically generated names,
+  // the stack name will be required to create the necessary CloudWatch subscriptions.
+  // If a forwarder is provided with dynamically named lambdas, and a stack name is not provided,
+  // the subscription will not be added.
+  stackName?: string;
   // When set, the macro will use this value to add the 'service' tag to all lambdas,
   // but will not override existing 'service' tags on individual lambdas or those set in Globals.
   service?: string;
   // When set, the macro will use this value to add the 'env' tag to all lambdas,
   // but will not override existing 'env' tags on individual lambdas or those set in Globals.
   env?: string;
-  // If a forwarder is provided and any lambdas have dynamically generated names,
-  // the stack name will be required to create the necessary CloudWatch subscriptions.
-  // If a forwarder is provided with dynamically named lambdas, and a stack name is not provided,
-  // the subscription will not be added.
-  stackName?: string;
 }
 
 // Same interface as Configuration above, except all parameters are optional, since user does
