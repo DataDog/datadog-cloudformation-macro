@@ -50,7 +50,7 @@ export function findLambdas(resources: Resources) {
       }
 
       const properties = resource.Properties;
-      let runtime = properties[RUNTIME];
+      const runtime = properties[RUNTIME];
       let runtimeType = RuntimeType.UNSUPPORTED;
 
       if (runtime !== undefined && runtime in runtimeLookup) {
@@ -67,11 +67,7 @@ export function findLambdas(resources: Resources) {
     .filter((lambda) => lambda !== undefined) as LambdaFunction[];
 }
 
-export function applyLayers(
-  region: string,
-  lambdas: LambdaFunction[],
-  layers: LayerJSON
-) {
+export function applyLayers(region: string, lambdas: LambdaFunction[], layers: LayerJSON) {
   const regionRuntimes = layers.regions[region];
   if (regionRuntimes === undefined) {
     return;
@@ -82,8 +78,7 @@ export function applyLayers(
       return;
     }
     const runtime = lambda.runtime;
-    const layerARN =
-      runtime !== undefined ? regionRuntimes[runtime] : undefined;
+    const layerARN = runtime !== undefined ? regionRuntimes[runtime] : undefined;
     if (layerARN !== undefined) {
       const currentLayers = lambda.properties.Layers ?? [];
       if (!new Set(currentLayers).has(layerARN)) {

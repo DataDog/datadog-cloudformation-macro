@@ -49,7 +49,7 @@ export enum TracingMode {
 
 function findIamRole(resources: Resources, lambda: LambdaFunction) {
   const role = lambda.properties.Role;
-  let roleKey = undefined;
+  let roleKey;
   if (typeof role !== "string") {
     const roleComponents: string[] = role[FN_GET_ATT];
     if (roleComponents !== undefined) {
@@ -76,11 +76,7 @@ export function getTracingMode(config: Configuration) {
   return TracingMode.NONE;
 }
 
-export function enableTracing(
-  tracingMode: TracingMode,
-  lambdas: LambdaFunction[],
-  resources: Resources
-) {
+export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[], resources: Resources) {
   if (tracingMode === TracingMode.XRAY || tracingMode === TracingMode.HYBRID) {
     const xrayPolicies = {
       Effect: ALLOW,
@@ -93,7 +89,7 @@ export function enableTracing(
 
       if (role === undefined) {
         throw new MissingIamRoleError(
-          `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`
+          `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`,
         );
       }
 
@@ -107,20 +103,17 @@ export function enableTracing(
           policyDocument.Statement = [statement, xrayPolicies];
         }
       } else {
-        const PolicyName = { [FN_JOIN]: ["-", [lambda.key, POLICY]] };
-        const PolicyDocument = {
+        const policyName = { [FN_JOIN]: ["-", [lambda.key, POLICY]] };
+        const policyDocument = {
           Version: POLICY_DOCUMENT_VERSION,
           Statement: xrayPolicies,
         };
-        role.Policies = [{ PolicyName, PolicyDocument }];
+        role.Policies = [{ PolicyName: policyName, PolicyDocument: policyDocument }];
       }
       lambda.properties.TracingConfig = { Mode: ACTIVE };
     });
   }
-  if (
-    tracingMode === TracingMode.HYBRID ||
-    tracingMode === TracingMode.DD_TRACE
-  ) {
+  if (tracingMode === TracingMode.HYBRID || tracingMode === TracingMode.DD_TRACE) {
     lambdas.forEach((lambda) => {
       const environment = lambda.properties.Environment ?? {};
       const envVariables = environment.Variables ?? {};

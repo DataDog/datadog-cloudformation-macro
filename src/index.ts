@@ -1,10 +1,6 @@
 import * as layers from "./layers.json";
 
-import {
-  getConfigFromCfnMappings,
-  getConfigFromCfnParams,
-  setEnvConfiguration,
-} from "./env";
+import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration } from "./env";
 import { findLambdas, applyLayers, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError } from "./tracing";
 import { addServiceAndEnvTags } from "./tags";
@@ -110,7 +106,7 @@ export const handler = async (event: InputEvent, _: any) => {
       lambdas,
       config.stackName,
       config.forwarderArn,
-      cloudWatchLogs
+      cloudWatchLogs,
     );
   }
 

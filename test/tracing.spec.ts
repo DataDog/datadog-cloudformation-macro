@@ -1,9 +1,4 @@
-import {
-  enableTracing,
-  TracingMode,
-  IamRoleProperties,
-  MissingIamRoleError,
-} from "../src/tracing";
+import { enableTracing, TracingMode, IamRoleProperties, MissingIamRoleError } from "../src/tracing";
 import { LambdaFunction, RuntimeType } from "../src/layer";
 
 function mockLambdaFunction() {
@@ -40,9 +35,7 @@ function mockResources() {
             },
           ],
         },
-        ManagedPolicyArns: [
-          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-        ],
+        ManagedPolicyArns: ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"],
       },
     },
     HelloWorldFunction: {
@@ -63,8 +56,7 @@ describe("enableTracing", () => {
     const tracingMode = TracingMode.HYBRID;
     const lambda = mockLambdaFunction();
     const resources: Record<string, any> = mockResources();
-    const iamRole: IamRoleProperties =
-      resources.HelloWorldFunctionRole.Properties;
+    const iamRole: IamRoleProperties = resources.HelloWorldFunctionRole.Properties;
     enableTracing(tracingMode, [lambda], resources);
 
     expect(lambda.properties.TracingConfig).toEqual({ Mode: "Active" });
@@ -93,8 +85,7 @@ describe("enableTracing", () => {
     const tracingMode = TracingMode.DD_TRACE;
     const lambda = mockLambdaFunction();
     const resources: Record<string, any> = mockResources();
-    const iamRole: IamRoleProperties =
-      resources.HelloWorldFunctionRole.Properties;
+    const iamRole: IamRoleProperties = resources.HelloWorldFunctionRole.Properties;
     enableTracing(tracingMode, [lambda], resources);
 
     expect(lambda.properties.TracingConfig).toBeUndefined();
@@ -108,8 +99,7 @@ describe("enableTracing", () => {
     const tracingMode = TracingMode.XRAY;
     const lambda = mockLambdaFunction();
     const resources: Record<string, any> = mockResources();
-    const iamRole: IamRoleProperties =
-      resources.HelloWorldFunctionRole.Properties;
+    const iamRole: IamRoleProperties = resources.HelloWorldFunctionRole.Properties;
     enableTracing(tracingMode, [lambda], resources);
 
     expect(lambda.properties.TracingConfig).toEqual({ Mode: "Active" });
@@ -136,9 +126,7 @@ describe("enableTracing", () => {
     enableTracing(tracingMode, [lambda], resources);
 
     expect(lambda.properties.TracingConfig).toBeUndefined();
-    expect(
-      resources.HelloWorldFunctionRole.Properties["Policies"]
-    ).toBeUndefined();
+    expect(resources.HelloWorldFunctionRole.Properties.Policies).toBeUndefined();
   });
 
   it("throws MissingIamRoleError if IAM role is not found", () => {
@@ -174,7 +162,7 @@ describe("enableTracing", () => {
     } catch (err) {
       expect(err).toBeInstanceOf(MissingIamRoleError);
       expect(err.message).toEqual(
-        `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`
+        `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`,
       );
     }
   });

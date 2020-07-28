@@ -94,24 +94,15 @@ export function getConfigFromCfnParams(params: CfnParams) {
   };
 }
 
-export function setEnvConfiguration(
-  config: Configuration,
-  lambdas: LambdaFunction[]
-) {
+export function setEnvConfiguration(config: Configuration, lambdas: LambdaFunction[]) {
   lambdas.forEach((lambda) => {
     const environment = lambda.properties.Environment ?? {};
     const envVariables = environment.Variables ?? {};
 
-    if (
-      config.apiKey !== undefined &&
-      envVariables[apiKeyEnvVar] === undefined
-    ) {
+    if (config.apiKey !== undefined && envVariables[apiKeyEnvVar] === undefined) {
       envVariables[apiKeyEnvVar] = config.apiKey;
     }
-    if (
-      config.apiKMSKey !== undefined &&
-      envVariables[apiKeyKMSEnvVar] === undefined
-    ) {
+    if (config.apiKMSKey !== undefined && envVariables[apiKeyKMSEnvVar] === undefined) {
       envVariables[apiKeyKMSEnvVar] = config.apiKMSKey;
     }
     if (envVariables[siteURLEnvVar] === undefined) {

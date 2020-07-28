@@ -16,39 +16,32 @@ function mockCloudWatchLogs(
       logGroup: CloudWatchLogs.LogGroup;
       filters?: CloudWatchLogs.DescribeSubscriptionFiltersResponse;
     }
-  >
+  >,
 ) {
   return {
-    describeLogGroups: jest
-      .fn()
-      .mockImplementation(({ logGroupNamePrefix }) => {
-        let response: CloudWatchLogs.DescribeLogGroupsResponse = {};
-        for (const logGroupName of Object.keys(logGroups)) {
-          if (logGroupName.startsWith(logGroupNamePrefix)) {
-            const lg = logGroups[logGroupName].logGroup;
-            if (response.logGroups === undefined) {
-              response.logGroups = [lg];
-            } else {
-              response.logGroups.push(lg);
-            }
+    describeLogGroups: jest.fn().mockImplementation(({ logGroupNamePrefix }) => {
+      const response: CloudWatchLogs.DescribeLogGroupsResponse = {};
+      for (const logGroupName of Object.keys(logGroups)) {
+        if (logGroupName.startsWith(logGroupNamePrefix)) {
+          const lg = logGroups[logGroupName].logGroup;
+          if (response.logGroups === undefined) {
+            response.logGroups = [lg];
+          } else {
+            response.logGroups.push(lg);
           }
         }
-        return { promise: () => Promise.resolve(response) };
-      }),
-    describeSubscriptionFilters: jest
-      .fn()
-      .mockImplementation(({ logGroupName }) => {
-        const response = logGroups[logGroupName]?.filters ?? {};
-        return { promise: () => Promise.resolve(response) };
-      }),
+      }
+      return { promise: () => Promise.resolve(response) };
+    }),
+    describeSubscriptionFilters: jest.fn().mockImplementation(({ logGroupName }) => {
+      const response = logGroups[logGroupName]?.filters ?? {};
+      return { promise: () => Promise.resolve(response) };
+    }),
   };
 }
 
-function mockResources(
-  lambdas: LambdaFunction[],
-  logGroups?: LogGroupDefinition[]
-) {
-  let resources: Record<string, any> = {};
+function mockResources(lambdas: LambdaFunction[], logGroups?: LogGroupDefinition[]) {
+  const resources: Record<string, any> = {};
   for (const lambda of lambdas) {
     resources[lambda.key] = {
       Type: "AWS::Lambda::Function",
@@ -63,13 +56,13 @@ function mockResources(
   return resources;
 }
 
-function mockLambdaFunction(key: string, FunctionName?: string) {
+function mockLambdaFunction(key: string, functionName?: string) {
   return {
     properties: {
       Handler: "app.handler",
       Runtime: "nodejs12.x",
       Role: "role-arn",
-      FunctionName,
+      FunctionName: functionName,
     },
     key,
     runtimeType: RuntimeType.NODE,
@@ -77,15 +70,12 @@ function mockLambdaFunction(key: string, FunctionName?: string) {
   } as LambdaFunction;
 }
 
-function mockLogGroupResource(
-  key: string,
-  LogGroupName: string | Record<string, any>
-) {
+function mockLogGroupResource(key: string, logGroupName: string | Record<string, any>) {
   return {
     key,
     logGroupResource: {
       Type: "AWS::Logs::LogGroup",
-      Properties: { LogGroupName },
+      Properties: { LogGroupName: logGroupName },
     },
   };
 }
@@ -101,13 +91,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
         filters: {},
       },
     });
-    await addCloudWatchForwarderSubscriptions(
-      resources,
-      [lambda],
-      undefined,
-      forwarder,
-      cloudWatchLogs as any
-    );
+    await addCloudWatchForwarderSubscriptions(resources, [lambda], undefined, forwarder, cloudWatchLogs as any);
     expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({
       logGroupNamePrefix: "/aws/lambda/MyLambdaFunction",
     });
@@ -138,7 +122,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       [lambda],
       "stack-name",
       "forwarder-arn",
-      cloudWatchLogs as any
+      cloudWatchLogs as any,
     );
     expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({
       logGroupNamePrefix: "/aws/lambda/stack-name-",
@@ -176,13 +160,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
         },
       },
     });
-    await addCloudWatchForwarderSubscriptions(
-      resources,
-      [lambda],
-      undefined,
-      "forwarder-arn",
-      cloudWatchLogs as any
-    );
+    await addCloudWatchForwarderSubscriptions(resources, [lambda], undefined, "forwarder-arn", cloudWatchLogs as any);
     expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({
       logGroupNamePrefix: logGroupName,
     });
@@ -193,10 +171,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
   });
 
   it("log groups are not created, but are already declared", async () => {
-    const explicitlyNamedLambda = mockLambdaFunction(
-      "FunctionOneKey",
-      "MyLambdaFunction"
-    );
+    const explicitlyNamedLambda = mockLambdaFunction("FunctionOneKey", "MyLambdaFunction");
     const dynamicallyNamedLambda = mockLambdaFunction("FunctionTwoKey");
     const lambdas = [explicitlyNamedLambda, dynamicallyNamedLambda];
 
@@ -218,20 +193,11 @@ describe("addCloudWatchForwarderSubscriptions", () => {
         },
       },
     };
-    const declaredLogGroups = [
-      explicitlyNamedLogGroup,
-      dynamicallyNamedLogGroup,
-    ];
+    const declaredLogGroups = [explicitlyNamedLogGroup, dynamicallyNamedLogGroup];
 
     const resources = mockResources(lambdas, declaredLogGroups);
     const cloudWatchLogs = mockCloudWatchLogs({});
-    await addCloudWatchForwarderSubscriptions(
-      resources,
-      lambdas,
-      "stack-name",
-      "forwarder-arn",
-      cloudWatchLogs as any
-    );
+    await addCloudWatchForwarderSubscriptions(resources, lambdas, "stack-name", "forwarder-arn", cloudWatchLogs as any);
 
     expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledTimes(2);
     expect(cloudWatchLogs.describeLogGroups).toHaveBeenNthCalledWith(1, {
@@ -276,13 +242,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     const lambda = mockLambdaFunction("FunctionKey", "MyLambdaFunction");
     const resources = mockResources([lambda]);
     const cloudWatchLogs = mockCloudWatchLogs({});
-    await addCloudWatchForwarderSubscriptions(
-      resources,
-      [lambda],
-      undefined,
-      "forwarder-arn",
-      cloudWatchLogs as any
-    );
+    await addCloudWatchForwarderSubscriptions(resources, [lambda], undefined, "forwarder-arn", cloudWatchLogs as any);
     expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({
       logGroupNamePrefix: "/aws/lambda/MyLambdaFunction",
     });
@@ -324,13 +284,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
         },
       },
     });
-    await addCloudWatchForwarderSubscriptions(
-      resources,
-      [lambda],
-      undefined,
-      forwarderArn,
-      cloudWatchLogs as any
-    );
+    await addCloudWatchForwarderSubscriptions(resources, [lambda], undefined, forwarderArn, cloudWatchLogs as any);
 
     expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({
       logGroupNamePrefix: "/aws/lambda/MyLambdaFunction",
@@ -366,14 +320,14 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     };
     // The declared subcription has a slightly different key than the one the macro would use to
     // create a new subscription, but the macro does not rely on the key to find existing subs.
-    resources["FunctionKeySubscription"] = declaredSubscription;
+    resources.FunctionKeySubscription = declaredSubscription;
     const cloudWatchLogs = mockCloudWatchLogs({});
     await addCloudWatchForwarderSubscriptions(
       resources,
       [lambda],
       undefined, // no need for stackName, lambda is explicitly named
       "forwarder-arn",
-      cloudWatchLogs as any
+      cloudWatchLogs as any,
     );
 
     expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({
@@ -396,10 +350,7 @@ describe("findExistingLogGroupWithFunctionName", () => {
   it("returns undefined if log group with FunctionName doesn't exist", async () => {
     const functionName = "MyLambdaFunction";
     const cloudWatchLogs = mockCloudWatchLogs({});
-    const result = await findExistingLogGroupWithFunctionName(
-      cloudWatchLogs as any,
-      functionName
-    );
+    const result = await findExistingLogGroupWithFunctionName(cloudWatchLogs as any, functionName);
 
     expect(result).toBeUndefined();
   });
@@ -412,10 +363,7 @@ describe("findExistingLogGroupWithFunctionName", () => {
         filters: {},
       },
     });
-    const result = await findExistingLogGroupWithFunctionName(
-      cloudWatchLogs as any,
-      functionName
-    );
+    const result = await findExistingLogGroupWithFunctionName(cloudWatchLogs as any, functionName);
 
     expect(result).toEqual({ logGroupName: "/aws/lambda/MyLambdaFunction" });
   });
@@ -425,10 +373,7 @@ describe("getExistingLambdaLogGroupOnStack", () => {
   it("returns empty array if no lambda log groups exist", async () => {
     const stackName = "stack-name";
     const cloudWatchLogs = mockCloudWatchLogs({});
-    const result = await getExistingLambdaLogGroupsOnStack(
-      cloudWatchLogs as any,
-      stackName
-    );
+    const result = await getExistingLambdaLogGroupsOnStack(cloudWatchLogs as any, stackName);
 
     expect(result).toBeDefined();
     expect(result).toEqual([]);
@@ -444,14 +389,9 @@ describe("getExistingLambdaLogGroupOnStack", () => {
         filters: {},
       },
     });
-    const result = await getExistingLambdaLogGroupsOnStack(
-      cloudWatchLogs as any,
-      stackName
-    );
+    const result = await getExistingLambdaLogGroupsOnStack(cloudWatchLogs as any, stackName);
 
-    expect(result).toEqual([
-      { logGroupName: "/aws/lambda/stack-name-DynamicallyGeneratedName" },
-    ]);
+    expect(result).toEqual([{ logGroupName: "/aws/lambda/stack-name-DynamicallyGeneratedName" }]);
   });
 });
 
@@ -462,11 +402,7 @@ describe("canSubscribeLogGroup", () => {
     const cloudWatchLogs = mockCloudWatchLogs({
       [logGroupName]: { logGroup: { logGroupName } },
     });
-    const canSubscribe = await canSubscribeLogGroup(
-      cloudWatchLogs as any,
-      logGroupName,
-      functionNamePrefix
-    );
+    const canSubscribe = await canSubscribeLogGroup(cloudWatchLogs as any, logGroupName, functionNamePrefix);
     expect(canSubscribe).toBeTruthy();
   });
 
@@ -487,11 +423,7 @@ describe("canSubscribeLogGroup", () => {
         },
       },
     });
-    const canSubscribe = await canSubscribeLogGroup(
-      cloudWatchLogs as any,
-      logGroupName,
-      functionNamePrefix
-    );
+    const canSubscribe = await canSubscribeLogGroup(cloudWatchLogs as any, logGroupName, functionNamePrefix);
     expect(canSubscribe).toBeFalsy();
   });
 
@@ -512,11 +444,7 @@ describe("canSubscribeLogGroup", () => {
         },
       },
     });
-    const canSubscribe = await canSubscribeLogGroup(
-      cloudWatchLogs as any,
-      logGroupName,
-      functionNamePrefix
-    );
+    const canSubscribe = await canSubscribeLogGroup(cloudWatchLogs as any, logGroupName, functionNamePrefix);
     expect(canSubscribe).toBeTruthy();
   });
 });
@@ -533,11 +461,7 @@ describe("findDeclaredLogGroup", () => {
   ];
 
   it("finds log group when declared with 'FunctionName'", () => {
-    const logGroup = findDeclaredLogGroup(
-      logGroups,
-      "FunctionKey",
-      "MyLambdaFunction"
-    );
+    const logGroup = findDeclaredLogGroup(logGroups, "FunctionKey", "MyLambdaFunction");
     let logGroupName: string | { [fn: string]: any } = "";
     if (logGroup) {
       logGroupName = logGroup.logGroupResource.Properties.LogGroupName;

@@ -1,10 +1,5 @@
-import {
-  getConfigFromCfnMappings,
-  getConfigFromCfnParams,
-  defaultConfiguration,
-  setEnvConfiguration,
-} from "../src/env";
-import { LambdaFunction, RuntimeType } from "../src/layer";
+import { getConfigFromCfnMappings, getConfigFromCfnParams, defaultConfiguration, setEnvConfiguration } from "./env";
+import { LambdaFunction, RuntimeType } from "./layer";
 
 describe("getConfig", () => {
   it("correctly parses parameters from Mappings", () => {

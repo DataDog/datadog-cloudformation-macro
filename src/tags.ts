@@ -3,16 +3,12 @@ import { LambdaFunction } from "./layer";
 const SERVICE = "service";
 const ENV = "env";
 
-export function addServiceAndEnvTags(
-  lambdas: LambdaFunction[],
-  service: string | undefined,
-  env: string | undefined
-) {
+export function addServiceAndEnvTags(lambdas: LambdaFunction[], service: string | undefined, env: string | undefined) {
   // Add the tag for each function, unless a 'service' or 'env' tag already exists.
   lambdas.forEach((lambda) => {
     let functionServiceTagExists = false;
     let functionEnvTagExists = false;
-    let tags = lambda.properties.Tags ?? [];
+    const tags = lambda.properties.Tags ?? [];
 
     for (const tag of tags) {
       if (tag.Key === SERVICE) {
