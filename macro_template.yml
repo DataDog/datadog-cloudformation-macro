@@ -21,10 +21,10 @@ Resources:
                 - logs:DescribeLogGroups
                 - logs:DescribeSubscriptionFilters
               Resource: "*"
-  DatadogCfnMacroWithCli:
+  DatadogCfnMacro:
     Type: AWS::CloudFormation::Macro
     Properties:
-      Name: DatadogCfnMacroWithCli
+      Name: DatadogCfnMacro
       FunctionName:
         Fn::GetAtt:
           - DatadogLambdaFunction
