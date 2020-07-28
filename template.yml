@@ -8,25 +8,23 @@ Mappings:
       Version: 0.1.0
 
 Resources:
-  DatadogMacroFunction:
+  DatadogLambdaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      Handler: src/index.handler
+      CodeUri: dist
+      Handler: index.handler
       Runtime: nodejs12.x
       Policies:
-        - PolicyName: CloudWatchPermissions
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:DescribeLogGroups
-                  - logs:DescribeSubscriptionFilters
-                Resource: "*"
-  DatadogCfnMacro:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:DescribeLogGroups
+                - logs:DescribeSubscriptionFilters
+              Resource: "*"
+  DatadogCfnMacroWithSam:
     Type: AWS::CloudFormation::Macro
     Properties:
-      Name: DatadogCfnMacro
+      Name: DatadogCfnMacroWithSam
       FunctionName:
         Fn::GetAtt:
           - DatadogLambdaFunction
