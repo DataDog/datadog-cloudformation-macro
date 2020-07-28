@@ -61,7 +61,7 @@ export const handler = async (event: InputEvent, _: any) => {
   let config;
 
   // Use the parameters given for this specific transform/macro if it exists
-  const transformParams = event.params;
+  const transformParams = event.params ?? {};
   if (Object.keys(transformParams).length > 0) {
     config = getConfigFromCfnParams(transformParams);
   } else {
@@ -146,12 +146,13 @@ function lambdaHasDynamicallyGeneratedName(lambdas: LambdaFunction[]) {
 
 export function getMissingStackNameErrorMsg(lambdaKeys: string[]) {
   return (
-    "A forwarder ARN was provided with one or more dynamically named lambda function resources, " +
-    "but the stack name was not provided. Without the stack name, " +
-    "the dynamically generated function name cannot be predicted and corresponding CloudWatch subscriptions cannot be added. " +
-    `To fix this, either add a 'FunctionName' property to the following resources: ${lambdaKeys.toString()}, ` +
-    "or include the 'stackName' under the Datadog parameters. If deploying with SAM, add the stack name by adding " +
-    "'stackName: ${AWS::StackName}' under the Datadog macro parameters. If deploying with CDK, add the stack name " +
-    "by adding 'stackName: my-stack.stackName' under the CfnMapping with the id 'Datadog'"
+    "A forwarder ARN was provided with one or more dynamically named lambda function resources," +
+    " but the stack name was not provided. Without the stack name, the dynamically generated" +
+    "function name can't be predicted and CloudWatch subscriptions can't be added. \n" +
+    "To fix this, either add a 'FunctionName' property to the following resources:" +
+    `${lambdaKeys.toString()}, or include the 'stackName' under the Datadog parameters. \n` +
+    "If deploying with SAM, add 'stackName: !Ref \"AWS::StackName\"' under the Datadog" +
+    "transform parameters. If deploying with CDK, add the stack name by adding " +
+    "'stackName: <your stack object>.stackName' under the CfnMapping with the id 'Datadog'."
   );
 }
