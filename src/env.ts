@@ -11,11 +11,11 @@ export interface Configuration {
   site: string;
   // The log level, (set to DEBUG for extended logging)
   logLevel: string;
-  // Whether the log forwarder integration is enabled by default
+  // Whether the log forwarder integration is enabled. Defaults to true.
   flushMetricsToLogs: boolean;
   // Enable enhanced metrics on Lambda functions. Defaults to true.
   enableEnhancedMetrics: boolean;
-  // Enable tracing on Lambda functions using X-Ray. Defaults to true
+  // Enable tracing on Lambda functions using X-Ray. Defaults to false.
   enableXrayTracing: boolean;
   // Enable tracing on Lambda function using dd-trace, datadog's APM library.
   enableDDTracing: boolean;
@@ -52,7 +52,7 @@ export const defaultConfiguration: Configuration = {
   flushMetricsToLogs: true,
   logLevel: "info",
   site: "datadoghq.com",
-  enableXrayTracing: true,
+  enableXrayTracing: false,
   enableDDTracing: true,
   enableEnhancedMetrics: true,
 };
