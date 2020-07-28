@@ -19,7 +19,6 @@
     "eslint": "^7.5.0",
     "jest": "^26.1.0",
     "prettier": "^2.0.5",
-    "serverless-plugin-typescript": "^1.1.9",
     "ts-jest": "^26.1.2",
     "typescript": "^3.9.5"
   },

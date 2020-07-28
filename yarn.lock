@@ -6344,15 +6344,6 @@ semver@^6.0.0, semver@^6.1.1, semver@^6.2.0, semver@^6.3.0:
   resolved "https://registry.yarnpkg.com/semver/-/semver-6.3.0.tgz#ee0a64c8af5e8ceea67687b133761e1becbd1d3d"
   integrity sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==
 
-serverless-plugin-typescript@^1.1.9:
-  version "1.1.9"
-  resolved "https://registry.yarnpkg.com/serverless-plugin-typescript/-/serverless-plugin-typescript-1.1.9.tgz#75348a93f3f5dae19aad7006d51a545618892028"
-  integrity sha512-OmZrD1uArNx+1MPrXck39zsa76k/H7QYOOAg/Uz9xpLGJPUsvW0pXRSE9NN7LRid6IuM/WpY3VWkD5DPusY4cA==
-  dependencies:
-    fs-extra "^7.0.1"
-    globby "^9.2.0"
-    lodash "^4.17.11"
-
 serverless@^1.74.1:
   version "1.75.1"
   resolved "https://registry.yarnpkg.com/serverless/-/serverless-1.75.1.tgz#1f67ec205f77258ab5708a1d905c2d5582176d64"
