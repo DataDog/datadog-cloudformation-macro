@@ -8,7 +8,7 @@ To install the macro, you will need to clone this repository and deploy a separa
 
 You can start by first cloning this repository:
 ```bash
-git clone <TODO insert .git here>
+git clone https://github.com/DataDog/datadog-cloudformation-macro.git
 ```
 
 Make sure you have all the dependencies installed:
