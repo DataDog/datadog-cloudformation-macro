@@ -36,7 +36,7 @@ Now you are ready to deploy the macro to your AWS account.
 
     ```bash
     aws cloudformation package \
-        --template-file template.yml \
+        --template-file macro_template.yml \
         --s3-bucket <your bucket name here> \
         --output-template-file packaged.template
     ```
