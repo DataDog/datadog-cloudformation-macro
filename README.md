@@ -23,7 +23,9 @@ yarn build    # Yarn users
 npm run build # NPM users
 ```
 
-Now you are ready to deploy the macro to your AWS account.
+Now you are ready to deploy the macro to your AWS account. 
+
+**Note:** You only need to deploy the macro once for a given region in your account, and it can be used for all serverless applications deployed in that same region.
 
 ### Deploying macro resources
 
@@ -50,9 +52,9 @@ Now you are ready to deploy the macro to your AWS account.
 
 ## Usage
 
-### Deploying with SAM or AWS CLI
+### SAM
 
-If you are deploying your serverless application with SAM, add the Datadog CloudFormation macro to your `template.yml` under the `Transform` section, after the required SAM transform:
+If you are deploying your serverless application with SAM, add the Datadog CloudFormation macro under the `Transform` section in your your `template.yml` file, after the required SAM transform:
 
 ```yaml
 Transform:
@@ -60,9 +62,9 @@ Transform:
   - Name: DatadogCfnMacro
 ```
 
-### Deploying with CDK
+### CDK
 
-If you are deploying your severless application with CDK, add the CloudFormation macro to your [Stack object](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) constructor.
+If you are deploying your serverless application with CDK, add the CloudFormation macro to your [Stack object](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) constructor.
 
 **Typescript**
 ```typescript
