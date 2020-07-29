@@ -25,7 +25,7 @@ npm run build # NPM users
 
 Now you are ready to deploy the macro to your AWS account. 
 
-**Note:** You only need to deploy the macro once for a given region in your account, and it can be used for all serverless applications deployed in that same region.
+**Note:** You only need to deploy the macro once for a given region in your account, and it can be used for all CloudFormation stacks deployed in that same region.
 
 ### Deploying macro resources
 
