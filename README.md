@@ -169,7 +169,7 @@ class CdkStack extends cdk.Stack {
           forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
           stackName: this.stackName,
           service: "service-name",
-          env: "test"
+          env: "test",
         },
       },
     });
@@ -192,6 +192,7 @@ class CdkStack(core.Stack):
           "forwarderArn": "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
           "stackName": self.stackName,
           "service": "service-name",
+          "env": "test",
         }
       })
 ```
