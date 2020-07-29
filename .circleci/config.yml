@@ -32,13 +32,13 @@ jobs:
           key: v1-dependencies-<< parameters.node >>-{{ checksum "package.json" }}
 
 workflows:
-  node-v1015:
+  node-v1022:
     jobs:
       - verify_build:
-          node: "10.15"
+          node: "10.22"
 
-  node-v127:
+  node-v12183:
     jobs:
       - verify_build:
-          node: "12.7"
+          node: "12.18.3"
           upload_coverage: "true"
