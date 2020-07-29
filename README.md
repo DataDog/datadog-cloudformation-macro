@@ -62,7 +62,7 @@ Transform:
   - Name: DatadogCfnMacro
 ```
 
-### CDK
+### AWS CDK
 
 If you are deploying your serverless application with CDK, add the CloudFormation macro to your [Stack object](https://docs.aws.amazon.com/cdk/api/latest/docs/@aws-cdk_core.Stack.html) constructor.
 
@@ -135,9 +135,9 @@ service: ""
 env: ""
 ```
 
-### Deploying with SAM or AWS CLI
+### SAM
 
-You can configure the library by add the following section to the `Parameters` under the `Transform` section of your template file (usually `template.yml`):
+You can configure the library by add the following section to the `Parameters` under the `Transform` section of your `template.yml` file:
 
 ```yaml
 Transform:
@@ -147,9 +147,10 @@ Transform:
         forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder"
         stackName: !Ref "AWS::StackName"
         service: "service-name"
+        env: "test"
 ```
 
-### Deploying with CDK
+### AWS CDK
 
 To configure the library when deploying with CDK, add a `CfnMapping` to your `Stack` object: 
 
@@ -168,6 +169,7 @@ class CdkStack extends cdk.Stack {
           forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
           stackName: this.stackName,
           service: "service-name",
+          env: "test"
         },
       },
     });
