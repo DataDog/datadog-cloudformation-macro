@@ -1,10 +1,10 @@
 # Datadog CloudFormation Macro
 
-This CloudFormation macro automatically installs Datadog Lambda layers to your Python and Node.js Lambda functions to collect custom metrics and traces.
+This CloudFormation macro automatically installs Datadog Lambda layers to your Python and Node.js Lambda functions to collect custom metrics and traces. Find more information about the Datadog [Python](https://github.com/DataDog/datadog-lambda-layer-python) and [Node.js](https://github.com/DataDog/datadog-lambda-layer-js) Lambda layers in their repositories.
 
 ## Installation
 
-To install the macro, you will need to clone this repository and deploy a separate CloudFormation stack. This deployment will include a CloudFormation macro resource and a Lambda function that is invoked when the macro is run. Deploying this stack on your AWS account will give you access to use the macro on your other Lambda functions.
+To make the macro available for use in your AWS account, clone this repository and deploy the CloudFormation stack. This deployment includes a CloudFormation macro resource and a Lambda function that is invoked when the macro is run. Deploying this stack enables you to use the macro on other CloudFormation stacks deployed in the same account. For details about how defining a macro in your account works, see [this CloudFormation documentation page](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html).
 
 You can start by first cloning this repository:
 ```bash
@@ -86,7 +86,7 @@ class CdkStack(core.Stack):
         self.add_transform("DatadogCfnMacro")
 ```
 
-Note: For both SAM and CDK deployments, if you did not modify the provided `macro_template.yml` file when you installed the macro, then the macro name should be `DatadogCfnMacro`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
+Note: For both SAM and CDK deployments, if you did not modify the provided `macro_template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogCfnMacro`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
 
 ## Configuration
 
@@ -211,4 +211,3 @@ module.exports.myHandler = datadog(
 @datadog_lambda_wrapper # This wrapper is NOT needed when using this plugin
 def lambda_handler(event, context):
 ```
-
