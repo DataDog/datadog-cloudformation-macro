@@ -1,5 +1,6 @@
 {
   "name": "datadog-cfn-macro",
+  "version": "0.1.0",
   "description": "Cloudformation macro to automatically instrument python and node functions with datadog tracing",
   "repository": "https://github.com/DataDog/datadog-cloudformation-macro",
   "scripts": {
@@ -7,22 +8,22 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage": "jest --coverage",
-    "lint": "tslint --project tsconfig.json",
-    "check-formatting": "prettier --check src/**",
-    "format": "prettier --write src/**"
+    "lint": "eslint -c .eslintrc . --ext .ts",
+    "check-formatting": "prettier --check src/** test/**",
+    "format": "prettier --write src/** test/**"
   },
   "devDependencies": {
     "@types/jest": "^26.0.4",
+    "@typescript-eslint/eslint-plugin": "^3.7.1",
+    "@typescript-eslint/parser": "^3.7.1",
+    "eslint": "^7.5.0",
     "jest": "^26.1.0",
     "prettier": "^2.0.5",
-    "serverless-plugin-typescript": "^1.1.9",
-    "ts-jest": "^26.1.2",
-    "tslint": "^6.1.2",
+    "ts-jest": "^26.1.4",
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "aws-sdk": "^2.712.0",
-    "serverless": "^1.74.1"
+    "aws-sdk": "^2.712.0"
   },
   "jest": {
     "verbose": true,
@@ -39,7 +40,7 @@
       "lcovonly",
       "text-summary"
     ],
-    "testRegex": "(src\\/).*(\\.spec\\.ts)$",
+    "testRegex": "(test\\/).*(\\.spec\\.ts)$",
     "testPathIgnorePatterns": [
       "\\.snap$",
       "<rootDir>/node_modules/"

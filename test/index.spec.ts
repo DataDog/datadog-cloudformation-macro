@@ -19,25 +19,15 @@ jest.mock("aws-sdk", () => {
   return {
     CloudWatchLogs: jest.fn().mockImplementation((_) => {
       return {
-        describeLogGroups: (
-          params: DescribeLogGroupsRequest,
-          callback?: Function
-        ) => {
+        describeLogGroups: (params: DescribeLogGroupsRequest, callback?: any) => {
           const response: DescribeLogGroupsResponse = {
-            logGroups: [
-              { logGroupName: `/aws/lambda/stack-name-${LAMBDA_KEY}` },
-            ],
+            logGroups: [{ logGroupName: `/aws/lambda/stack-name-${LAMBDA_KEY}` }],
           };
           return {
-            promise: jest
-              .fn()
-              .mockImplementation(() => Promise.resolve(response)),
+            promise: jest.fn().mockImplementation(() => Promise.resolve(response)),
           };
         },
-        describeSubscriptionFilters: (
-          params: DescribeSubscriptionFiltersRequest,
-          callback: any
-        ) => {
+        describeSubscriptionFilters: (params: DescribeSubscriptionFiltersRequest, callback?: any) => {
           return {
             promise: jest.fn().mockImplementation(() => Promise.resolve([])),
           };
@@ -47,12 +37,8 @@ jest.mock("aws-sdk", () => {
   };
 });
 
-function mockInputEvent(
-  params: any,
-  mappings: any,
-  logGroups?: LogGroupDefinition[]
-) {
-  let fragment: Record<string, any> = {
+function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefinition[]) {
+  const fragment: Record<string, any> = {
     AWSTemplateFormatVersion: "2010-09-09",
     Description: "Sample lambda with SAM and Datadog macro",
     Resources: {
@@ -71,9 +57,7 @@ function mockInputEvent(
               },
             ],
           },
-          ManagedPolicyArns: [
-            "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-          ],
+          ManagedPolicyArns: ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"],
         },
       },
       HelloWorldFunction: {
@@ -93,13 +77,11 @@ function mockInputEvent(
     },
   };
   if (mappings !== undefined) {
-    fragment["Mappings"] = mappings;
+    fragment.Mappings = mappings;
   }
   if (logGroups) {
-    if (logGroups) {
-      for (const lg of logGroups) {
-        fragment.Resources[lg.key] = lg.logGroupResource;
-      }
+    for (const lg of logGroups) {
+      fragment.Resources[lg.key] = lg.logGroupResource;
     }
   }
   return {
@@ -107,7 +89,7 @@ function mockInputEvent(
     accountId: "test-accountId",
     fragment,
     transformId: "DDCloudformationMacro",
-    params: params || {},
+    params: params ?? {},
     requestId: "test-requestId",
     templateParameterValues: {},
   } as InputEvent;
@@ -124,8 +106,7 @@ describe("Macro", () => {
       };
       const inputEvent = mockInputEvent(transformParams, mappings);
       const output = await handler(inputEvent, {});
-      const lambdaProperties: FunctionProperties =
-        output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
+      const lambdaProperties: FunctionProperties = output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
       expect(lambdaProperties.Environment).toMatchObject({
         Variables: { DD_SITE: "transform-params-site" },
       });
@@ -139,8 +120,7 @@ describe("Macro", () => {
       };
       const inputEvent = mockInputEvent({}, mappings);
       const output = await handler(inputEvent, {});
-      const lambdaProperties: FunctionProperties =
-        output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
+      const lambdaProperties: FunctionProperties = output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
 
       expect(lambdaProperties.Environment).toMatchObject({
         Variables: { DD_SITE: "mappings-site" },
@@ -152,19 +132,15 @@ describe("Macro", () => {
     it("adds lambda layers by default", async () => {
       const inputEvent = mockInputEvent({}, {}); // Use default configuration
       const output = await handler(inputEvent, {});
-      const lambdaProperties: FunctionProperties =
-        output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
-      expect(lambdaProperties.Layers).toEqual([
-        expect.stringMatching(/arn\:aws\:lambda\:us\-east\-1\:.*\:layer\:.*/),
-      ]);
+      const lambdaProperties: FunctionProperties = output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
+      expect(lambdaProperties.Layers).toEqual([expect.stringMatching(/arn:aws:lambda:us-east-1:.*:layer:.*/)]);
     });
 
     it("skips adding lambda layers when addLayers is false", async () => {
       const params = { addLayers: false };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
-      const lambdaProperties: FunctionProperties =
-        output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
+      const lambdaProperties: FunctionProperties = output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
       expect(lambdaProperties.Layers).toBeUndefined();
     });
   });
@@ -174,10 +150,8 @@ describe("Macro", () => {
       const params = { enableXrayTracing: false };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
-      const iamRole: IamRoleProperties =
-        output.fragment[RESOURCES][`${LAMBDA_KEY}Role`][PROPERTIES];
-      const lambdaProperties: FunctionProperties =
-        output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
+      const iamRole: IamRoleProperties = output.fragment[RESOURCES][`${LAMBDA_KEY}Role`][PROPERTIES];
+      const lambdaProperties: FunctionProperties = output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
       expect(lambdaProperties.TracingConfig).toBeUndefined();
       expect(iamRole.Policies).toBeUndefined();
     });
@@ -190,12 +164,8 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
 
       // Mocked response includes implicitly created log group, should not redeclare
-      expect(output.fragment[RESOURCES]).not.toHaveProperty(
-        `${LAMBDA_KEY}LogGroup`
-      );
-      expect(output.fragment[RESOURCES]).toHaveProperty(
-        `${LAMBDA_KEY}LogGroupSubscription`
-      );
+      expect(output.fragment[RESOURCES]).not.toHaveProperty(`${LAMBDA_KEY}LogGroup`);
+      expect(output.fragment[RESOURCES]).toHaveProperty(`${LAMBDA_KEY}LogGroupSubscription`);
     });
 
     it("macro fails when forwarder is provided & at least one lambda has a dynamically generated name, but no stack name is given", async () => {
@@ -204,9 +174,7 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
 
       expect(output.status).toEqual("failure");
-      expect(output.errorMessage).toEqual(
-        getMissingStackNameErrorMsg([LAMBDA_KEY])
-      );
+      expect(output.errorMessage).toEqual(getMissingStackNameErrorMsg([LAMBDA_KEY]));
     });
   });
 
@@ -214,8 +182,7 @@ describe("Macro", () => {
     it("does not add or modify tags when neither 'service' nor 'env' are provided", async () => {
       const inputEvent = mockInputEvent({}, {});
       const output = await handler(inputEvent, {});
-      const lambdaProperties: FunctionProperties =
-        output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
+      const lambdaProperties: FunctionProperties = output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
       expect(lambdaProperties.Tags).toBeUndefined();
     });
 
@@ -226,8 +193,7 @@ describe("Macro", () => {
       };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
-      const lambdaProperties: FunctionProperties =
-        output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
+      const lambdaProperties: FunctionProperties = output.fragment[RESOURCES][LAMBDA_KEY][PROPERTIES];
       expect(lambdaProperties.Tags).toEqual([
         { Value: "my-service", Key: "service" },
         { Value: "test", Key: "env" },

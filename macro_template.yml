@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Datadog CloudFormation Macro
+
+Mappings:
+  Constants:
+    DatadogCfnMacro:
+      Version: 0.1.0
+
+Resources:
+  DatadogLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:DescribeLogGroups
+                - logs:DescribeSubscriptionFilters
+              Resource: "*"
+  DatadogCfnMacro:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Name: DatadogCfnMacro
+      FunctionName:
+        Fn::GetAtt:
+          - DatadogLambdaFunction
+          - Arn

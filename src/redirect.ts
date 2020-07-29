@@ -2,8 +2,7 @@ import { LambdaFunction, RuntimeType } from "./layer";
 
 export const DD_HANDLER_ENV_VAR = "DD_LAMBDA_HANDLER";
 export const PYTHON_HANDLER = "datadog_lambda.handler.handler";
-export const JS_HANDLER_WITH_LAYERS =
-  "/opt/nodejs/node_modules/datadog-lambda-js/handler.handler";
+export const JS_HANDLER_WITH_LAYERS = "/opt/nodejs/node_modules/datadog-lambda-js/handler.handler";
 export const JS_HANDLER = "node_modules/datadog-lambda-js/dist/handler.handler";
 
 /**
@@ -12,10 +11,7 @@ export const JS_HANDLER = "node_modules/datadog-lambda-js/dist/handler.handler";
  * 'DD_LAMBDA_HANDLER' is set to the original handler in the lambda's environment for the
  * replacement handler to find.
  */
-export function redirectHandlers(
-  lambdas: LambdaFunction[],
-  addLayers: boolean
-) {
+export function redirectHandlers(lambdas: LambdaFunction[], addLayers: boolean) {
   lambdas.forEach((lambda) => {
     setEnvDatadogHandler(lambda);
     const handler = getDDHandler(lambda.runtimeType, addLayers);
@@ -26,10 +22,7 @@ export function redirectHandlers(
   });
 }
 
-function getDDHandler(
-  lambdaRuntime: RuntimeType | undefined,
-  addLayers: boolean
-) {
+function getDDHandler(lambdaRuntime: RuntimeType | undefined, addLayers: boolean) {
   if (lambdaRuntime === undefined) {
     return;
   }

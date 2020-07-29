@@ -11,27 +11,27 @@ export interface Configuration {
   site: string;
   // The log level, (set to DEBUG for extended logging)
   logLevel: string;
-  // Whether the log forwarder integration is enabled by default
+  // Whether the log forwarder integration is enabled. Defaults to true.
   flushMetricsToLogs: boolean;
-  // Enable tracing on Lambda functions and API Gateway integrations using X-Ray. Defaults to true
+  // Enable enhanced metrics on Lambda functions. Defaults to true.
+  enableEnhancedMetrics: boolean;
+  // Enable tracing on Lambda functions using X-Ray. Defaults to false.
   enableXrayTracing: boolean;
   // Enable tracing on Lambda function using dd-trace, datadog's APM library.
   enableDDTracing: boolean;
   // When set, the macro will subscribe the lambdas to the forwarder with the given arn.
   forwarderArn?: string;
-  // Enable enhanced metrics on Lambda functions. Defaults to true.
-  enableEnhancedMetrics: boolean;
+  // If a forwarder is provided and any lambdas have dynamically generated names,
+  // the stack name will be required to create the necessary CloudWatch subscriptions.
+  // If a forwarder is provided with dynamically named lambdas, and a stack name is not provided,
+  // the subscription will not be added.
+  stackName?: string;
   // When set, the macro will use this value to add the 'service' tag to all lambdas,
   // but will not override existing 'service' tags on individual lambdas or those set in Globals.
   service?: string;
   // When set, the macro will use this value to add the 'env' tag to all lambdas,
   // but will not override existing 'env' tags on individual lambdas or those set in Globals.
   env?: string;
-  // If a forwarder is provided and any lambdas have dynamically generated names,
-  // the stack name will be required to create the necessary CloudWatch subscriptions.
-  // If a forwarder is provided with dynamically named lambdas, and a stack name is not provided,
-  // the subscription will not be added.
-  stackName?: string;
 }
 
 // Same interface as Configuration above, except all parameters are optional, since user does
@@ -52,7 +52,7 @@ export const defaultConfiguration: Configuration = {
   flushMetricsToLogs: true,
   logLevel: "info",
   site: "datadoghq.com",
-  enableXrayTracing: true,
+  enableXrayTracing: false,
   enableDDTracing: true,
   enableEnhancedMetrics: true,
 };
@@ -94,24 +94,15 @@ export function getConfigFromCfnParams(params: CfnParams) {
   };
 }
 
-export function setEnvConfiguration(
-  config: Configuration,
-  lambdas: LambdaFunction[]
-) {
+export function setEnvConfiguration(config: Configuration, lambdas: LambdaFunction[]) {
   lambdas.forEach((lambda) => {
     const environment = lambda.properties.Environment ?? {};
     const envVariables = environment.Variables ?? {};
 
-    if (
-      config.apiKey !== undefined &&
-      envVariables[apiKeyEnvVar] === undefined
-    ) {
+    if (config.apiKey !== undefined && envVariables[apiKeyEnvVar] === undefined) {
       envVariables[apiKeyEnvVar] = config.apiKey;
     }
-    if (
-      config.apiKMSKey !== undefined &&
-      envVariables[apiKeyKMSEnvVar] === undefined
-    ) {
+    if (config.apiKMSKey !== undefined && envVariables[apiKeyKMSEnvVar] === undefined) {
       envVariables[apiKeyKMSEnvVar] = config.apiKMSKey;
     }
     if (envVariables[siteURLEnvVar] === undefined) {

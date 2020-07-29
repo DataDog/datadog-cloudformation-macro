@@ -1,27 +1,17 @@
-import {
-  findLambdas,
-  LambdaFunction,
-  RuntimeType,
-  applyLayers,
-  LayerJSON,
-} from "../src/layer";
+import { findLambdas, LambdaFunction, RuntimeType, applyLayers, LayerJSON } from "../src/layer";
 
-function mockFunctionResource(Runtime: string) {
+function mockFunctionResource(runtime: string) {
   return {
     Type: "AWS::Lambda::Function",
     Properties: {
       Handler: "app.handler",
       Role: "role-arn",
-      Runtime,
+      Runtime: runtime,
     },
   };
 }
 
-function mockLambdaFunction(
-  key: string,
-  runtime: string,
-  runtimeType: RuntimeType
-) {
+function mockLambdaFunction(key: string, runtime: string, runtimeType: RuntimeType) {
   return {
     properties: {
       Handler: "app.handler",
@@ -63,11 +53,7 @@ describe("findLambdas", () => {
 
 describe("applyLayers", () => {
   it("adds a layer array if none are present", () => {
-    const lambda = mockLambdaFunction(
-      "FunctionKey",
-      "nodejs12.x",
-      RuntimeType.NODE
-    );
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
     const layers: LayerJSON = {
       regions: { "us-east-1": { "nodejs12.x": "node:1" } },
     };
@@ -77,11 +63,7 @@ describe("applyLayers", () => {
   });
 
   it("appends to the layer array if already present", () => {
-    const lambda = mockLambdaFunction(
-      "FunctionKey",
-      "nodejs12.x",
-      RuntimeType.NODE
-    );
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
     const layers: LayerJSON = {
       regions: { "us-east-1": { "nodejs12.x": "node:1" } },
     };
@@ -92,11 +74,7 @@ describe("applyLayers", () => {
   });
 
   it("doesn't add duplicate layers", () => {
-    const lambda = mockLambdaFunction(
-      "FunctionKey",
-      "nodejs12.x",
-      RuntimeType.NODE
-    );
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
     const layers: LayerJSON = {
       regions: { "us-east-1": { "nodejs12.x": "node:1" } },
     };
@@ -107,11 +85,7 @@ describe("applyLayers", () => {
   });
 
   it("only adds layer when region is found", () => {
-    const lambda = mockLambdaFunction(
-      "FunctionKey",
-      "nodejs12.x",
-      RuntimeType.NODE
-    );
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
     const layers: LayerJSON = {
       regions: { "us-east-1": { "nodejs12.x": "node:1" } },
     };
@@ -121,11 +95,7 @@ describe("applyLayers", () => {
   });
 
   it("only adds layers when layer arn is found", () => {
-    const lambda = mockLambdaFunction(
-      "FunctionKey",
-      "nodejs12.x",
-      RuntimeType.NODE
-    );
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
     const layers: LayerJSON = {
       regions: { "us-east-1": { "python2.7": "python:1" } },
     };
@@ -135,11 +105,7 @@ describe("applyLayers", () => {
   });
 
   it("doesn't add layer when runtime is not supported", () => {
-    const lambda = mockLambdaFunction(
-      "FunctionKey",
-      "go1.10",
-      RuntimeType.UNSUPPORTED
-    );
+    const lambda = mockLambdaFunction("FunctionKey", "go1.10", RuntimeType.UNSUPPORTED);
     const layers: LayerJSON = {
       regions: { "us-east-1": { "python2.7": "python:1" } },
     };

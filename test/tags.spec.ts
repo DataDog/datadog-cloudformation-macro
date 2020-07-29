@@ -1,13 +1,13 @@
 import { RuntimeType, LambdaFunction } from "../src/layer";
 import { addServiceAndEnvTags } from "../src/tags";
 
-function mockLambdaFunction(Tags: any) {
+function mockLambdaFunction(tags: any) {
   return {
     properties: {
       Handler: "app.handler",
       Runtime: "nodejs12.x",
       Role: "role-arn",
-      Tags,
+      Tags: tags,
     },
     key: "FunctionKey",
     runtimeType: RuntimeType.NODE,
