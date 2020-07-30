@@ -1,5 +1,5 @@
 Component,Origin,License,Copyright
-aws-sdk,github.com/aws/aws-sdk-js,Apache-2.0,Copyright 2012-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+aws-sdk,github.com/aws/aws-sdk-js,Apache-2.0,"Copyright 2012-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved."
 base64-js,github.com/beatgammit/base64-js,MIT,Copyright (c) 2014 Jameson Little
 buffer,github.com/feross/buffer,MIT,"Copyright (c) Feross Aboukhadijeh, and other contributors."
 events,github.com/Gozala/events,MIT,"Copyright Joyent, Inc. and other Node contributors."
