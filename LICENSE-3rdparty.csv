@@ -1,0 +1,15 @@
+Component,Origin,License,Copyright
+aws-sdk,github.com/aws/aws-sdk-js,Apache-2.0,"Copyright 2012-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved."
+base64-js,github.com/beatgammit/base64-js,MIT,Copyright (c) 2014 Jameson Little
+buffer,github.com/feross/buffer,MIT,"Copyright (c) Feross Aboukhadijeh, and other contributors."
+events,github.com/Gozala/events,MIT,"Copyright Joyent, Inc. and other Node contributors."
+ieee754,github.com/feross/ieee754,BSD-3-Clause,"Copyright (c) 2008, Fair Oaks Labs, Inc. All rights reserved."
+isarray,github.com/juliangruber/isarray,MIT,Copyright (c) 2013 Julian Gruber
+jmespath,github.com/jmespath/jmespath.js,Apache 2.0,Copyright 2014 James Saryerwinnie
+punycode,github.com/bestiejs/punycode.js,MIT,Copyright Mathias Bynens
+querystring,github.com/Gozala/querystring,MIT,"Copyright 2012 Irakli Gozalishvili. All rights reserved."
+sax,github.com/isaacs/sax-js,ISC,Copyright (c) Isaac Z. Schlueter and Contributors
+url,github.com/defunctzombie/node-url,MIT,"Copyright Joyent, Inc. and other Node contributors."
+uuid,github.com/kelektiv/node-uuid,MIT,Copyright (c) 2010-2016 Robert Kieffer and other contributors
+xml2js,github.com/Leonidas-from-XIV/node-xml2js,MIT,"Copyright 2010, 2011, 2012, 2013. All rights reserved."
+xmlbuilder,github.com/oozcitak/xmlbuilder-js,MIT,Copyright (c) 2013 Ozgur Ozcitak
