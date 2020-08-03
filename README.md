@@ -125,7 +125,7 @@ enableDDTracing: true
 # When set, the plugin will try to subscribe the lambda's cloudwatch log groups to the forwarder with the given arn.
 forwarderArn: arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder
 
-# The name of the CloudFromation stack being deployed. Only required when a forwarderArn is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For how to add this parameter for SAM and CDK, see examples below.
+# The name of the CloudFormation stack being deployed. Only required when a forwarderArn is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For how to add this parameter for SAM and CDK, see examples below.
 stackName: ""
 
 # When set, the macro will add a `service` tag to all Lambda functions with the provided value.
