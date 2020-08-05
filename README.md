@@ -4,55 +4,15 @@ This CloudFormation macro automatically installs Datadog Lambda layers to your P
 
 ## Installation
 
-To make the macro available for use in your AWS account, clone this repository and deploy the CloudFormation stack. This deployment includes a CloudFormation macro resource and a Lambda function that is invoked when the macro is run. Deploying this stack enables you to use the macro on other CloudFormation stacks deployed in the same account. For details about how defining a macro in your account works, see [this CloudFormation documentation page](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html).
+[![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=datadog-cfn-macro&templateURL=https://datadog-cloudformation-macro.s3.amazonaws.com/aws/dd-cfn-macro/latest.yaml)
 
-You can start by first cloning this repository:
-```bash
-git clone https://github.com/DataDog/datadog-cloudformation-macro.git
-```
-
-Make sure you have all the dependencies installed:
-```bash
-yarn install # Yarn users
-npm install  # NPM users
-```
-
-And run the build script:
-```bash
-yarn build    # Yarn users
-npm run build # NPM users
-```
-
-Now you are ready to deploy the macro to your AWS account. 
+To make the macro available for use in your AWS account, deploy the CloudFormation stack with the button provided above. This deployment includes a CloudFormation macro resource and a Lambda function that is invoked when the macro is run. Deploying this stack enables you to use the macro on other CloudFormation stacks deployed in the same account. For details about how defining a macro in your account works, see [this CloudFormation documentation page](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html).
 
 **Note:** You only need to deploy the macro once for a given region in your account, and it can be used for all CloudFormation stacks deployed in that same region.
 
-### Deploying macro resources
-
-1. You will need an S3 bucket to store the CloudFormation artifacts for the macro.
-    * If you don't have one already, you can create one with `aws s3 mb s3://<bucket name>`
-
-2. Package the provided CloudFormation template (`macro_template.yml`). This includes a Lambda function and a CloudFormation macro resource. The provided template uses the AWS Serverless Application Model, so it must be transformed before deployment.
-
-    ```bash
-    aws cloudformation package \
-        --template-file macro_template.yml \
-        --s3-bucket <your bucket name here> \
-        --output-template-file packaged.template
-    ```
-
-3. Deploy the packaged CloudFormation template to a CloudFormation stack:
-
-    ```bash
-    aws cloudformation deploy \
-        --stack-name datadog-cfn-macro \
-        --template-file packaged.template \
-        --capabilities CAPABILITY_IAM
-    ```
-
 ## Usage
 
-### SAM
+### AWS SAM
 
 If you are deploying your serverless application with SAM, add the Datadog CloudFormation macro under the `Transform` section in your your `template.yml` file, after the required SAM transform:
 
