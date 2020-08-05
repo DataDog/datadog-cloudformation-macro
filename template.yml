@@ -25,10 +25,6 @@ Parameters:
     Description: ARN for the Permissions Boundary Policy
 
 Conditions:
-  IsAWSChina:
-    Fn::Equals:
-      - Ref: AWS::Partition
-      - "aws-cn"
   SetFunctionName:
     Fn::Not:
       - Fn::Equals:
