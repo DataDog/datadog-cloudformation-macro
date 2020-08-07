@@ -49,80 +49,89 @@ export interface FunctionProperties {
 }
 
 export const handler = async (event: InputEvent, _: any) => {
-  const region = event.region;
-  const fragment = event.fragment;
-  const resources = fragment.Resources;
-  const lambdas = findLambdas(resources);
-
-  let config;
-
-  // Use the parameters given for this specific transform/macro if it exists
-  const transformParams = event.params ?? {};
-  if (Object.keys(transformParams).length > 0) {
-    config = getConfigFromCfnParams(transformParams);
-  } else {
-    // If not, check the Mappings section for Datadog config parameters as well
-    config = getConfigFromCfnMappings(fragment.Mappings);
-  }
-  setEnvConfiguration(config, lambdas);
-
-  // Apply layers
-  if (config.addLayers) {
-    applyLayers(region, lambdas, layers);
-  }
-
-  // Enable tracing
-  const tracingMode = getTracingMode(config);
   try {
-    enableTracing(tracingMode, lambdas, resources);
-  } catch (err) {
-    if (err instanceof MissingIamRoleError) {
-      return {
-        requestId: event.requestId,
-        status: FAILURE,
-        fragment,
-        errorMessage: err.message,
-      };
-    }
-  }
+    const region = event.region;
+    const fragment = event.fragment;
+    const resources = fragment.Resources;
+    const lambdas = findLambdas(resources);
 
-  // Cloudwatch forwarder subscriptions
-  if (config.forwarderArn) {
-    const dynamicallyNamedLambdas = lambdaHasDynamicallyGeneratedName(lambdas);
-    if (dynamicallyNamedLambdas.length > 0 && config.stackName === undefined) {
-      const lambdaKeys = dynamicallyNamedLambdas.map((lambda) => lambda.key);
-      const errorMessage = getMissingStackNameErrorMsg(lambdaKeys);
-      return {
-        requestId: event.requestId,
-        status: FAILURE,
-        fragment,
-        errorMessage,
-      };
+    let config;
+
+    // Use the parameters given for this specific transform/macro if it exists
+    const transformParams = event.params ?? {};
+    if (Object.keys(transformParams).length > 0) {
+      config = getConfigFromCfnParams(transformParams);
+    } else {
+      // If not, check the Mappings section for Datadog config parameters as well
+      config = getConfigFromCfnMappings(fragment.Mappings);
+    }
+    setEnvConfiguration(config, lambdas);
+
+    // Apply layers
+    if (config.addLayers) {
+      applyLayers(region, lambdas, layers);
     }
 
-    const cloudWatchLogs = new CloudWatchLogs({ region });
-    await addCloudWatchForwarderSubscriptions(
-      resources,
-      lambdas,
-      config.stackName,
-      config.forwarderArn,
-      cloudWatchLogs,
-    );
+    // Enable tracing
+    const tracingMode = getTracingMode(config);
+    try {
+      enableTracing(tracingMode, lambdas, resources);
+    } catch (err) {
+      if (err instanceof MissingIamRoleError) {
+        return {
+          requestId: event.requestId,
+          status: FAILURE,
+          fragment,
+          errorMessage: err.message,
+        };
+      }
+    }
+
+    // Cloudwatch forwarder subscriptions
+    if (config.forwarderArn) {
+      const dynamicallyNamedLambdas = lambdaHasDynamicallyGeneratedName(lambdas);
+      if (dynamicallyNamedLambdas.length > 0 && config.stackName === undefined) {
+        const lambdaKeys = dynamicallyNamedLambdas.map((lambda) => lambda.key);
+        const errorMessage = getMissingStackNameErrorMsg(lambdaKeys);
+        return {
+          requestId: event.requestId,
+          status: FAILURE,
+          fragment,
+          errorMessage,
+        };
+      }
+
+      const cloudWatchLogs = new CloudWatchLogs({ region });
+      await addCloudWatchForwarderSubscriptions(
+        resources,
+        lambdas,
+        config.stackName,
+        config.forwarderArn,
+        cloudWatchLogs,
+      );
+    }
+
+    // Add service & env tags if values are provided
+    if (config.service || config.env) {
+      addServiceAndEnvTags(lambdas, config.service, config.env);
+    }
+
+    // Redirect handlers
+    redirectHandlers(lambdas, config.addLayers);
+
+    return {
+      requestId: event.requestId,
+      status: SUCCESS,
+      fragment,
+    };
+  } catch (error) {
+    return {
+      requestId: event.requestId,
+      status: FAILURE,
+      fragment: event.fragment,
+      errorMessage: error.message,
+    };
   }
-
-  // Add service & env tags if values are provided
-  if (config.service || config.env) {
-    addServiceAndEnvTags(lambdas, config.service, config.env);
-  }
-
-  // Redirect handlers
-  redirectHandlers(lambdas, config.addLayers);
-
-  return {
-    requestId: event.requestId,
-    status: SUCCESS,
-    fragment,
-  };
 };
 
 /**
