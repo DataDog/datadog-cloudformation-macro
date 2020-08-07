@@ -4,9 +4,23 @@ This CloudFormation macro automatically installs Datadog Lambda layers to your P
 
 ## Installation
 
-[![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home#/stacks/create/review?stackName=datadog-cfn-macro&templateURL=https://datadog-cloudformation-macro.s3.amazonaws.com/aws/dd-cfn-macro/latest.yaml)
+To make the macro available for use in your AWS account, deploy a CloudFormation stack with a Datadog provided template. This deployment includes a CloudFormation macro resource and a Lambda function that is invoked when the macro is run. Deploying this stack enables you to use the macro on other CloudFormation stacks deployed in the same account. For details about how defining a macro in your account works, see [this CloudFormation documentation page](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html).
 
-To make the macro available for use in your AWS account, deploy the CloudFormation stack with the button provided above. This deployment includes a CloudFormation macro resource and a Lambda function that is invoked when the macro is run. Deploying this stack enables you to use the macro on other CloudFormation stacks deployed in the same account. For details about how defining a macro in your account works, see [this CloudFormation documentation page](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html).
+If you are installing for the first time, deploy with:
+```bash
+aws cloudformation create-stack \
+  --stack-name datadog-cfn-macro \
+  --template-url https://datadog-cloudformation-template.s3.amazonaws.com/aws/cfn-macro/latest.yml \
+  --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
+```
+
+If you are updating the macro after a new release, use the `update-stack` method instead with the same paramters:
+```bash
+aws cloudformation update-stack \
+  --stack-name datadog-cfn-macro \
+  --template-url https://datadog-cloudformation-template.s3.amazonaws.com/aws/cfn-macro/latest.yml \
+  --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
+```
 
 **Note:** You only need to deploy the macro once for a given region in your account, and it can be used for all CloudFormation stacks deployed in that same region.
 
