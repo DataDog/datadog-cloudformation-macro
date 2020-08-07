@@ -45,5 +45,5 @@ aws cloudformation wait stack-create-complete --stack-name $STACK_NAME --region 
 
 echo "Completed stack creation"
 
-# echo "Cleaning up stack"
+echo "Cleaning up stack"
 aws cloudformation delete-stack --stack-name $STACK_NAME  --region $AWS_REGION
