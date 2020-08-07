@@ -8,11 +8,8 @@ import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 import { CloudWatchLogs } from "aws-sdk";
 
-export const RESOURCES = "Resources";
 const SUCCESS = "success";
 const FAILURE = "failure";
-export const TYPE = "Type";
-export const PROPERTIES = "Properties";
 
 export interface Resources {
   [logicalId: string]: {
