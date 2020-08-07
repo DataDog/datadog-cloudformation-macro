@@ -23,7 +23,7 @@ if [ "$AWS_ACCOUNT" = "464622532012" ] ; then
 fi
 
 # Run script in this process. This gives us TEMPLATE_URL and MACRO_SOURCE_URL env vars
-. release.sh datadog-cloudformation-macro-staging $CURRENT_VERSION
+. release.sh datadog-cloudformation-template-staging $CURRENT_VERSION
 
 function param {
     KEY=$1
@@ -35,7 +35,7 @@ PARAM_LIST=[$(param SourceZipUrl \"${MACRO_SOURCE_URL}\")]
 echo "Setting params ${PARAM_LIST}"
 
 # Create an instance of the stack
-STACK_NAME="dd-cfn-macro-integration-stack-${RUN_ID}"
+STACK_NAME="cfn-macro-integration-stack-${RUN_ID}"
 echo "Creating stack ${STACK_NAME}"
 aws cloudformation create-stack --stack-name $STACK_NAME --template-url $TEMPLATE_URL --capabilities "CAPABILITY_AUTO_EXPAND" "CAPABILITY_IAM" --on-failure "DELETE" \
     --parameters=$PARAM_LIST --region $AWS_REGION

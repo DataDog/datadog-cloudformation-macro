@@ -55,7 +55,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     fi
 
     # Confirm to proceed
-    read -p "About to bump the version from ${CURRENT_VERSION} to ${VERSION}, create a release dd-cfn-macro-${VERSION} on Github and upload the template.yml to s3://${BUCKET}/aws/dd-cfn-macro/${VERSION}.yml. Continue (y/n)?" CONT
+    read -p "About to bump the version from ${CURRENT_VERSION} to ${VERSION}, create a release cfn-macro-${VERSION} on Github and upload the template.yml to s3://${BUCKET}/aws/cfn-macro/${VERSION}.yml. Continue (y/n)?" CONT
     if [ "$CONT" != "y" ]; then
         echo "Exiting"
         exit 1
@@ -74,33 +74,33 @@ if [ "$PROD_RELEASE" = true ] ; then
     git push origin master
 
     # Create a github release
-    echo "Release dd-cfn-macro-${VERSION} to github"
+    echo "Release cfn-macro-${VERSION} to github"
     go get github.com/github/hub
     ./tools/build_zip.sh "${VERSION}"
 
-    hub release create -a .macro/dd-cfn-macro-${VERSION}.zip -m "dd-cfn-macro-${VERSION}" dd-cfn-macro-${VERSION}
-    TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/dd-cfn-macro/latest.yml"
-    MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/dd-cfn-macro-${VERSION}/dd-cfn-macro-${VERSION}.zip'"
+    hub release create -a .macro/cfn-macro-${VERSION}.zip -m "cfn-macro-${VERSION}" cfn-macro-${VERSION}
+    TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/cfn-macro/latest.yml"
+    MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/cfn-macro-${VERSION}/cfn-macro-${VERSION}.zip'"
 else
-    echo "About to release non-public staging version of macro, upload dd-cfn-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/dd-cfn-macro-staging/${VERSION}.yml"
+    echo "About to release non-public staging version of macro, upload cfn-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/cfn-macro-staging/${VERSION}.yml"
     # Upload to s3 instead of github
     ./tools/build_zip.sh "${VERSION}"
-    aws s3 cp .macro/dd-cfn-macro-${VERSION}.zip s3://${BUCKET}/aws/dd-cfn-macro-staging-zip/dd-cfn-macro-${VERSION}.zip
-    TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/dd-cfn-macro-staging/latest.yml"
-    MACRO_SOURCE_URL="s3://${BUCKET}/aws/dd-cfn-macro-staging-zip/dd-cfn-macro-${VERSION}.zip"
+    aws s3 cp .macro/cfn-macro-${VERSION}.zip s3://${BUCKET}/aws/cfn-macro-staging-zip/cfn-macro-${VERSION}.zip
+    TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/cfn-macro-staging/latest.yml"
+    MACRO_SOURCE_URL="s3://${BUCKET}/aws/cfn-macro-staging-zip/cfn-macro-${VERSION}.zip"
 fi
 
 # Upload the template to the S3 bucket
-echo "Uploading template.yml to s3://${BUCKET}/aws/dd-cfn-macro/${VERSION}.yml"
+echo "Uploading template.yml to s3://${BUCKET}/aws/cfn-macro/${VERSION}.yml"
 
 if [ "$PROD_RELEASE" = true ] ; then
-    aws s3 cp template.yml s3://${BUCKET}/aws/dd-cfn-macro/${VERSION}.yml \
+    aws s3 cp template.yml s3://${BUCKET}/aws/cfn-macro/${VERSION}.yml \
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-    aws s3 cp template.yml s3://${BUCKET}/aws/dd-cfn-macro/latest.yml \
+    aws s3 cp template.yml s3://${BUCKET}/aws/cfn-macro/latest.yml \
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
 else
-    aws s3 cp template.yml s3://${BUCKET}/aws/dd-cfn-macro-staging/${VERSION}.yml
-    aws s3 cp template.yml s3://${BUCKET}/aws/dd-cfn-macro-staging/latest.yml
+    aws s3 cp template.yml s3://${BUCKET}/aws/cfn-macro-staging/${VERSION}.yml
+    aws s3 cp template.yml s3://${BUCKET}/aws/cfn-macro-staging/latest.yml
 fi
 
 echo "Done uploading the template, and here is the CloudFormation quick launch URL"

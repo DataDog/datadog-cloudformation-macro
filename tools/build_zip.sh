@@ -17,7 +17,7 @@ else
     VERSION=$1
 fi
 
-MACRO_PREFIX="dd-cfn-macro"
+MACRO_PREFIX="cfn-macro"
 MACRO_DIR="../.macro"
 
 function make_path_absolute {
