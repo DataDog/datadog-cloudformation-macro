@@ -40,10 +40,6 @@ aws sts get-caller-identity
 echo "Validating template.yml"
 aws cloudformation validate-template --template-body file://template.yml
 
-# Update layer versions
-echo "Updating layer versions"
-./tools/generate_layers_json.sh
-
 # Build and run test suite
 echo "Running unit tests and build script"
 yarn test 
@@ -72,6 +68,10 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     # Get the latest code
     git pull origin master
+
+    # Update layer versions
+    echo "Updating layer versions"
+    ./tools/generate_layers_json.sh
 
     # Bump version number
     echo "Bumping the current version number to the desired"
