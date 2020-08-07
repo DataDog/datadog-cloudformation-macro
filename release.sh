@@ -40,6 +40,15 @@ aws sts get-caller-identity
 echo "Validating template.yml"
 aws cloudformation validate-template --template-body file://template.yml
 
+# Update layer versions
+echo "Updating layer versions"
+./tools/generate_layers_json.sh
+
+# Build and run test suite
+echo "Running unit tests and build script"
+yarn test 
+yarn build
+
 if [ "$PROD_RELEASE" = true ] ; then
 
     if [[ ! $(./tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
@@ -67,9 +76,10 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Bump version number
     echo "Bumping the current version number to the desired"
     perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" template.yml
+    yarn version --no-git-tag-version --new-version "${VERSION}"
 
     # Commit version number changes to git
-    git add src/ template.yml README.md
+    git add src/ template.yml README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
     git push origin master
 
