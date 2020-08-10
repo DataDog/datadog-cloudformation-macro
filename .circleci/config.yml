@@ -2,7 +2,7 @@ version: 2.1
 
 jobs:
   verify_build:
-    working_directory: ~/repo/serverless
+    working_directory: ~/serverless
     docker:
       - image: circleci/node:<< parameters.node >>
     parameters:
