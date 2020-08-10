@@ -17,7 +17,7 @@ else
     VERSION=$1
 fi
 
-MACRO_PREFIX="cfn-macro"
+MACRO_PREFIX="serverless-macro"
 MACRO_DIR="../.macro"
 
 function make_path_absolute {

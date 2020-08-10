@@ -35,7 +35,7 @@ PARAM_LIST=[$(param SourceZipUrl \"${MACRO_SOURCE_URL}\")]
 echo "Setting params ${PARAM_LIST}"
 
 # Create an instance of the stack
-STACK_NAME="cfn-macro-integration-stack-${RUN_ID}"
+STACK_NAME="serverless-macro-integration-stack-${RUN_ID}"
 echo "Creating stack ${STACK_NAME}"
 aws cloudformation create-stack --stack-name $STACK_NAME --template-url $TEMPLATE_URL --capabilities "CAPABILITY_AUTO_EXPAND" "CAPABILITY_IAM" --on-failure "DELETE" \
     --parameters=$PARAM_LIST --region $AWS_REGION
