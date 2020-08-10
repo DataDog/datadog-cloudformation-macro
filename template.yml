@@ -19,6 +19,10 @@ Parameters:
     Type: String
     Default: ""
     Description: DO NOT CHANGE unless you know what you are doing. Override the default location of the function source code.
+  PermissionsBoundaryArn:
+    Type: String
+    Default: ""
+    Description: ARN for the Permissions Boundary Policy
 
 Conditions:
   SetFunctionName:
@@ -35,6 +39,11 @@ Conditions:
     Fn::Equals:
       - !Select [0, !Split ["/", !Ref SourceZipUrl]]
       - "s3:"
+  SetPermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - Ref: PermissionsBoundaryArn
+          - ""
 
 Resources:
   MacroFunction:
@@ -57,6 +66,11 @@ Resources:
             - { Version: !FindInMap [Constants, DatadogServerlessMacro, Version] }
       Tags:
         dd_serverless_macro_version: !FindInMap [Constants, DatadogServerlessMacro, Version]
+      PermissionsBoundary:
+        Fn::If:
+          - SetPermissionsBoundary
+          - Ref: PermissionsBoundaryArn
+          - Ref: AWS::NoValue
       Policies:
         - Version: "2012-10-17"
           Statement:
