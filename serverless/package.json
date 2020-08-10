@@ -2,7 +2,9 @@
   "name": "datadog-serverless-macro",
   "version": "0.1.0",
   "description": "Cloudformation macro to automatically instrument python and node functions with datadog tracing",
-  "repository": "https://github.com/DataDog/datadog-cloudformation-macro/serverless",
+  "repository": "https://github.com/DataDog/datadog-cloudformation-macro",
+  "author": "Datadog",
+  "license": "Apache-2.0",
   "scripts": {
     "prebuild": "./tools/check_layers_json.sh",
     "build": "tsc",
