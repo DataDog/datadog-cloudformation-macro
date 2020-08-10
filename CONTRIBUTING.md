@@ -8,10 +8,12 @@ Fork, then clone:
 git clone git@github.com:your-username/datadog-cloudformation-macro.git
 ```
 
-Make your change, update tests and ensure the tests pass (install Docker if you haven't):
+Make your change, update tests and ensure the tests pass. 
 
+For the Datadog Serverless Macro:
 ```bash
-./scripts/run_tests.sh
+cd serverless
+yarn test
 ```
 
 Push to your fork and [submit a pull request][pr].
