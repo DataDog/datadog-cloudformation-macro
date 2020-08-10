@@ -1,6 +1,6 @@
 # Datadog Serverless Macro
 
-This CloudFormation macro automatically installs Datadog Lambda layers to your Python and Node.js Lambda functions to collect custom metrics and traces. Find more information about the Datadog [Python](https://github.com/DataDog/datadog-lambda-layer-python) and [Node.js](https://github.com/DataDog/datadog-lambda-layer-js) Lambda layers in their repositories.
+This CloudFormation macro automatically installs the Datadog Lambda Library to your Python and Node.js Lambda functions to collect custom metrics and traces. Find more information about the Datadog [Python](https://github.com/DataDog/datadog-lambda-layer-python) and [Node.js](https://github.com/DataDog/datadog-lambda-layer-js) Lambda Libraries in their repositories.
 
 ## Installation
 
@@ -62,7 +62,7 @@ class CdkStack(core.Stack):
         self.add_transform("DatadogServerlessMacro")
 ```
 
-Note: For both SAM and CDK deployments, if you did not modify the provided `macro_template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerlessMacro`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
+Note: For both SAM and CDK deployments, if you did not modify the provided `template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerlessMacro`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
 
 ## Configuration
 
@@ -99,7 +99,7 @@ enableDDTracing: true
 # When set, the plugin will try to subscribe the lambda's cloudwatch log groups to the forwarder with the given arn.
 forwarderArn: arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder
 
-# The name of the CloudFromation stack being deployed. Only required when a forwarderArn is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For how to add this parameter for SAM and CDK, see examples below.
+# The name of the CloudFormation stack being deployed. Only required when forwarderArn is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For how to add this parameter for SAM and CDK, see examples below.
 stackName: ""
 
 # When set, the macro will add a `service` tag to all Lambda functions with the provided value.
@@ -173,7 +173,7 @@ class CdkStack(core.Stack):
 
 ## How it works
 
-This macro modifies your CloudFormation template to attach the Datadog Lambda Layers for [Node.js](https://github.com/DataDog/datadog-lambda-layer-js) and [Python](https://github.com/DataDog/datadog-lambda-layer-python) to your functions. It redirects to a replacement handler that initializes the Lambda Layers without any required code changes. It also enables X-Ray tracing for your Lambda functions.
+This macro modifies your CloudFormation template to attach the Datadog Lambda Library for [Node.js](https://github.com/DataDog/datadog-lambda-layer-js) and [Python](https://github.com/DataDog/datadog-lambda-layer-python) to your functions. It redirects to a replacement handler that initializes the Lambda Library without any required code changes.
 
 **IMPORTANT NOTE:** Because the plugin automatically wraps your Lambda handler function, you do **NOT** need to wrap your handler function as stated in the Node.js and Python Layer documentation.
 
