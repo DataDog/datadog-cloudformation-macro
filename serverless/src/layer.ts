@@ -117,10 +117,7 @@ export function applyLayers(
 
     if (lambda.runtimeType === RuntimeType.PYTHON) {
       if (pythonLibraryVersion === undefined) {
-        errors.push(
-          `Resource ${lambda.key} has a Python runtime, but no Python Lambda Library version was provided.` +
-            `Please add the 'pythonLibraryVersion' parameter for the Datadog serverless macro.`,
-        );
+        errors.push(getMissingLibraryVersionErrorMsg(lambda.key, "Python", "python"));
         return;
       }
       layerARN = getLayerARN(region, pythonLibraryVersion, lambda.runtime);
@@ -128,10 +125,7 @@ export function applyLayers(
 
     if (lambda.runtimeType === RuntimeType.NODE) {
       if (nodeLibraryVersion === undefined) {
-        errors.push(
-          `Resource ${lambda.key} has a Node.js runtime, but no Node.js Lambda Library version was provided.` +
-            `Please add the 'nodeLibraryVersion' parameter for the Datadog serverless macro.`,
-        );
+        errors.push(getMissingLibraryVersionErrorMsg(lambda.key, "Node.js", "node"));
         return;
       }
       layerARN = getLayerARN(region, nodeLibraryVersion, lambda.runtime);
@@ -151,4 +145,11 @@ export function applyLayers(
 function getLayerARN(region: string, version: number, runtime: string) {
   const layerName = runtimeToLayerName[runtime];
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
+}
+
+export function getMissingLibraryVersionErrorMsg(functionKey: string, formalRuntime: string, paramRuntime: string) {
+  return (
+    `Resource ${functionKey} has a ${formalRuntime} runtime, but no ${formalRuntime} Lambda Library version was provided.` +
+    `Please add the '${paramRuntime}LibraryVersion' parameter for the Datadog serverless macro.`
+  );
 }
