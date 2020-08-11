@@ -70,7 +70,14 @@ You can configure the library by add the following parameters:
 
 ```yaml
 # Whether to add the Lambda Layers, or expect the user to bring their own. Defaults to true.
+# If this is true, 'pythonLibraryVersion' is required if any Lambda function has a Python runtime, and 'nodeLibraryVersion' is required if any Lambda function has a Node.js runtime.
 addLayers: true
+
+# The Python Lambda Library version to install to the Python Lambda functions. This is required if 'addLayers' is true and you are deploying one or more Python Lambda functions. The latest version is 19.
+pythonLibraryVersion: ""
+
+# The Node.js Lambda Library version to install to the Node.js Lambda functions. This is required if 'addLayers' is true and you are deploying one or more Node.js Lambda functions. The latest version is 25.
+nodeLibraryVersion: ""
 
 # The log level, set to DEBUG for extended logging. Defaults to info.
 logLevel: "info"
@@ -118,6 +125,7 @@ Transform:
   - AWS::Serverless-2016-10-31
   - Name: DatadogServerlessMacro
     Parameters: 
+        nodeLibraryVersion: 25
         forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder"
         stackName: !Ref "AWS::StackName"
         service: "service-name"
@@ -140,6 +148,7 @@ class CdkStack extends cdk.Stack {
     new cdk.CfnMapping(this, "Datadog", { // The id for this CfnMapping must be 'Datadog'
       mapping: {
         Parameters: { // This mapping key must be 'Parameters'
+          nodeLibraryVersion: 25,
           forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
           stackName: this.stackName,
           service: "service-name",
@@ -163,6 +172,7 @@ class CdkStack(core.Stack):
     mapping = core.CfnMapping(self, "Datadog", # The id for this CfnMapping must be 'Datadog'
       mapping={
         "Parameters": { # This mapping key must be 'Parameters'
+          "nodeLibraryVersion": 25,
           "forwarderArn": "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
           "stackName": self.stackName,
           "service": "service-name",
