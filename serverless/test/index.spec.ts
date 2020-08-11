@@ -101,6 +101,7 @@ describe("Macro", () => {
       const inputEvent = mockInputEvent(transformParams, mappings);
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.Environment).toMatchObject({
         Variables: { DD_SITE: "transform-params-site" },
       });
@@ -135,7 +136,7 @@ describe("Macro", () => {
       ]);
     });
 
-    it("errors when corresponding lambda layer version is not provided", async () => {
+    it("macro fails when corresponding lambda layer version is not provided", async () => {
       const inputEvent = mockInputEvent({}, {}); // Use default configuration, no lambda layer version provided
       const output = await handler(inputEvent, {});
 
@@ -148,6 +149,7 @@ describe("Macro", () => {
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.Layers).toBeUndefined();
     });
   });
@@ -159,6 +161,7 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const iamRole: IamRoleProperties = output.fragment.Resources[`${LAMBDA_KEY}Role`].Properties;
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.TracingConfig).toBeUndefined();
       expect(iamRole.Policies).toBeUndefined();
     });
@@ -191,6 +194,7 @@ describe("Macro", () => {
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.Tags).toBeUndefined();
     });
 
@@ -203,6 +207,7 @@ describe("Macro", () => {
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.Tags).toEqual([
         { Value: "my-service", Key: "service" },
         { Value: "test", Key: "env" },

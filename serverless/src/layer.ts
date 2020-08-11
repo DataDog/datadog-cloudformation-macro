@@ -149,7 +149,7 @@ function getLayerARN(region: string, version: number, runtime: string) {
 
 export function getMissingLibraryVersionErrorMsg(functionKey: string, formalRuntime: string, paramRuntime: string) {
   return (
-    `Resource ${functionKey} has a ${formalRuntime} runtime, but no ${formalRuntime} Lambda Library version was provided.` +
+    `Resource ${functionKey} has a ${formalRuntime} runtime, but no ${formalRuntime} Lambda Library version was provided. ` +
     `Please add the '${paramRuntime}LibraryVersion' parameter for the Datadog serverless macro.`
   );
 }

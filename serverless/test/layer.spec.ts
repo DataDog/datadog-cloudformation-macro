@@ -1,4 +1,11 @@
-import { findLambdas, LambdaFunction, RuntimeType, applyLayers, DD_ACCOUNT_ID } from "../src/layer";
+import {
+  findLambdas,
+  LambdaFunction,
+  RuntimeType,
+  applyLayers,
+  DD_ACCOUNT_ID,
+  getMissingLibraryVersionErrorMsg,
+} from "../src/layer";
 
 function mockFunctionResource(runtime: string) {
   return {
@@ -113,10 +120,8 @@ describe("applyLayers", () => {
     const errors = applyLayers("us-east-1", [pythonLambda, nodeLambda]);
 
     expect(errors).toEqual([
-      "Resource PythonFunctionKey has a Python runtime, but no Python Lambda Library version was provided." +
-        "Please add the 'pythonLibraryVersion' parameter for the Datadog serverless macro.",
-      "Resource NodeFunctionKey has a Node.js runtime, but no Node.js Lambda Library version was provided." +
-        "Please add the 'nodeLibraryVersion' parameter for the Datadog serverless macro.",
+      getMissingLibraryVersionErrorMsg("PythonFunctionKey", "Python", "python"),
+      getMissingLibraryVersionErrorMsg("NodeFunctionKey", "Node.js", "node"),
     ]);
     expect(pythonLambda.properties.Layers).toBeUndefined();
     expect(nodeLambda.properties.Layers).toBeUndefined();
