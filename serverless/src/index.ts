@@ -1,5 +1,3 @@
-import * as layers from "./layers.json";
-
 import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration } from "./env";
 import { findLambdas, applyLayers, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError } from "./tracing";
@@ -66,7 +64,15 @@ export const handler = async (event: InputEvent, _: any) => {
 
     // Apply layers
     if (config.addLayers) {
-      applyLayers(region, lambdas, layers);
+      const errors = applyLayers(region, lambdas, config.pythonLibraryVersion, config.nodeLibraryVersion);
+      if (errors.length > 0) {
+        return {
+          requestId: event.requestId,
+          status: FAILURE,
+          fragment,
+          errorMessage: errors.join("\n"),
+        };
+      }
     }
 
     // Enable tracing
