@@ -70,14 +70,14 @@ You can configure the library by add the following parameters:
 
 ```yaml
 # Whether to add the Lambda Layers, or expect the user to bring their own. Defaults to true.
-# If this is true, 'pythonLibraryVersion' is required if any Lambda function has a Python runtime, and 'nodeLibraryVersion' is required if any Lambda function has a Node.js runtime.
+# If this is true, 'pythonLayerVersion' is required if any Lambda function has a Python runtime, and 'nodeLayerVersion' is required if any Lambda function has a Node.js runtime.
 addLayers: true
 
-# The Python Lambda Library version to install to the Python Lambda functions. This is required if 'addLayers' is true and you are deploying one or more Python Lambda functions. The latest version is 19.
-pythonLibraryVersion: ""
+# Version of the Python Lambda Library to install. This is required if 'addLayers' is true and you are deploying one or more Python Lambda functions. The library is installed through Lambda layers - to see the latest layer version check the datadog-lambda-python repo release notes: https://github.com/DataDog/datadog-lambda-python/releases.
+pythonLayerVersion: ""
 
-# The Node.js Lambda Library version to install to the Node.js Lambda functions. This is required if 'addLayers' is true and you are deploying one or more Node.js Lambda functions. The latest version is 25.
-nodeLibraryVersion: ""
+# Version of the Node.js Lambda Library to install. This is required if 'addLayers' is true and you are deploying one or more Node.js Lambda functions. The library is installed through Lambda layers - to see the latest layer version check the datadog-lambda-js repo release notes: https://github.com/DataDog/datadog-lambda-js/releases.
+nodeLayerVersion: ""
 
 # The log level, set to DEBUG for extended logging. Defaults to info.
 logLevel: "info"
@@ -125,7 +125,7 @@ Transform:
   - AWS::Serverless-2016-10-31
   - Name: DatadogServerlessMacro
     Parameters: 
-        nodeLibraryVersion: 25
+        nodeLayerVersion: 25
         forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder"
         stackName: !Ref "AWS::StackName"
         service: "service-name"
@@ -148,7 +148,7 @@ class CdkStack extends cdk.Stack {
     new cdk.CfnMapping(this, "Datadog", { // The id for this CfnMapping must be 'Datadog'
       mapping: {
         Parameters: { // This mapping key must be 'Parameters'
-          nodeLibraryVersion: 25,
+          nodeLayerVersion: 25,
           forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
           stackName: this.stackName,
           service: "service-name",
@@ -172,7 +172,7 @@ class CdkStack(core.Stack):
     mapping = core.CfnMapping(self, "Datadog", # The id for this CfnMapping must be 'Datadog'
       mapping={
         "Parameters": { # This mapping key must be 'Parameters'
-          "nodeLibraryVersion": 25,
+          "nodeLayerVersion": 25,
           "forwarderArn": "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
           "stackName": self.stackName,
           "service": "service-name",
@@ -183,7 +183,7 @@ class CdkStack(core.Stack):
 
 ## How it works
 
-This macro modifies your CloudFormation template to attach the Datadog Lambda Library for [Node.js](https://github.com/DataDog/datadog-lambda-layer-js) and [Python](https://github.com/DataDog/datadog-lambda-layer-python) to your functions. It redirects to a replacement handler that initializes the Lambda Library without any required code changes.
+This macro modifies your CloudFormation template to install the Datadog Lambda Library by attaching the Lambda Layers for [Node.js](https://github.com/DataDog/datadog-lambda-layer-js) and [Python](https://github.com/DataDog/datadog-lambda-layer-python) to your functions. It redirects to a replacement handler that initializes the Lambda Library without any required code changes.
 
 **IMPORTANT NOTE:** Because the plugin automatically wraps your Lambda handler function, you do **NOT** need to wrap your handler function as stated in the Node.js and Python Layer documentation.
 
