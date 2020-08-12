@@ -4,7 +4,7 @@ import {
   RuntimeType,
   applyLayers,
   DD_ACCOUNT_ID,
-  getMissingLibraryVersionErrorMsg,
+  getMissingLayerVersionErrorMsg,
 } from "../src/layer";
 
 function mockFunctionResource(runtime: string) {
@@ -120,8 +120,8 @@ describe("applyLayers", () => {
     const errors = applyLayers("us-east-1", [pythonLambda, nodeLambda]);
 
     expect(errors).toEqual([
-      getMissingLibraryVersionErrorMsg("PythonFunctionKey", "Python", "python"),
-      getMissingLibraryVersionErrorMsg("NodeFunctionKey", "Node.js", "node"),
+      getMissingLayerVersionErrorMsg("PythonFunctionKey", "Python", "python"),
+      getMissingLayerVersionErrorMsg("NodeFunctionKey", "Node.js", "node"),
     ]);
     expect(pythonLambda.properties.Layers).toBeUndefined();
     expect(nodeLambda.properties.Layers).toBeUndefined();

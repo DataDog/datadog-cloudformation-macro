@@ -100,8 +100,8 @@ export function findLambdas(resources: Resources) {
 export function applyLayers(
   region: string,
   lambdas: LambdaFunction[],
-  pythonLibraryVersion?: number,
-  nodeLibraryVersion?: number,
+  pythonLayerVersion?: number,
+  nodeLayerVersion?: number,
 ) {
   if (!availableRegions.has(region)) {
     return [];
@@ -116,19 +116,19 @@ export function applyLayers(
     let layerARN;
 
     if (lambda.runtimeType === RuntimeType.PYTHON) {
-      if (pythonLibraryVersion === undefined) {
-        errors.push(getMissingLibraryVersionErrorMsg(lambda.key, "Python", "python"));
+      if (pythonLayerVersion === undefined) {
+        errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Python", "python"));
         return;
       }
-      layerARN = getLayerARN(region, pythonLibraryVersion, lambda.runtime);
+      layerARN = getLayerARN(region, pythonLayerVersion, lambda.runtime);
     }
 
     if (lambda.runtimeType === RuntimeType.NODE) {
-      if (nodeLibraryVersion === undefined) {
-        errors.push(getMissingLibraryVersionErrorMsg(lambda.key, "Node.js", "node"));
+      if (nodeLayerVersion === undefined) {
+        errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Node.js", "node"));
         return;
       }
-      layerARN = getLayerARN(region, nodeLibraryVersion, lambda.runtime);
+      layerARN = getLayerARN(region, nodeLayerVersion, lambda.runtime);
     }
 
     if (layerARN !== undefined) {
@@ -147,9 +147,9 @@ function getLayerARN(region: string, version: number, runtime: string) {
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
 }
 
-export function getMissingLibraryVersionErrorMsg(functionKey: string, formalRuntime: string, paramRuntime: string) {
+export function getMissingLayerVersionErrorMsg(functionKey: string, formalRuntime: string, paramRuntime: string) {
   return (
     `Resource ${functionKey} has a ${formalRuntime} runtime, but no ${formalRuntime} Lambda Library version was provided. ` +
-    `Please add the '${paramRuntime}LibraryVersion' parameter for the Datadog serverless macro.`
+    `Please add the '${paramRuntime}LayerVersion' parameter for the Datadog serverless macro.`
   );
 }
