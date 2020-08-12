@@ -70,13 +70,15 @@ You can configure the library by add the following parameters:
 
 ```yaml
 # Whether to add the Lambda Layers, or expect the user to bring their own. Defaults to true.
-# If this is true, 'pythonLayerVersion' is required if any Lambda function has a Python runtime, and 'nodeLayerVersion' is required if any Lambda function has a Node.js runtime.
+# When true, the Lambda Library version variables are also be required.
 addLayers: true
 
-# Version of the Python Lambda Library to install. This is required if 'addLayers' is true and you are deploying one or more Python Lambda functions. The library is installed through Lambda layers - to see the latest layer version check the datadog-lambda-python repo release notes: https://github.com/DataDog/datadog-lambda-python/releases.
+# [Required if you are deploying at least one Lambda function written in Python and `addLayers` is true]
+# Version of the Python Lambda Library to install. The library is installed through Lambda layers - to see the latest layer version check the datadog-lambda-python repo release notes: https://github.com/DataDog/datadog-lambda-python/releases.
 pythonLayerVersion: ""
 
-# Version of the Node.js Lambda Library to install. This is required if 'addLayers' is true and you are deploying one or more Node.js Lambda functions. The library is installed through Lambda layers - to see the latest layer version check the datadog-lambda-js repo release notes: https://github.com/DataDog/datadog-lambda-js/releases.
+[Required if you are deploying at least one Lambda function written in Node.js and `addLayers` is true]
+# Version of the Node.js Lambda Library to install. The library is installed through Lambda layers - to see the latest layer version check the datadog-lambda-js repo release notes: https://github.com/DataDog/datadog-lambda-js/releases.
 nodeLayerVersion: ""
 
 # The log level, set to DEBUG for extended logging. Defaults to info.
