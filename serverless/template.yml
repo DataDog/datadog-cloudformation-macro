@@ -77,7 +77,9 @@ Resources:
             - Effect: Allow
               Action:
                 - logs:DescribeLogGroups
+                - logs:CreateLogGroup
                 - logs:DescribeSubscriptionFilters
+                - logs:PutSubscriptionFilter
               Resource: "*"
   MacroFunctionLogGroup:
     Type: AWS::Logs::LogGroup
