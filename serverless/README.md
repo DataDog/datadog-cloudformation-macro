@@ -33,7 +33,7 @@ If you are deploying your serverless application with SAM, add the Datadog Serve
 ```yaml
 Transform:
   - AWS::Serverless-2016-10-31
-  - Name: DatadogServerlessMacro
+  - Name: DatadogServerless
 ```
 
 ### AWS CDK
@@ -47,7 +47,7 @@ import * as cdk from "@aws-cdk/core";
 class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-    this.addTransform("DatadogServerlessMacro");
+    this.addTransform("DatadogServerless");
   }
 }
 ```
@@ -59,10 +59,10 @@ from aws_cdk import core
 class CdkStack(core.Stack):
     def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
-        self.add_transform("DatadogServerlessMacro")
+        self.add_transform("DatadogServerless")
 ```
 
-Note: For both SAM and CDK deployments, if you did not modify the provided `template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerlessMacro`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
+Note: For both SAM and CDK deployments, if you did not modify the provided `template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerless`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
 
 ## Configuration
 
@@ -125,7 +125,7 @@ You can configure the library by add the following section to the `Parameters` u
 ```yaml
 Transform:
   - AWS::Serverless-2016-10-31
-  - Name: DatadogServerlessMacro
+  - Name: DatadogServerless
     Parameters: 
         nodeLayerVersion: 25
         forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder"
@@ -145,7 +145,7 @@ import * as cdk from "@aws-cdk/core";
 class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
-    this.addTransform("DatadogServerlessMacro");
+    this.addTransform("DatadogServerless");
 
     new cdk.CfnMapping(this, "Datadog", { // The id for this CfnMapping must be 'Datadog'
       mapping: {
@@ -169,7 +169,7 @@ from aws_cdk import core
 class CdkStack(core.Stack):
   def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
     super().__init__(scope, id, **kwargs)
-    self.add_transform("DatadogServerlessMacro")
+    self.add_transform("DatadogServerless")
 
     mapping = core.CfnMapping(self, "Datadog", # The id for this CfnMapping must be 'Datadog'
       mapping={
