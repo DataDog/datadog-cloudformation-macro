@@ -221,6 +221,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       FunctionTwoKeyLogGroup: dynamicallyNamedLogGroup.logGroupResource,
       FunctionOneKeyLogGroupSubscription: {
         Type: "AWS::Logs::SubscriptionFilter",
+        DependsOn: "FunctionOneKeyLogGroup",
         Properties: {
           DestinationArn: "forwarder-arn",
           FilterPattern: "",
@@ -229,6 +230,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       },
       FunctionTwoKeyLogGroupSubscription: {
         Type: "AWS::Logs::SubscriptionFilter",
+        DependsOn: "FunctionTwoKeyLogGroup",
         Properties: {
           DestinationArn: "forwarder-arn",
           FilterPattern: "",

@@ -21,17 +21,20 @@ export interface LogGroupDefinition {
   };
 }
 
+interface SubscriptionResource {
+  Type: string;
+  DependsOn?: string;
+  Properties: {
+    DestinationArn: string;
+    FilterPattern: string;
+    LogGroupName: string | { [fn: string]: any };
+    RoleArn?: string;
+  };
+}
+
 export interface SubscriptionDefinition {
   key: string;
-  subscriptionResource: {
-    Type: string;
-    Properties: {
-      DestinationArn: string;
-      FilterPattern: string;
-      LogGroupName: string | { [fn: string]: any };
-      RoleArn?: string;
-    };
-  };
+  subscriptionResource: SubscriptionResource;
 }
 
 /**
@@ -91,6 +94,11 @@ export async function addCloudWatchForwarderSubscriptions(
       }
     }
 
+    // If there is a user declared log group/if this macro adds a log group declaration, save the logical id
+    // to add as a dependency. This prevents the subscription filter being created before the log group is.
+    // (Will stay undefined if a log group already exists, and will not be used.)
+    let logGroupKey: string | undefined;
+
     // If log group exists, we need to check if there are any existing subsciption filters.
     // We will only add a new subscription to the provided forwarder ARN if no current subscriptions exist.
     if (logGroup !== undefined) {
@@ -112,7 +120,8 @@ export async function addCloudWatchForwarderSubscriptions(
       const declaredLogGroup = findDeclaredLogGroup(logGroupsInTemplate, lambda.key, lambda.properties.FunctionName);
 
       if (declaredLogGroup) {
-        logGroupName = declaredLogGroup?.logGroupResource.Properties.LogGroupName;
+        logGroupName = declaredLogGroup.logGroupResource.Properties.LogGroupName;
+        logGroupKey = declaredLogGroup.key;
         if (subscriptionsInTemplate === undefined) {
           subscriptionsInTemplate = findSubscriptionsInTemplate(resources);
         }
@@ -122,13 +131,14 @@ export async function addCloudWatchForwarderSubscriptions(
       } else {
         // If there's no existing log group and none were declared in the template for this lambda,
         // then we create a new log group by declaring one in the template.
-        logGroupName = addLogGroupToTemplate(resources, lambda);
+        logGroupKey = `${lambda.key}${LOG_GROUP}`;
+        logGroupName = addLogGroupToTemplate(resources, lambda, logGroupKey);
         addSubscription = true;
       }
     }
 
     if (addSubscription) {
-      addSubscriptionToTemplate(resources, forwarderArn, lambda.key, logGroupName);
+      addSubscriptionToTemplate(resources, forwarderArn, lambda.key, logGroupName, logGroupKey);
     }
   }
 }
@@ -246,14 +256,11 @@ function isSubscriptionAlreadyDeclared(
   return false;
 }
 
-function addLogGroupToTemplate(resources: Resources, lambda: LambdaFunction) {
-  const functionKey = lambda.key;
-  const logGroupKey = `${functionKey}${LOG_GROUP}`;
-
+function addLogGroupToTemplate(resources: Resources, lambda: LambdaFunction, logGroupKey: string) {
   // '${functionKey}' will either reference the FunctionName property if it exists,
   // or the dynamically generated name
   const logGroupName = {
-    "Fn::Sub": `${LAMBDA_LOG_GROUP_PREFIX}\${${functionKey}}`,
+    "Fn::Sub": `${LAMBDA_LOG_GROUP_PREFIX}\${${lambda.key}}`,
   };
   resources[logGroupKey] = {
     Type: LOG_GROUP_TYPE,
@@ -267,9 +274,10 @@ function addSubscriptionToTemplate(
   forwarderArn: string,
   functionKey: string,
   logGroupName: string | { [fn: string]: any },
+  logGroupKey: string | undefined,
 ) {
   const subscriptionName = `${functionKey}${LOG_GROUP}${SUBSCRIPTION}`;
-  const subscription = {
+  const subscription: SubscriptionResource = {
     Type: SUBSCRIPTION_FILTER_TYPE,
     Properties: {
       DestinationArn: forwarderArn,
@@ -277,5 +285,10 @@ function addSubscriptionToTemplate(
       LogGroupName: logGroupName,
     },
   };
+  // If a log group is declared in the template, reference the logical id of the log group
+  // to ensure that the subscription filter is created after the log group.
+  if (logGroupKey) {
+    subscription.DependsOn = logGroupKey;
+  }
   resources[subscriptionName] = subscription;
 }

@@ -2,7 +2,7 @@ version: 2.1
 
 jobs:
   verify_build:
-    working_directory: ~/repo
+    working_directory: ~/repo/serverless
     docker:
       - image: circleci/node:<< parameters.node >>
     parameters:
@@ -13,7 +13,8 @@ jobs:
         default: "false"
     resource_class: medium+
     steps:
-      - checkout
+      - checkout:
+          path: ~/repo
       - restore_cache:
           keys:
             - v1-dependencies-<< parameters.node >>-{{ checksum "package.json" }}
