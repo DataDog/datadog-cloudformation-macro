@@ -6,7 +6,6 @@
   "author": "Datadog",
   "license": "Apache-2.0",
   "scripts": {
-    "prebuild": "./tools/check_layers_json.sh",
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",

@@ -69,10 +69,6 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Get the latest code
     git pull origin master
 
-    # Update layer versions
-    echo "Updating layer versions"
-    ./tools/generate_layers_json.sh
-
     # Bump version number
     echo "Bumping the current version number to the desired"
     perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" template.yml

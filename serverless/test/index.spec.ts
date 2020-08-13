@@ -1,4 +1,5 @@
 import { handler, FunctionProperties, getMissingStackNameErrorMsg, InputEvent } from "../src/index";
+import { getMissingLayerVersionErrorMsg } from "../src/layer";
 import { IamRoleProperties } from "../src/tracing";
 import {
   DescribeLogGroupsRequest,
@@ -100,6 +101,7 @@ describe("Macro", () => {
       const inputEvent = mockInputEvent(transformParams, mappings);
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.Environment).toMatchObject({
         Variables: { DD_SITE: "transform-params-site" },
       });
@@ -123,10 +125,23 @@ describe("Macro", () => {
 
   describe("lambda layers", () => {
     it("adds lambda layers by default", async () => {
-      const inputEvent = mockInputEvent({}, {}); // Use default configuration
+      const params = { nodeLayerVersion: 25 };
+      const inputEvent = mockInputEvent(params, {}); // Use default configuration
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
-      expect(lambdaProperties.Layers).toEqual([expect.stringMatching(/arn:aws:lambda:us-east-1:.*:layer:.*/)]);
+
+      // Mocked Lambda has runtime nodejs12.x, so layer name is Datadog-Node12-x, with provided version number (25) at end
+      expect(lambdaProperties.Layers).toEqual([
+        expect.stringMatching(/arn:aws:lambda:us-east-1:.*:layer:Datadog-Node12-x:25/),
+      ]);
+    });
+
+    it("macro fails when corresponding lambda layer version is not provided", async () => {
+      const inputEvent = mockInputEvent({}, {}); // Use default configuration, no lambda layer version provided
+      const output = await handler(inputEvent, {});
+
+      expect(output.status).toEqual("failure");
+      expect(output.errorMessage).toEqual(getMissingLayerVersionErrorMsg(LAMBDA_KEY, "Node.js", "node"));
     });
 
     it("skips adding lambda layers when addLayers is false", async () => {
@@ -134,6 +149,7 @@ describe("Macro", () => {
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.Layers).toBeUndefined();
     });
   });
@@ -145,6 +161,7 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const iamRole: IamRoleProperties = output.fragment.Resources[`${LAMBDA_KEY}Role`].Properties;
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.TracingConfig).toBeUndefined();
       expect(iamRole.Policies).toBeUndefined();
     });
@@ -152,7 +169,7 @@ describe("Macro", () => {
 
   describe("CloudWatch subscriptions", () => {
     it("adds subscription filters when forwarder is provided", async () => {
-      const params = { forwarderArn: "forwarder-arn", stackName: "stack-name" };
+      const params = { forwarderArn: "forwarder-arn", stackName: "stack-name", nodeLayerVersion: 25 };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
 
@@ -162,7 +179,7 @@ describe("Macro", () => {
     });
 
     it("macro fails when forwarder is provided & at least one lambda has a dynamically generated name, but no stack name is given", async () => {
-      const params = { forwarderArn: "forwarder-arn" };
+      const params = { forwarderArn: "forwarder-arn", nodeLayerVersion: 25 };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
 
@@ -173,9 +190,11 @@ describe("Macro", () => {
 
   describe("tags", () => {
     it("does not add or modify tags when neither 'service' nor 'env' are provided", async () => {
-      const inputEvent = mockInputEvent({}, {});
+      const params = { nodeLayerVersion: 25 };
+      const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.Tags).toBeUndefined();
     });
 
@@ -183,10 +202,12 @@ describe("Macro", () => {
       const params = {
         service: "my-service",
         env: "test",
+        nodeLayerVersion: 25,
       };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
       expect(lambdaProperties.Tags).toEqual([
         { Value: "my-service", Key: "service" },
         { Value: "test", Key: "env" },

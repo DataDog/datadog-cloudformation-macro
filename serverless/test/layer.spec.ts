@@ -1,4 +1,11 @@
-import { findLambdas, LambdaFunction, RuntimeType, applyLayers, LayerJSON } from "../src/layer";
+import {
+  findLambdas,
+  LambdaFunction,
+  RuntimeType,
+  applyLayers,
+  DD_ACCOUNT_ID,
+  getMissingLayerVersionErrorMsg,
+} from "../src/layer";
 
 function mockFunctionResource(runtime: string) {
   return {
@@ -54,63 +61,69 @@ describe("findLambdas", () => {
 describe("applyLayers", () => {
   it("adds a layer array if none are present", () => {
     const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
-    const layers: LayerJSON = {
-      regions: { "us-east-1": { "nodejs12.x": "node:1" } },
-    };
-    applyLayers("us-east-1", [lambda], layers);
+    const region = "us-east-1";
+    const nodeLayerVersion = 25;
+    const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion);
 
-    expect(lambda.properties.Layers).toEqual(["node:1"]);
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`,
+    ]);
   });
 
   it("appends to the layer array if already present", () => {
     const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
-    const layers: LayerJSON = {
-      regions: { "us-east-1": { "nodejs12.x": "node:1" } },
-    };
     lambda.properties.Layers = ["node:2"];
-    applyLayers("us-east-1", [lambda], layers);
 
-    expect(lambda.properties.Layers).toEqual(["node:2", "node:1"]);
+    const region = "us-east-1";
+    const nodeLayerVersion = 25;
+    const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion);
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      "node:2",
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`,
+    ]);
   });
 
   it("doesn't add duplicate layers", () => {
     const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
-    const layers: LayerJSON = {
-      regions: { "us-east-1": { "nodejs12.x": "node:1" } },
-    };
-    lambda.properties.Layers = ["node:1"];
-    applyLayers("us-east-1", [lambda], layers);
+    const region = "us-east-1";
+    const nodeLayerVersion = 25;
+    const layerArn = `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`;
+    lambda.properties.Layers = [layerArn];
+    const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion);
 
-    expect(lambda.properties.Layers).toEqual(["node:1"]);
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([layerArn]);
   });
 
-  it("only adds layer when region is found", () => {
+  it("only adds layer when region it is available in region", () => {
     const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
-    const layers: LayerJSON = {
-      regions: { "us-east-1": { "nodejs12.x": "node:1" } },
-    };
-    applyLayers("us-east-2", [lambda], layers);
+    const errors = applyLayers("unsupported-region", [lambda], 18);
 
-    expect(lambda.properties.Layers).toBeUndefined();
-  });
-
-  it("only adds layers when layer arn is found", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
-    const layers: LayerJSON = {
-      regions: { "us-east-1": { "python2.7": "python:1" } },
-    };
-    applyLayers("us-east-1", [lambda], layers);
-
+    expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toBeUndefined();
   });
 
   it("doesn't add layer when runtime is not supported", () => {
     const lambda = mockLambdaFunction("FunctionKey", "go1.10", RuntimeType.UNSUPPORTED);
-    const layers: LayerJSON = {
-      regions: { "us-east-1": { "python2.7": "python:1" } },
-    };
-    applyLayers("us-east-1", [lambda], layers);
+    const errors = applyLayers("us-east-1", [lambda]);
 
+    expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toBeUndefined();
+  });
+
+  it("returns errors if layer versions are not provided for corresponding Lambda runtimes", () => {
+    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python2.7", RuntimeType.PYTHON);
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs12.x", RuntimeType.NODE);
+    const errors = applyLayers("us-east-1", [pythonLambda, nodeLambda]);
+
+    expect(errors).toEqual([
+      getMissingLayerVersionErrorMsg("PythonFunctionKey", "Python", "python"),
+      getMissingLayerVersionErrorMsg("NodeFunctionKey", "Node.js", "node"),
+    ]);
+    expect(pythonLambda.properties.Layers).toBeUndefined();
+    expect(nodeLambda.properties.Layers).toBeUndefined();
   });
 });

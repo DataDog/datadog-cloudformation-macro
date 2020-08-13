@@ -213,5 +213,5 @@ Resources:
   Macro:
     Type: AWS::CloudFormation::Macro
     Properties:
-      Name: DatadogServerlessMacro
+      Name: DatadogServerless
       FunctionName: !GetAtt MacroFunction.Arn
