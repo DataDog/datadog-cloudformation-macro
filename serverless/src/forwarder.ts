@@ -54,14 +54,18 @@ export class MissingSubDeclarationError extends Error {
  * To add the subscriptions for the provided forwarder ARN, we need the corresponding
  * log group for each lambda function.
  *
- * We first check if there's an existing log group. If it exists, we then check if there are any
- * existing subscriptions. We can go ahead and add the subscription to the forwarder ARN if no
- * other unknown subscriptions exist.
+ * We first check if a log group exists for a given lambda. If it does, we then check if there
+ * are existing subscriptions. We can go ahead and add the subscription to the forwarder ARN
+ * (using AWS SDK) if no other unknown subscriptions exist.
  *
- * If no log group exists, then check if any are declared in the template (but not yet created).
- * If none are declared, we add a log group for the given lambda. In both cases, we also declare a
- * new subscription filter for the forwarder ARN on this log group.
- * TODO: change comment
+ * If no log group exists and none are declared in the customer template, we will create one
+ * through AWS SDK. We will also add a subscription to the forwarder ARN on this newly created
+ * log group through AWS SDK.
+ *
+ * If a log group has been declared explicitly by the customer but has not been initialized,
+ * we will not be able to add the subscription to the forwarder ARN. In this case, we throw an
+ * error and ask the user to remove the log group declaration. (Details on why we cannot
+ * create a subscription for this case below.)
  */
 export async function addCloudWatchForwarderSubscriptions(
   resources: Resources,
@@ -114,8 +118,8 @@ export async function addCloudWatchForwarderSubscriptions(
       // The log group exists in this case, so the logGroupName must also be defined, since
       // that's the property we used to find this log group.
       logGroupName = logGroup.logGroupName as string;
-      const canSub = await canSubscribeLogGroup(cloudWatchLogs, logGroupName, functionNamePrefix);
-      if (canSub) {
+      const shouldSub = await shouldSubscribeLogGroup(cloudWatchLogs, logGroupName);
+      if (shouldSub) {
         await putSubscriptionFilter(cloudWatchLogs, forwarderArn, logGroupName);
       }
     } else {
@@ -134,16 +138,29 @@ export async function addCloudWatchForwarderSubscriptions(
       if (declaredLogGroup) {
         logGroupName = declaredLogGroup.logGroupResource.Properties.LogGroupName;
         logGroupKey = declaredLogGroup.key;
+
         if (subscriptionsInTemplate === undefined) {
           subscriptionsInTemplate = findSubscriptionsInTemplate(resources);
         }
-        // If a log group has already been declared but not yet initialized, check if any
-        // subscriptions are declared, so we don't overwrite them.
-        const declaredSub = findDeclareSub(subscriptionsInTemplate, logGroupName, logGroupKey);
+        const declaredSub = findDeclaredSub(subscriptionsInTemplate, logGroupName, logGroupKey);
         if (declaredSub === undefined) {
+          // In this case, we cannot use the 'putSubscriptionFilter' function from AWS SDK to add
+          // a subscription because the log group has to be initialized first.
+
+          // (A logical alternative is to add a subscription filter declaration to the template
+          // instead of using AWS SDK. However, we will have to add the same subscription filter
+          // to the template each time the macro runs, in order to ensure that the subscription
+          // will not be removed in the change set. This requires some way of identifying which
+          // subscriptions were created by our macro. Currently, the 'putSubscriptionFilter'
+          // function in AWS SDK supports a 'filterName' parameter that would allow us to add a
+          // Datadog specific filter name for this purpose, but the CloudFormation type for
+          // subscriptions does not support this parameter. If the 'AWS::Logs::SubscriptionFilter'
+          // type is updated with a 'filterName' param in the future, then we can implement this.)
+          // https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html
+
           throw new MissingSubDeclarationError(
             `Found a declared log group for ${lambda.key} but no subscription filter declared for ${forwarderArn}. ` +
-              `To allow the macro to automatically create these for you, please remove the log group declaration.`,
+              `To allow the macro to automatically create a log group and subscription, please remove the log group declaration.`,
           );
         }
       } else {
@@ -189,28 +206,9 @@ export async function getExistingLambdaLogGroupsOnStack(cloudWatchLogs: CloudWat
   return logGroups ?? [];
 }
 
-export async function canSubscribeLogGroup(
-  cloudWatchLogs: CloudWatchLogs,
-  logGroupName: string,
-  expectedSubName: string,
-) {
+export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogs, logGroupName: string) {
   const subscriptionFilters = await describeSubscriptionFilters(cloudWatchLogs, logGroupName);
-  let hasUnknownSubscriptions = false;
-
-  for (const subscription of subscriptionFilters) {
-    const filterName = subscription.filterName;
-    if (filterName && filterName.startsWith(expectedSubName)) {
-      // If this is a subscription filter this macro previously created for this lambda,
-      // it needs to be kept in the template so the SubscriptionFilter resource is not
-      // removed from the template and deleted.
-      return true;
-    }
-    // If there are any unknown subscriptions, it's possible we cannot add a subscription
-    // for the forwarder.
-    hasUnknownSubscriptions = true;
-  }
-  // If no unknown subscriptions exist, possible to subscribe.
-  return !hasUnknownSubscriptions;
+  return subscriptionFilters.length === 0;
 }
 
 async function describeSubscriptionFilters(cloudWatchLogs: CloudWatchLogs, logGroupName: string) {
@@ -263,7 +261,7 @@ function findSubscriptionsInTemplate(resources: Resources) {
     });
 }
 
-function findDeclareSub(
+function findDeclaredSub(
   subscriptions: SubscriptionDefinition[],
   logGroupName: string | { [fn: string]: any },
   logGroupKey: string,
