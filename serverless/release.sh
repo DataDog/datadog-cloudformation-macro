@@ -109,7 +109,7 @@ else
     aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
 fi
 
-echo "Done uploading the template, and here is the CloudFormation quick launch URL"
-echo "https://console.aws.amazon.com/cloudformation/home#/stacks/quickCreate?stackName=datadog-serverless-macro&templateURL=${TEMPLATE_URL}"
+# echo "Done uploading the template, and here is the CloudFormation quick launch URL"
+# echo "https://console.aws.amazon.com/cloudformation/home#/stacks/quickCreate?stackName=datadog-serverless-macro&templateURL=${TEMPLATE_URL}"
 
 echo "Done!"
