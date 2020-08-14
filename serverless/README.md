@@ -105,7 +105,7 @@ enableXrayTracing: false
 # Enable tracing on Lambda function using dd-trace, datadog's APM library. Requires datadog log forwarder to be set up. Defaults to true.
 enableDDTracing: true
 
-# When set, the plugin will try to subscribe the lambda's cloudwatch log groups to the forwarder with the given arn.
+# When set, the plugin will try to subscribe the lambda's cloudwatch log groups to the forwarder with the given arn. If you are deploying your Lambda functions for the first time and no log groups currently exist, you will need to provide the 'FunctionName' property for your Lambdas so the macro can automatically create the log groups and add the subscriptions.
 forwarderArn: arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder
 
 # The name of the CloudFormation stack being deployed. Only required when forwarderArn is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For how to add this parameter for SAM and CDK, see examples below.
@@ -201,4 +201,32 @@ module.exports.myHandler = datadog(
 ```python
 @datadog_lambda_wrapper # This wrapper is NOT needed when using this plugin
 def lambda_handler(event, context):
+```
+
+## FAQ
+
+### I'm seeing this error message: 'FunctionName' property is undefined for...
+This error occurs when you provide a `forwarderArn` and are deploying your Lambda function for the first time, so no log group currently exists. In order for the macro to create this log group and the correct subscriptions for you, you will need to provide the `FunctionName` property on your Lambda. For examples, see below:
+
+**AWS SAM**
+```yml
+Resources:
+  MyLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs12.x
+      FunctionName: MyFunctionName # Add this property to your Lambdas
+```
+
+**AWS CDK (Node.js)**
+```js
+import * as lambda from "@aws-cdk/aws-lambda";
+
+const myLambda = new lambda.Function(this, "function-id", {
+  runtime: lambda.Runtime.NODEJS_12_X,
+  code: lambda.Code.fromAsset("lambda"),
+  handler: "index.handler",
+  functionName: "MyFunctionName", // Add this property to your Lambdas
+});
 ```
