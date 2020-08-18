@@ -10,7 +10,9 @@ AWS_REGION="sa-east-1"
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR/..
 
-CURRENT_VERSION="$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)-test"
+RUN_ID=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c10)
+
+CURRENT_VERSION="$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)-test-${RUN_ID}"
 
 # Make sure we aren't trying to do anything on Datadog's production account. We don't want our
 # integration tests to accidentally release a new version of the macro
@@ -33,7 +35,7 @@ PARAM_LIST=[$(param SourceZipUrl \"${MACRO_SOURCE_URL}\")]
 echo "Setting params ${PARAM_LIST}"
 
 # Create an instance of the stack
-STACK_NAME="serverless-macro-test-stack"
+STACK_NAME="serverless-macro-test-stack-${RUN_ID}"
 echo "Creating stack ${STACK_NAME}"
 aws cloudformation create-stack --stack-name $STACK_NAME --template-url $TEMPLATE_URL --capabilities "CAPABILITY_AUTO_EXPAND" "CAPABILITY_IAM" --on-failure "DELETE" \
     --parameters=$PARAM_LIST --region $AWS_REGION
