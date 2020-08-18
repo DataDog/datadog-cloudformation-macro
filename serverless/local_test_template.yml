@@ -1,0 +1,39 @@
+# Usage:
+# aws cloudformation package \
+#   --template-file local_test_template.yml \
+#   --s3-bucket <s3 bucket name here> \
+#   --output-template-file packaged.template
+
+# aws cloudformation deploy \
+#   --stack-name serverless-macro-test-stack \
+#   --template-file packaged.template \
+#   --capabilities CAPABILITY_IAM
+
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Template for testing local changes, can be deployed directly without creating zip file or using ZipCopier in template.yml
+
+Resources:
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: dist
+      Handler: index.handler
+      Runtime: nodejs12.x
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - logs:DescribeLogGroups
+                - logs:DescribeSubscriptionFilters
+                - logs:CreateLogGroup
+                - logs:PutSubscriptionFilter
+              Resource: "*"
+  Macro:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Name: DatadogServerless
+      FunctionName:
+        Fn::GetAtt:
+          - Function
+          - Arn
