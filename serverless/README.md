@@ -14,12 +14,17 @@ aws cloudformation create-stack \
   --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
 ```
 
-If you are updating the macro after a new release, use the `update-stack` method instead with the same paramters:
+If you are updating the macro after a new release, create and execute a change set with the updated template:
 ```bash
-aws cloudformation update-stack \
+aws cloudformation create-change-set \
   --stack-name datadog-serverless-macro \
   --template-url https://datadog-cloudformation-template.s3.amazonaws.com/aws/serverless-macro/latest.yml \
-  --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
+  --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM \
+  --change-set-name datadog-serverless-macro-<newest release version>
+
+aws cloudformation execute-change-set \
+  --stack-name datadog-serverless-macro \
+  --change-set-name datadog-serverless-macro-<newest release version>
 ```
 
 **Note:** You only need to deploy the macro once for a given region in your account, and it can be used for all CloudFormation stacks deployed in that same region.
