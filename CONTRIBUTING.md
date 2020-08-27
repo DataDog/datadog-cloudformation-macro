@@ -13,6 +13,7 @@ Make your change, update tests and ensure the tests pass.
 For the Datadog Serverless Macro:
 ```bash
 cd serverless
+yarn install
 yarn test
 ```
 

@@ -14,7 +14,7 @@ aws cloudformation create-stack \
   --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
 ```
 
-If you are updating the macro after a new release, use the `update-stack` method instead with the same paramters:
+If you are updating the macro after a new release, use the `update-stack` method instead with the same parameters:
 ```bash
 aws cloudformation update-stack \
   --stack-name datadog-serverless-macro \
@@ -28,7 +28,7 @@ aws cloudformation update-stack \
 
 ### AWS SAM
 
-If you are deploying your serverless application with SAM, add the Datadog Serverless CloudFormation macro under the `Transform` section in your your `template.yml` file, after the required SAM transform:
+If you are deploying your serverless application with SAM, add the Datadog Serverless CloudFormation macro under the `Transform` section in your `template.yml` file, after the required SAM transform:
 
 ```yaml
 Transform:
@@ -171,10 +171,10 @@ class CdkStack(core.Stack):
     super().__init__(scope, id, **kwargs)
     self.add_transform("DatadogServerless")
 
-    mapping = core.CfnMapping(self, "Datadog", # The id for this CfnMapping must be 'Datadog'
+    core.CfnMapping(self, "Datadog", # The id for this CfnMapping must be 'Datadog'
       mapping={
         "Parameters": { # This mapping key must be 'Parameters'
-          "nodeLayerVersion": 25,
+          "pythonLayerVersion": 19,
           "forwarderArn": "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
           "stackName": self.stackName,
           "service": "service-name",
