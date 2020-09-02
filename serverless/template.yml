@@ -181,6 +181,11 @@ Resources:
                 send_cfn_resp(event, context, 'SUCCESS')
             finally:
                 timer.cancel()
+      PermissionsBoundary:
+        Fn::If:
+          - SetPermissionsBoundary
+          - Ref: PermissionsBoundaryArn
+          - Ref: AWS::NoValue
       Policies:
         - Version: "2012-10-17"
           Statement:
