@@ -245,5 +245,15 @@ const myLambda = new lambda.Function(this, "function-id", {
 ### I'm seeing this error message: 'logGroupNamePrefix' failed to satisfy constraint...
 `forwarderArn` option does not work when `FunctionName` contains CloudFormation functions, such as `!Sub`. In this case, the macro does not have access to the actual function name (CloudFormation executes functions after transformations), and therefore cannot create log groups and subscription filters for your functions. 
 
-Instead of setting `forwarderArn`, you can define the log groups and subscription filters using the [AWS::Logs::LogGroup](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-loggroup.html) and [AWS::Logs::SubscriptionFilter
-](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html) resources.
+Instead of setting `forwarderArn`, you can define the subscription filters using the [AWS::Logs::SubscriptionFilter
+](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html) resource like below.
+
+```yaml
+Resources:
+  MyLogSubscriptionFilter:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Properties:
+      DestinationArn: "<DATADOG_FORWARDER_ARN>"
+      LogGroupName: "<CLOUDWATCH_LOG_GROUP_NAME>"
+      FilterPattern: ""
+```
