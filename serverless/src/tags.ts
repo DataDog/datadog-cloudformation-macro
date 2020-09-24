@@ -34,7 +34,7 @@ export function addServiceAndEnvTags(lambdas: LambdaFunction[], service: string 
 
 export function addMacroTag(lambdas: LambdaFunction[], version: string | undefined) {
   if (!version) return;
-  // Add the tag for each function, unless a 'service' or 'env' tag already exists.
+
   lambdas.forEach((lambda) => {
     const tags = lambda.properties.Tags ?? [];
     tags.push({ Value: `v${version}`, Key: "dd_sls_macro" });
