@@ -217,7 +217,7 @@ def lambda_handler(event, context):
 ## FAQ
 
 ### I'm seeing this error message: 'FunctionName' property is undefined for...
-This error occurs when you provide a `forwarderArn` and are deploying your Lambda function for the first time, so no log group currently exists. In order for the macro to create this log group and the correct subscriptions for you, you will need to provide the `FunctionName` property on your Lambda. For examples, see below:
+This error occurs when you provide a `forwarderArn` and are deploying your Lambda function for the first time, so no log group currently exists and the macro cannot create this log group or subscribe the Forwarder for you. One way to fix this issue is to explicitly define the `FunctionName` property on your Lambda (see example below).
 
 **AWS SAM**
 ```yml
@@ -242,12 +242,10 @@ const myLambda = new lambda.Function(this, "function-id", {
 });
 ```
 
-### I'm seeing this error message: 'logGroupNamePrefix' failed to satisfy constraint...
-`forwarderArn` option does not work when `FunctionName` contains CloudFormation functions, such as `!Sub`. In this case, the macro does not have access to the actual function name (CloudFormation executes functions after transformations), and therefore cannot create log groups and subscription filters for your functions. 
-
-Instead of setting `forwarderArn`, you can define the subscription filters using the [AWS::Logs::SubscriptionFilter
+If you cannot (or prefer not) define the `FunctionName` explicitly, then instead of setting `forwarderArn`, you can define the subscription filters for the Forwarder by yourself using the [AWS::Logs::SubscriptionFilter
 ](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html) resource like below.
 
+**AWS SAM**
 ```yaml
 Resources:
   MyLogSubscriptionFilter:
@@ -256,4 +254,43 @@ Resources:
       DestinationArn: "<DATADOG_FORWARDER_ARN>"
       LogGroupName: "<CLOUDWATCH_LOG_GROUP_NAME>"
       FilterPattern: ""
+```
+
+**AWS CDK (Node.js)**
+```js
+import {CfnSubscriptionFilter} from '@aws-cdk/aws-logs';
+
+const subscription = new CfnSubscriptionFilter(this, `DatadogForwarderSubscriptionFilter`, {
+    logGroupName: '<CLOUDWATCH_LOG_GROUP_NAME>',
+    destinationArn: '<DATADOG_FORWARDER_ARN>',
+    filterPattern: ''
+});
+```
+
+### I'm seeing this error message: 'logGroupNamePrefix' failed to satisfy constraint...
+`forwarderArn` option does not work when `FunctionName` contains CloudFormation functions, such as `!Sub`. In this case, the macro does not have access to the actual function name (CloudFormation executes functions after transformations), and therefore cannot create log groups and subscription filters for your functions. 
+
+Instead of setting `forwarderArn`, you can define the subscription filters using the [AWS::Logs::SubscriptionFilter
+](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html) resource like below.
+
+**AWS SAM**
+```yaml
+Resources:
+  MyLogSubscriptionFilter:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Properties:
+      DestinationArn: "<DATADOG_FORWARDER_ARN>"
+      LogGroupName: "<CLOUDWATCH_LOG_GROUP_NAME>"
+      FilterPattern: ""
+```
+
+**AWS CDK (Node.js)**
+```js
+import {CfnSubscriptionFilter} from '@aws-cdk/aws-logs';
+
+const subscription = new CfnSubscriptionFilter(this, `DatadogForwarderSubscriptionFilter`, {
+    logGroupName: '<CLOUDWATCH_LOG_GROUP_NAME>',
+    destinationArn: '<DATADOG_FORWARDER_ARN>',
+    filterPattern: ''
+});
 ```
