@@ -4,9 +4,6 @@ on: [pull_request]
 
 jobs:
   cloudformation-linter:
-    defaults:
-      run:
-        working-directory: serverless
     runs-on: ubuntu-latest
 
     steps:
@@ -16,4 +13,4 @@ jobs:
     - name: cfn-lint
       uses: scottbrenner/cfn-lint-action@master
       with:
-        args: "./template.yml"
+        args: "./serverless/template.yml"

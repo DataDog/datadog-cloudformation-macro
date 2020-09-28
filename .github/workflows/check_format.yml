@@ -1,4 +1,4 @@
-name: serverless check formatting
+name: Check Formatting
 
 on: [pull_request]
 
