@@ -228,7 +228,7 @@ const myLambda = new lambda.Function(this, "function-id", {
 });
 ```
 
-If you cannot (or prefer not) define the `FunctionName` explicitly, then instead of setting `forwarderArn`, you can define the subscription filters for the Forwarder by yourself using the [AWS::Logs::SubscriptionFilter][8] resource like below.
+If you cannot (or prefer not) define the `FunctionName` explicitly, then instead of setting `forwarderArn`, you can define the subscription filters for the Forwarder by yourself using the [AWS::Logs::SubscriptionFilter][7] resource like below.
 
 **AWS SAM**
 ```yaml
@@ -287,4 +287,3 @@ const subscription = new CfnSubscriptionFilter(this, `DatadogForwarderSubscripti
 [5]: https://github.com/DataDog/datadog-lambda-python/releases
 [6]: https://github.com/DataDog/datadog-lambda-js/releases
 [7]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html
-[8]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html)
