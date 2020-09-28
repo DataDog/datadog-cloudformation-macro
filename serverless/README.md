@@ -71,24 +71,36 @@ You can configure the library by add the following parameters:
 ```yaml
 # Whether to add the Lambda Layers, or expect the user to bring their own. Defaults to true.
 # When true, the Lambda Library version variables are also be required.
+# When false, you must include the Datadog Lambda library in your functions' deployment packages.
 addLayers: true
 
-# [Required if you are deploying at least one Lambda function written in Python and `addLayers` is true]
-# Version of the Python Lambda Library to install. The library is installed through Lambda layers - to see the latest layer version check the datadog-lambda-python repo release notes: https://github.com/DataDog/datadog-lambda-python/releases.
+# Required if you are deploying at least one Lambda function written in Python and `addLayers` is true.
+# Version of the Python Lambda layer to install, such as "21".
+# Find the latest version number from https://github.com/DataDog/datadog-lambda-python/releases.
 pythonLayerVersion: ""
 
-[Required if you are deploying at least one Lambda function written in Node.js and `addLayers` is true]
-# Version of the Node.js Lambda Library to install. The library is installed through Lambda layers - to see the latest layer version check the datadog-lambda-js repo release notes: https://github.com/DataDog/datadog-lambda-js/releases.
+# Required if you are deploying at least one Lambda function written in Node.js and `addLayers` is true.
+# Version of the Node.js Lambda layer to install, such as "29".
+# Find the latest version number from https://github.com/DataDog/datadog-lambda-js/releases.
 nodeLayerVersion: ""
 
-# The log level, set to DEBUG for extended logging. Defaults to info.
-logLevel: "info"
+# When set, the plugin will automatically subscribe the functions' log groups to the Datadog Forwarder.
+# Alternatively you can define the log subscription using the `AWS::Logs::SubscriptionFilter` resource.
+# Note: The 'FunctionName' property must be defined for functions that are deployed for the first time,
+# because the macro needs the function name to create the log groups and subscription filters.
+# 'FunctionName' must NOT contain any CloudFormation functions, such as `!Sub`.
+forwarderArn: arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder
+
+# The name of the CloudFormation stack being deployed. Only required when forwarderArn is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For how to add this parameter for SAM and CDK, see examples below.
+stackName: ""
 
 # Send custom metrics via logs with the help of Datadog Forwarder Lambda function (recommended). Defaults to true.
+# When false, the Datadog API key must be defined using `apiKey` or `apiKMSKey`.
 flushMetricsToLogs: true
 
-# Which Datadog Site to send data to, only needed when flushMetricsToLogs is false. Defaults to datadoghq.com.
-site: datadoghq.com # datadoghq.eu for Datadog EU
+# Which Datadog site to send data to, only needed when flushMetricsToLogs is false. Defaults to datadoghq.com.
+# Set to datadoghq.eu for Datadog EU
+site: datadoghq.com
 
 # Datadog API Key, only needed when flushMetricsToLogs is false.
 apiKey: ""
@@ -97,25 +109,24 @@ apiKey: ""
 apiKMSKey: ""
 
 # Enable enhanced metrics for Lambda functions. Defaults to true.
+# The function log group must be subscribed by the Datadog Forwarder Lambda function.
 enableEnhancedMetrics: true
 
 # Enable tracing on Lambda functions. Defaults to false.
 enableXrayTracing: false
 
-# Enable tracing on Lambda function using dd-trace, datadog's APM library. Requires datadog log forwarder to be set up. Defaults to true.
+# Enable tracing on Lambda function using dd-trace, datadog's APM library. Defaults to true.
+# The function log group must be subscribed by the Datadog Forwarder Lambda function.
 enableDDTracing: true
-
-# When set, the plugin will try to subscribe the lambda's cloudwatch log groups to the forwarder with the given arn. If you are deploying your Lambda functions for the first time and no log groups currently exist, you will need to provide the 'FunctionName' property for your Lambdas so the macro can automatically create the log groups and add the subscriptions.
-forwarderArn: arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder
-
-# The name of the CloudFormation stack being deployed. Only required when forwarderArn is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For how to add this parameter for SAM and CDK, see examples below.
-stackName: ""
 
 # When set, the macro will add a `service` tag to all Lambda functions with the provided value.
 service: ""
 
 # When set, the macro will add a `env` tag to all Lambda functions with the provided value.
 env: ""
+
+# The log level, set to DEBUG for extended logging. Defaults to info.
+logLevel: "info"
 ```
 
 ### SAM
@@ -206,7 +217,7 @@ def lambda_handler(event, context):
 ## FAQ
 
 ### I'm seeing this error message: 'FunctionName' property is undefined for...
-This error occurs when you provide a `forwarderArn` and are deploying your Lambda function for the first time, so no log group currently exists. In order for the macro to create this log group and the correct subscriptions for you, you will need to provide the `FunctionName` property on your Lambda. For examples, see below:
+This error occurs when you provide a `forwarderArn` and are deploying your Lambda function for the first time, so no log group currently exists and the macro cannot create this log group or subscribe the Forwarder for you. One way to fix this issue is to explicitly define the `FunctionName` property on your Lambda (see example below).
 
 **AWS SAM**
 ```yml
@@ -228,5 +239,58 @@ const myLambda = new lambda.Function(this, "function-id", {
   code: lambda.Code.fromAsset("lambda"),
   handler: "index.handler",
   functionName: "MyFunctionName", // Add this property to your Lambdas
+});
+```
+
+If you cannot (or prefer not) define the `FunctionName` explicitly, then instead of setting `forwarderArn`, you can define the subscription filters for the Forwarder by yourself using the [AWS::Logs::SubscriptionFilter
+](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html) resource like below.
+
+**AWS SAM**
+```yaml
+Resources:
+  MyLogSubscriptionFilter:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Properties:
+      DestinationArn: "<DATADOG_FORWARDER_ARN>"
+      LogGroupName: "<CLOUDWATCH_LOG_GROUP_NAME>"
+      FilterPattern: ""
+```
+
+**AWS CDK (Node.js)**
+```js
+import {CfnSubscriptionFilter} from '@aws-cdk/aws-logs';
+
+const subscription = new CfnSubscriptionFilter(this, `DatadogForwarderSubscriptionFilter`, {
+    logGroupName: '<CLOUDWATCH_LOG_GROUP_NAME>',
+    destinationArn: '<DATADOG_FORWARDER_ARN>',
+    filterPattern: ''
+});
+```
+
+### I'm seeing this error message: 'logGroupNamePrefix' failed to satisfy constraint...
+`forwarderArn` option does not work when `FunctionName` contains CloudFormation functions, such as `!Sub`. In this case, the macro does not have access to the actual function name (CloudFormation executes functions after transformations), and therefore cannot create log groups and subscription filters for your functions. 
+
+Instead of setting `forwarderArn`, you can define the subscription filters using the [AWS::Logs::SubscriptionFilter
+](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html) resource like below.
+
+**AWS SAM**
+```yaml
+Resources:
+  MyLogSubscriptionFilter:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Properties:
+      DestinationArn: "<DATADOG_FORWARDER_ARN>"
+      LogGroupName: "<CLOUDWATCH_LOG_GROUP_NAME>"
+      FilterPattern: ""
+```
+
+**AWS CDK (Node.js)**
+```js
+import {CfnSubscriptionFilter} from '@aws-cdk/aws-logs';
+
+const subscription = new CfnSubscriptionFilter(this, `DatadogForwarderSubscriptionFilter`, {
+    logGroupName: '<CLOUDWATCH_LOG_GROUP_NAME>',
+    destinationArn: '<DATADOG_FORWARDER_ARN>',
+    filterPattern: ''
 });
 ```
