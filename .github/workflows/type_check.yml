@@ -1,4 +1,4 @@
-name: Check Formatting
+name: Check Typescript Build
 
 on: [pull_request]
 
@@ -16,4 +16,4 @@ jobs:
       with:
         node-version: 12.x
     - run: npm install
-    - run: npm run check-formatting
+    - run: npm run build
