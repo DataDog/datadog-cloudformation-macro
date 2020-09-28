@@ -16,4 +16,4 @@ jobs:
     - name: cfn-lint
       uses: scottbrenner/cfn-lint-action@master
       with:
-        args: "template.yml"
+        args: "./template.yml"
