@@ -11,6 +11,7 @@ import {
 import { LogGroupDefinition } from "../src/forwarder";
 
 const LAMBDA_KEY = "HelloWorldFunction";
+const VERSION_REGEX = /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/;
 jest.mock("aws-sdk", () => {
   return {
     CloudWatchLogs: jest.fn().mockImplementation((_) => {
@@ -197,13 +198,13 @@ describe("Macro", () => {
   });
 
   describe("tags", () => {
-    it("does not add or modify tags when neither 'service' nor 'env' are provided", async () => {
+    it("only adds macro version tag when neither 'service' nor 'env' are provided", async () => {
       const params = { nodeLayerVersion: 25 };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toBeUndefined();
+      expect(lambdaProperties.Tags).toEqual([{ Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" }]);
     });
 
     it("adds tags if either 'service' or 'env' params are provided", async () => {
@@ -219,6 +220,7 @@ describe("Macro", () => {
       expect(lambdaProperties.Tags).toEqual([
         { Value: "my-service", Key: "service" },
         { Value: "test", Key: "env" },
+        { Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" },
       ]);
     });
   });

@@ -2,6 +2,7 @@ import { LambdaFunction } from "./layer";
 
 const SERVICE = "service";
 const ENV = "env";
+const MACRO_VERSION = "dd_sls_macro";
 
 export function addServiceAndEnvTags(lambdas: LambdaFunction[], service: string | undefined, env: string | undefined) {
   // Add the tag for each function, unless a 'service' or 'env' tag already exists.
@@ -29,5 +30,16 @@ export function addServiceAndEnvTags(lambdas: LambdaFunction[], service: string 
     if (tags.length > 0) {
       lambda.properties.Tags = tags;
     }
+  });
+}
+
+export function addMacroTag(lambdas: LambdaFunction[], version: string | undefined) {
+  if (!version) return;
+
+  lambdas.forEach((lambda) => {
+    const tags = lambda.properties.Tags ?? [];
+    tags.push({ Value: `v${version}`, Key: MACRO_VERSION });
+
+    lambda.properties.Tags = tags;
   });
 }

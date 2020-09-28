@@ -1,10 +1,11 @@
 import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration } from "./env";
 import { findLambdas, applyLayers, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError } from "./tracing";
-import { addServiceAndEnvTags } from "./tags";
+import { addServiceAndEnvTags, addMacroTag } from "./tags";
 import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 import { CloudWatchLogs } from "aws-sdk";
+import { version } from "../package.json";
 
 const SUCCESS = "success";
 const FAILURE = "failure";
@@ -118,6 +119,8 @@ export const handler = async (event: InputEvent, _: any) => {
     if (config.service || config.env) {
       addServiceAndEnvTags(lambdas, config.service, config.env);
     }
+
+    addMacroTag(lambdas, version);
 
     // Redirect handlers
     redirectHandlers(lambdas, config.addLayers);

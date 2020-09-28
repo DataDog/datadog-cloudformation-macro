@@ -5,6 +5,7 @@
   "repository": "https://github.com/DataDog/datadog-cloudformation-macro",
   "author": "Datadog",
   "license": "Apache-2.0",
+  "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
     "test": "jest",
