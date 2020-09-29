@@ -228,7 +228,7 @@ const myLambda = new lambda.Function(this, "function-id", {
 });
 ```
 
-If you cannot (or prefer not) define the `FunctionName` explicitly, then instead of setting `forwarderArn`, you can define the subscription filters for the Forwarder by yourself using the [AWS::Logs::SubscriptionFilter][7] resource like below.
+If you cannot (or prefer not) define the `FunctionName` explicitly, then remove the `forwarderArn` parameter from the SAM template or CDK source code, and instead define the subscription filters using the [AWS::Logs::SubscriptionFilter][7] resource like below..
 
 **AWS SAM**
 ```yaml
@@ -256,7 +256,7 @@ const subscription = new CfnSubscriptionFilter(this, `DatadogForwarderSubscripti
 
 The `forwarderArn` option does not work when `FunctionName` contains CloudFormation functions, such as `!Sub`. In this case, the macro does not have access to the actual function name (CloudFormation executes functions after transformations). It therefore cannot create log groups and subscription filters for your functions. 
 
-Instead of setting `forwarderArn`, you can define the subscription filters using the [AWS::Logs::SubscriptionFilter][7] resource like below.
+Remove the `forwarderArn` parameter from the SAM template or CDK source code, and instead define the subscription filters using the [AWS::Logs::SubscriptionFilter][7] resource like below.
 
 **AWS SAM**
 ```yaml
