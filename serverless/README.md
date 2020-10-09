@@ -20,7 +20,7 @@ aws cloudformation create-stack \
   --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
 ```
 
-If you are updating the macro after a new release, use the `update-stack` method instead with the same parameters:
+If you are updating the macro after a new release, use the `update-stack` method instead with the same parameters. Alternatively, you may also specify a version of the macro from the latest [releases](https://github.com/DataDog/datadog-cloudformation-macro/releases) by replacing `latest.yml` with the release version, e.g. `0.1.2.yaml`:
 ```bash
 aws cloudformation update-stack \
   --stack-name datadog-serverless-macro \
