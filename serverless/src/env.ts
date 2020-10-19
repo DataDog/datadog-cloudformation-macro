@@ -7,6 +7,8 @@ export interface Configuration {
   pythonLayerVersion?: number;
   // Node.js Lambda layer version
   nodeLayerVersion?: number;
+  // Whether this is deployed in GovCloud so the GovCloud lambda layer can be applied
+  isGovCloud?: boolean;
   // Datadog API Key, only necessary when using metrics without log forwarding
   apiKey?: string;
   // Datadog API Key encrypted using KMS, only necessary when using metrics without log forwarding
