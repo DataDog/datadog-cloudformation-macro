@@ -99,7 +99,7 @@ function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefiniti
 }
 
 function mockGovCloudInputEvent(params: any, mappings: any, logGroups?: LogGroupDefinition[]) {
-  let govCloudEvent = mockInputEvent(params, mappings, logGroups);
+  const govCloudEvent = mockInputEvent(params, mappings, logGroups);
   govCloudEvent.region = "us-gov-east-1";
   return govCloudEvent;
 }
