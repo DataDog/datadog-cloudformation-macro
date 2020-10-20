@@ -1,6 +1,6 @@
 name: Lint Cloudformation Template
 
-on: [pull_request]
+on: push
 
 jobs:
   cloudformation-linter:
@@ -10,7 +10,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
 
-    - name: cfn-lint
+    - name: Run cfn-lint
       uses: scottbrenner/cfn-lint-action@master
       with:
         args: "./serverless/template.yml"
