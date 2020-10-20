@@ -29,7 +29,7 @@ jobs:
         run: npm install
 
       - name: Check formatting
-      - run: npm run check-formatting
+        run: npm run check-formatting
 
   cloudformation-linter:
     runs-on: ubuntu-latest
