@@ -2,6 +2,7 @@ import { FunctionProperties, Resources } from "./index";
 
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
 export const DD_ACCOUNT_ID = "464622532012";
+export const DD_GOV_ACCOUNT_ID = "002406178527";
 
 export enum RuntimeType {
   NODE,
@@ -56,6 +57,8 @@ const availableRegions = new Set([
   "eu-west-2",
   "eu-west-3",
   "sa-east-1",
+  "us-gov-east-1",
+  "us-gov-west-1",
 ]);
 
 /**
@@ -102,6 +105,7 @@ export function applyLayers(
   lambdas: LambdaFunction[],
   pythonLayerVersion?: number,
   nodeLayerVersion?: number,
+  isGovCloud?: boolean,
 ) {
   if (!availableRegions.has(region)) {
     return [];
@@ -113,6 +117,10 @@ export function applyLayers(
       return;
     }
 
+    if (isGovCloud === undefined) {
+      isGovCloud = false;
+    }
+
     let layerARN;
 
     if (lambda.runtimeType === RuntimeType.PYTHON) {
@@ -120,7 +128,7 @@ export function applyLayers(
         errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Python", "python"));
         return;
       }
-      layerARN = getLayerARN(region, pythonLayerVersion, lambda.runtime);
+      layerARN = getLayerARN(region, pythonLayerVersion, lambda.runtime, isGovCloud);
     }
 
     if (lambda.runtimeType === RuntimeType.NODE) {
@@ -128,7 +136,7 @@ export function applyLayers(
         errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Node.js", "node"));
         return;
       }
-      layerARN = getLayerARN(region, nodeLayerVersion, lambda.runtime);
+      layerARN = getLayerARN(region, nodeLayerVersion, lambda.runtime, isGovCloud);
     }
 
     if (layerARN !== undefined) {
@@ -142,8 +150,12 @@ export function applyLayers(
   return errors;
 }
 
-function getLayerARN(region: string, version: number, runtime: string) {
+function getLayerARN(region: string, version: number, runtime: string, isGovCloud: boolean) {
   const layerName = runtimeToLayerName[runtime];
+
+  if (isGovCloud) {
+    return `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:${layerName}:${version}`;
+  }
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
 }
 

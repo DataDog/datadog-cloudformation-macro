@@ -98,6 +98,12 @@ function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefiniti
   } as InputEvent;
 }
 
+function mockGovCloudInputEvent(params: any, mappings: any, logGroups?: LogGroupDefinition[]) {
+  const govCloudEvent = mockInputEvent(params, mappings, logGroups);
+  govCloudEvent.region = "us-gov-east-1";
+  return govCloudEvent;
+}
+
 describe("Macro", () => {
   describe("parameters and config", () => {
     it("uses transform parameters if they are provided", async () => {
@@ -160,6 +166,17 @@ describe("Macro", () => {
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
       expect(lambdaProperties.Layers).toBeUndefined();
+    });
+
+    it("uses the govcloud layer when isGovCloud is true", async () => {
+      const params = { isGovCloud: true, nodeLayerVersion: 25 };
+      const inputEvent = mockGovCloudInputEvent(params, {});
+      const output = await handler(inputEvent, {});
+      const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
+      expect(lambdaProperties.Layers).toEqual([
+        expect.stringMatching(/arn:aws-us-gov:lambda:us-gov-east-1:002406178527:layer:Datadog-Node12-x:25/),
+      ]);
     });
   });
 
