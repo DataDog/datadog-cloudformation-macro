@@ -65,13 +65,7 @@ export const handler = async (event: InputEvent, _: any) => {
 
     // Apply layers
     if (config.addLayers) {
-      const errors = applyLayers(
-        region,
-        lambdas,
-        config.pythonLayerVersion,
-        config.nodeLayerVersion,
-        config.isGovCloud,
-      );
+      const errors = applyLayers(region, lambdas, config.pythonLayerVersion, config.nodeLayerVersion);
       if (errors.length > 0) {
         return {
           requestId: event.requestId,
