@@ -1,4 +1,5 @@
 # Datadog Serverless Macro
+![build_serverless](https://github.com/DataDog/datadog-cloudformation-macro/workflows/build_serverless/badge.svg)
 
 Datadog recommends the Serverless CloudFormation macro for customers using AWS SAM or AWS CDK to deploy their serverless applications.
 
