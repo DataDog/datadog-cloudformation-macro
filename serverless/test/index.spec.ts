@@ -168,8 +168,8 @@ describe("Macro", () => {
       expect(lambdaProperties.Layers).toBeUndefined();
     });
 
-    it("uses the govcloud layer when isGovCloud is true", async () => {
-      const params = { isGovCloud: true, nodeLayerVersion: 25 };
+    it("uses the GovCloud layer when a GovCloud region is detected", async () => {
+      const params = { nodeLayerVersion: 25 };
       const inputEvent = mockGovCloudInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;

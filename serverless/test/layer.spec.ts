@@ -133,7 +133,7 @@ describe("isGovCloud", () => {
   it("applies the GovCloud layer", () => {
     const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON);
     const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs10.x", RuntimeType.NODE);
-    const errors = applyLayers("us-gov-east-1", [pythonLambda, nodeLambda], 21, 30, true);
+    const errors = applyLayers("us-gov-east-1", [pythonLambda, nodeLambda], 21, 30);
 
     expect(errors.length).toEqual(0);
     expect(pythonLambda.properties.Layers).toEqual([

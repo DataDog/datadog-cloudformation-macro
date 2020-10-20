@@ -105,7 +105,6 @@ export function applyLayers(
   lambdas: LambdaFunction[],
   pythonLayerVersion?: number,
   nodeLayerVersion?: number,
-  isGovCloud?: boolean,
 ) {
   if (!availableRegions.has(region)) {
     return [];
@@ -117,10 +116,6 @@ export function applyLayers(
       return;
     }
 
-    if (isGovCloud === undefined) {
-      isGovCloud = false;
-    }
-
     let layerARN;
 
     if (lambda.runtimeType === RuntimeType.PYTHON) {
@@ -128,7 +123,7 @@ export function applyLayers(
         errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Python", "python"));
         return;
       }
-      layerARN = getLayerARN(region, pythonLayerVersion, lambda.runtime, isGovCloud);
+      layerARN = getLayerARN(region, pythonLayerVersion, lambda.runtime);
     }
 
     if (lambda.runtimeType === RuntimeType.NODE) {
@@ -136,7 +131,7 @@ export function applyLayers(
         errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Node.js", "node"));
         return;
       }
-      layerARN = getLayerARN(region, nodeLayerVersion, lambda.runtime, isGovCloud);
+      layerARN = getLayerARN(region, nodeLayerVersion, lambda.runtime);
     }
 
     if (layerARN !== undefined) {
@@ -150,9 +145,11 @@ export function applyLayers(
   return errors;
 }
 
-function getLayerARN(region: string, version: number, runtime: string, isGovCloud: boolean) {
+function getLayerARN(region: string, version: number, runtime: string) {
   const layerName = runtimeToLayerName[runtime];
+  const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
+  // if this is a GovCloud region, use the GovCloud lambda layer
   if (isGovCloud) {
     return `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:${layerName}:${version}`;
   }
