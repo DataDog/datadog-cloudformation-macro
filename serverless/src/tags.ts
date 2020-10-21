@@ -49,7 +49,7 @@ export function addMacroTag(lambdas: LambdaFunction[], version: string | undefin
 export function addCDKTag(lambdas: LambdaFunction[]) {
   lambdas.forEach((lambda) => {
     const tags = lambda.properties.Tags ?? [];
-    tags.push({ Value: 'CDK', Key: MACRO_BY });
+    tags.push({ Value: "CDK", Key: MACRO_BY });
 
     lambda.properties.Tags = tags;
   });
@@ -58,11 +58,11 @@ export function addCDKTag(lambdas: LambdaFunction[]) {
 export function addSAMTag(lambdas: LambdaFunction[]) {
   lambdas.forEach((lambda) => {
     const tags = lambda.properties.Tags ?? [];
-    tags.forEach(tag => {
-      if (tag.Key === 'lambda:createdBy' && tag.Value === 'SAM') {
+    tags.forEach((tag) => {
+      if (tag.Key === "lambda:createdBy" && tag.Value === "SAM") {
         tags.push({ Value: `SAM`, Key: MACRO_BY });
       }
-    })
+    });
 
     lambda.properties.Tags = tags;
   });

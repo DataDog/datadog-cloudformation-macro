@@ -40,7 +40,13 @@ jest.mock("aws-sdk", () => {
   };
 });
 
-function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefinition[], fromCDK?: boolean, fromSAM?: boolean) {
+function mockInputEvent(
+  params: any,
+  mappings: any,
+  logGroups?: LogGroupDefinition[],
+  fromCDK?: boolean,
+  fromSAM?: boolean,
+) {
   const fragment: Record<string, any> = {
     AWSTemplateFormatVersion: "2010-09-09",
     Description: "Sample lambda with SAM and Datadog macro",
@@ -100,10 +106,12 @@ function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefiniti
   }
 
   if (fromSAM) {
-    fragment.Resources.HelloWorldFunction.Properties.Tags = [{
-      Key: "lambda:createdBy",
-      Value: "SAM",
-    }];
+    fragment.Resources.HelloWorldFunction.Properties.Tags = [
+      {
+        Key: "lambda:createdBy",
+        Value: "SAM",
+      },
+    ];
   }
 
   return {
