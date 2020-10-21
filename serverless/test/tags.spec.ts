@@ -1,5 +1,5 @@
 import { RuntimeType, LambdaFunction } from "../src/layer";
-import { addServiceAndEnvTags, addMacroTag } from "../src/tags";
+import { addServiceAndEnvTags, addMacroTag, addCDKTag } from "../src/tags";
 
 function mockLambdaFunction(tags: any) {
   return {
@@ -80,6 +80,26 @@ describe("addMacroTag", () => {
     expect(lambda.properties.Tags).toEqual([
       { Value: "dev", Key: "env" },
       { Value: "v6.6.6", Key: "dd_sls_macro" },
+    ]);
+  });
+});
+
+describe("addCDKTag", () => {
+  it("creates tags property if needed", () => {
+    const lambda = mockLambdaFunction(undefined);
+    addCDKTag([lambda]);
+
+    expect(lambda.properties.Tags).toEqual([{ Value: "CDK", Key: "lambda:createdBy" }]);
+  });
+
+  it("appends version tag if needed", () => {
+    const existingTags = [{ Value: "dev", Key: "env" }];
+    const lambda = mockLambdaFunction(existingTags);
+    addCDKTag([lambda]);
+
+    expect(lambda.properties.Tags).toEqual([
+      { Value: "dev", Key: "env" },
+      { Value: "CDK", Key: "lambda:createdBy" },
     ]);
   });
 });

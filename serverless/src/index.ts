@@ -1,7 +1,7 @@
 import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration } from "./env";
 import { findLambdas, applyLayers, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError } from "./tracing";
-import { addServiceAndEnvTags, addMacroTag } from "./tags";
+import { addServiceAndEnvTags, addMacroTag, addCDKTag } from "./tags";
 import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 import { CloudWatchLogs } from "aws-sdk";
@@ -121,6 +121,10 @@ export const handler = async (event: InputEvent, _: any) => {
     }
 
     addMacroTag(lambdas, version);
+
+    if (resources.CDKMetadata) {
+      addCDKTag(lambdas);
+    }
 
     // Redirect handlers
     redirectHandlers(lambdas, config.addLayers);

@@ -40,7 +40,7 @@ jest.mock("aws-sdk", () => {
   };
 });
 
-function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefinition[]) {
+function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefinition[], fromCDK?: boolean) {
   const fragment: Record<string, any> = {
     AWSTemplateFormatVersion: "2010-09-09",
     Description: "Sample lambda with SAM and Datadog macro",
@@ -87,6 +87,18 @@ function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefiniti
       fragment.Resources[lg.key] = lg.logGroupResource;
     }
   }
+
+  if (fromCDK) {
+    fragment.Resources.CDKMetadata = {
+      Type: "AWS::CDK::Metadata",
+      Properties: {
+        Modules:
+          "aws-cdk=1.64.0,@aws-cdk/assets=1.64.0,@aws-cdk/aws-applicationautoscaling=1.64.0,@aws-cdk/aws-autoscaling-common=1.64.0,@aws-cdk/aws-cloudwatch=1.64.0,@aws-cdk/aws-codeguruprofiler=1.64.0,@aws-cdk/aws-ec2=1.64.0,@aws-cdk/aws-events=1.64.0,@aws-cdk/aws-iam=1.64.0,@aws-cdk/aws-kms=1.64.0,@aws-cdk/aws-lambda=1.64.0,@aws-cdk/aws-logs=1.64.0,@aws-cdk/aws-s3=1.64.0,@aws-cdk/aws-s3-assets=1.64.0,@aws-cdk/aws-sqs=1.64.0,@aws-cdk/aws-ssm=1.64.0,@aws-cdk/cloud-assembly-schema=1.64.0,@aws-cdk/core=1.64.0,@aws-cdk/cx-api=1.64.0,@aws-cdk/region-info=1.64.0,jsii-runtime=node.js/v14.8.0",
+      },
+      Condition: "CDKMetadataAvailable",
+    };
+  }
+
   return {
     region: "us-east-1",
     accountId: "test-accountId",
@@ -222,6 +234,18 @@ describe("Macro", () => {
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
       expect(lambdaProperties.Tags).toEqual([{ Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" }]);
+    });
+
+    it("only adds cdk created tag when CDKMetadata is present", async () => {
+      const params = { nodeLayerVersion: 25 };
+      const inputEvent = mockInputEvent(params, {}, undefined, true);
+      const output = await handler(inputEvent, {});
+      const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
+      expect(lambdaProperties.Tags).toEqual([
+        { Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" },
+        { Value: "CDK", Key: "lambda:createdBy" },
+      ]);
     });
 
     it("adds tags if either 'service' or 'env' params are provided", async () => {
