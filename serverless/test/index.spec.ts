@@ -40,7 +40,7 @@ jest.mock("aws-sdk", () => {
   };
 });
 
-function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefinition[], fromCDK?: boolean) {
+function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefinition[], fromCDK?: boolean, fromSAM?: boolean) {
   const fragment: Record<string, any> = {
     AWSTemplateFormatVersion: "2010-09-09",
     Description: "Sample lambda with SAM and Datadog macro",
@@ -97,6 +97,13 @@ function mockInputEvent(params: any, mappings: any, logGroups?: LogGroupDefiniti
       },
       Condition: "CDKMetadataAvailable",
     };
+  }
+
+  if (fromSAM) {
+    fragment.Resources.HelloWorldFunction.Properties.Tags = [{
+      Key: "lambda:createdBy",
+      Value: "SAM",
+    }];
   }
 
   return {
@@ -244,7 +251,20 @@ describe("Macro", () => {
 
       expect(lambdaProperties.Tags).toEqual([
         { Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" },
-        { Value: "CDK", Key: "lambda:createdBy" },
+        { Value: "CDK", Key: "dd_sls_macro_by" },
+      ]);
+    });
+
+    it("only adds SAM created tag when lambda:createdBy:SAM tag is present", async () => {
+      const params = { nodeLayerVersion: 25 };
+      const inputEvent = mockInputEvent(params, {}, undefined, false, true);
+      const output = await handler(inputEvent, {});
+      const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
+      expect(lambdaProperties.Tags).toEqual([
+        { Value: "SAM", Key: "lambda:createdBy" },
+        { Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" },
+        { Value: "SAM", Key: "dd_sls_macro_by" },
       ]);
     });
 

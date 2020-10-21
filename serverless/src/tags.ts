@@ -4,7 +4,7 @@ const SERVICE = "service";
 const ENV = "env";
 const MACRO_VERSION = "dd_sls_macro";
 // Following the same pattern from SAM
-const LAMBDA_CREATED = "lambda:createdBy";
+const MACRO_BY = "dd_sls_macro_by";
 
 export function addServiceAndEnvTags(lambdas: LambdaFunction[], service: string | undefined, env: string | undefined) {
   // Add the tag for each function, unless a 'service' or 'env' tag already exists.
@@ -49,7 +49,20 @@ export function addMacroTag(lambdas: LambdaFunction[], version: string | undefin
 export function addCDKTag(lambdas: LambdaFunction[]) {
   lambdas.forEach((lambda) => {
     const tags = lambda.properties.Tags ?? [];
-    tags.push({ Value: `CDK`, Key: LAMBDA_CREATED });
+    tags.push({ Value: 'CDK', Key: MACRO_BY });
+
+    lambda.properties.Tags = tags;
+  });
+}
+
+export function addSAMTag(lambdas: LambdaFunction[]) {
+  lambdas.forEach((lambda) => {
+    const tags = lambda.properties.Tags ?? [];
+    tags.forEach(tag => {
+      if (tag.Key === 'lambda:createdBy' && tag.Value === 'SAM') {
+        tags.push({ Value: `SAM`, Key: MACRO_BY });
+      }
+    })
 
     lambda.properties.Tags = tags;
   });
