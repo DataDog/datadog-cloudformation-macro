@@ -1,5 +1,5 @@
 import { RuntimeType, LambdaFunction } from "../src/layer";
-import { addServiceAndEnvTags, addMacroTag } from "../src/tags";
+import { addServiceAndEnvTags, addMacroTag, addCDKTag, addSAMTag } from "../src/tags";
 
 function mockLambdaFunction(tags: any) {
   return {
@@ -80,6 +80,46 @@ describe("addMacroTag", () => {
     expect(lambda.properties.Tags).toEqual([
       { Value: "dev", Key: "env" },
       { Value: "v6.6.6", Key: "dd_sls_macro" },
+    ]);
+  });
+});
+
+describe("addCDKTag", () => {
+  it("creates tags property if needed", () => {
+    const lambda = mockLambdaFunction(undefined);
+    addCDKTag([lambda]);
+
+    expect(lambda.properties.Tags).toEqual([{ Value: "CDK", Key: "dd_sls_macro_by" }]);
+  });
+
+  it("appends version tag if needed", () => {
+    const existingTags = [{ Value: "dev", Key: "env" }];
+    const lambda = mockLambdaFunction(existingTags);
+    addCDKTag([lambda]);
+
+    expect(lambda.properties.Tags).toEqual([
+      { Value: "dev", Key: "env" },
+      { Value: "CDK", Key: "dd_sls_macro_by" },
+    ]);
+  });
+});
+
+describe("addSAMTag", () => {
+  it("creates tags property if needed", () => {
+    const lambda = mockLambdaFunction(undefined);
+    addSAMTag([lambda]);
+
+    expect(lambda.properties.Tags).toEqual([]);
+  });
+
+  it("appends version tag if needed", () => {
+    const existingTags = [{ Value: "SAM", Key: "lambda:createdBy" }];
+    const lambda = mockLambdaFunction(existingTags);
+    addSAMTag([lambda]);
+
+    expect(lambda.properties.Tags).toEqual([
+      { Value: "SAM", Key: "lambda:createdBy" },
+      { Value: "SAM", Key: "dd_sls_macro_by" },
     ]);
   });
 });
