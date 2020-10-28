@@ -1,4 +1,5 @@
 # Datadog Serverless Macro
+![build_serverless](https://github.com/DataDog/datadog-cloudformation-macro/workflows/build_serverless/badge.svg)
 
 Datadog recommends the Serverless CloudFormation macro for customers using AWS SAM or AWS CDK to deploy their serverless applications.
 
@@ -20,7 +21,7 @@ aws cloudformation create-stack \
   --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
 ```
 
-If you are updating the macro after a new release, use the `update-stack` method instead with the same parameters. Alternatively, you may also specify a version of the macro from the latest [releases](https://github.com/DataDog/datadog-cloudformation-macro/releases) by replacing `latest.yml` with the release version, e.g. `0.1.2.yaml`:
+If you are updating the macro after a new release, use the `update-stack` method instead with the same parameters. Alternatively, you may also specify a version of the macro from the latest [releases](https://github.com/DataDog/datadog-cloudformation-macro/releases) by replacing `latest.yml` with the release version, e.g. `0.1.2.yml`:
 ```bash
 aws cloudformation update-stack \
   --stack-name datadog-serverless-macro \
@@ -40,6 +41,13 @@ To deploy your serverless application with SAM, add the Datadog Serverless Cloud
 Transform:
   - AWS::Serverless-2016-10-31
   - Name: DatadogServerless
+    Parameters:
+      pythonLayerVersion: "<LAYER_VERSION>" # Use nodeLayerVersion for Node.js
+      stackName: !Ref "AWS::StackName"
+      forwarderArn: "<FORWARDER_ARN>"
+      service: "<SERVICE>" # Optional
+      env: "<ENV>" # Optional
+      # For additional parameters, see the Configuration section
 ```
 
 ### AWS CDK
@@ -54,103 +62,16 @@ class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
     this.addTransform("DatadogServerless");
-  }
-}
-```
 
-**Python**
-```python
-from aws_cdk import core
-
-class CdkStack(core.Stack):
-    def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
-        super().__init__(scope, id, **kwargs)
-        self.add_transform("DatadogServerless")
-```
-
-Note: For both SAM and CDK deployments, if you did not modify the provided `template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerless`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
-
-## Configuration
-
-To further configure your plugin, use the following custom parameters in your `serverless.yml`:
-
-| Parameter               | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `addLayers`             | Whether to add the Lambda Layers or expect the user to bring their own. Defaults to true. When true, the Lambda Library version variables are also required. When false, you must include the Datadog Lambda library in your functions' deployment packages.                                                                                                                                                                                                                                    |
-| `pythonLayerVersion`    | Version of the Python Lambda layer to install, such as "21". Required if you are deploying at least one Lambda function written in Python and `addLayers` is true. Find the latest version number from [https://github.com/DataDog/datadog-lambda-python/releases][5].                                                                                                                                                                                                                           |
-| `nodeLayerVersion`      | Version of the Node.js Lambda layer to install, such as "29". Required if you are deploying at least one Lambda function written in Node.js and `addLayers` is true. Find the latest version number from [https://github.com/DataDog/datadog-lambda-js/releases][6].                                                                                                                                                                                                                             |
-| `forwarderArn:`         | When set, the plugin will automatically subscribe the functions' log groups to the Datadog Forwarder. Alternatively, you can define the log subscription using the `AWS::Logs::SubscriptionFilter` resource. **Note**: The 'FunctionName' property must be defined for functions that are deployed for the first time because the macro needs the function name to create the log groups and subscription filters. 'FunctionName' must NOT contain any CloudFormation functions, such as `!Sub`. |
-| `stackName`             | The name of the CloudFormation stack being deployed. Only required when a `forwarderArn` is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For more information on how to add this parameter for SAM and CDK, see the examples below.                                                                                                                                                                                           |
-| `flushMetricsToLogs`    | Send custom metrics via logs with the Datadog Forwarder Lambda function (recommended). Defaults to `true`. When set to `false`, the Datadog API key must be defined using `apiKey` or `apiKMSKey`.                                                                                                                                                                                                                                                                                       |
-| `site`                  | Set which Datadog site to send data, only needed when flushMetricsToLogs is `false`. Defaults to `datadoghq.com`. Set to `datadoghq.eu` for the Datadog EU site.                                                                                                                                                                                                                                                                                                                                 |
-| `apiKey`                | The Datadog API Key, only needed when `flushMetricsToLogs` is set to `false`.                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `apiKMSKey`             | Datadog API Key encrypted using KMS. Use this parameter in place of `apiKey` when `flushMetricsToLogs` is false, and you are using KMS encryption.                                                                                                                                                                                                                                                                                                                                               |
-| `enableEnhancedMetrics` | Enable enhanced metrics for Lambda functions. Defaults to `true`. The Datadog Forwarder Lambda function must subscribe the function log group.                                                                                                                                                                                                                                                                                                                                            |
-| `enableXrayTracing`     | Enable tracing on Lambda functions. Defaults to false.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `enableDDTracing`       | Enable tracing on Lambda function using dd-trace, Datadog's APM library. Defaults to `true`. The Datadog Forwarder Lambda function must subscribe the function log group.                                                                                                                                                                                                                                                                                                                       |
-| `service`               | When set, the macro adds a `service` tag to all Lambda functions with the provided value.                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `env`                   | When set, the macro adds an `env` tag to all Lambda functions with the provided value.                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `logLevel`              | The log level, set to `DEBUG` for extended logging. Defaults to `info`.                                                                                                                                                                                                                                                                                                                                                                                                                          |
-
-To use any of these parameters, add a `custom` > `datadog` section to your `serverless.yml` similar to this example:
-
-```yaml
-custom:
-  datadog:
-    addLayers: true
-    pythonLayerVersion: "21"
-    nodeLayerVersion: "29"
-    forwarderArn: arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder
-    stackName: !Ref "AWS::StackName"
-    flushMetricsToLogs: true
-    site: datadoghq.com
-    apiKey: "{Datadog_API_Key}"
-    apiKMSKey: "{Encripted_Datadog_API_Key}"
-    enableEnhancedMetrics: true
-    enableXrayTracing: false
-    enableDDTracing: true
-    service: "{your-service-name}"
-    env: "{your-env-name}"
-    logLevel: "info"
-```
-
-### SAM
-
-To configure this library in SAM, add the following section to the `Parameters` under the `Transform` section of your `template.yml` file:
-
-```yaml
-Transform:
-  - AWS::Serverless-2016-10-31
-  - Name: DatadogServerless
-    Parameters: 
-        nodeLayerVersion: 25
-        forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder"
-        stackName: !Ref "AWS::StackName"
-        service: "{your-service-name}"
-        env: "test"
-```
-
-### AWS CDK
-
-To configure the library when deploying with CDK, add a `CfnMapping` to your `Stack` object: 
-
-**Typescript**
-```typescript
-import * as cdk from "@aws-cdk/core";
-
-class CdkStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
-    super(scope, id, props);
-    this.addTransform("DatadogServerless");
-
-    new cdk.CfnMapping(this, "Datadog", { // The id for this CfnMapping must be 'Datadog'
+    new cdk.CfnMapping(this, "Datadog", {
       mapping: {
-        Parameters: { // This mapping key must be 'Parameters'
-          nodeLayerVersion: 25,
-          forwarderArn: "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
+        Parameters: {
+          nodeLayerVersion: "<LAYER_VERSION>",
+          forwarderArn: "<FORWARDER_ARN>",
           stackName: this.stackName,
-          service: "service-name",
-          env: "test",
+          service: "<SERVICE>", // Optional
+          env: "<ENV>", // Optional
+          // For additional parameters, see the Configuration section
         },
       },
     });
@@ -167,37 +88,47 @@ class CdkStack(core.Stack):
     super().__init__(scope, id, **kwargs)
     self.add_transform("DatadogServerless")
 
-    core.CfnMapping(self, "Datadog", # The id for this CfnMapping must be 'Datadog'
+    mapping = core.CfnMapping(self, "Datadog",
       mapping={
-        "Parameters": { # This mapping key must be 'Parameters'
-          "pythonLayerVersion": 19,
-          "forwarderArn": "arn:aws:lambda:us-east-1:000000000000:function:datadog-forwarder",
+        "Parameters": {
+          "pythonLayerVersion": "<LAYER_VERSION>",
+          "forwarderArn": "<FORWARDER_ARN>",
           "stackName": self.stackName,
-          "service": "service-name",
-          "env": "test",
+          "service": "<SERVICE>",  # Optional
+          "env": "<ENV>",  # Optional
+          # For additional parameters, see the Configuration section
         }
       })
 ```
+
+Note: For both SAM and CDK deployments, if you did not modify the provided `template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerless`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
+
+## Configuration
+
+To further configure your plugin, use the following custom parameters:
+
+| Parameter               | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|-------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `addLayers`             | Whether to add the Lambda Layers or expect the user to bring their own. Defaults to true. When true, the Lambda Library version variables are also required. When false, you must include the Datadog Lambda library in your functions' deployment packages.                                                                                                                                                                                                                                    |
+| `pythonLayerVersion`    | Version of the Python Lambda layer to install, such as "21". Required if you are deploying at least one Lambda function written in Python and `addLayers` is true. Find the latest version number from [https://github.com/DataDog/datadog-lambda-python/releases][5].                                                                                                                                                                                                                           |
+| `nodeLayerVersion`      | Version of the Node.js Lambda layer to install, such as "29". Required if you are deploying at least one Lambda function written in Node.js and `addLayers` is true. Find the latest version number from [https://github.com/DataDog/datadog-lambda-js/releases][6].                                                                                                                                                                                                                             |
+| `forwarderArn:`         | When set, the plugin will automatically subscribe the functions' log groups to the Datadog Forwarder. Alternatively, you can define the log subscription using the [AWS::Logs::SubscriptionFilter][7] resource. **Note**: The 'FunctionName' property must be defined for functions that are deployed for the first time because the macro needs the function name to create the log groups and subscription filters. 'FunctionName' must NOT contain any CloudFormation functions, such as `!Sub`. |
+| `stackName`             | The name of the CloudFormation stack being deployed. Only required when a `forwarderArn` is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For more information on how to add this parameter for SAM and CDK, see the examples below.                                                                                                                                                                                           |
+| `flushMetricsToLogs`    | Send custom metrics via logs with the Datadog Forwarder Lambda function (recommended). Defaults to `true`. When set to `false`, the Datadog API key must be defined using `apiKey` or `apiKMSKey`.                                                                                                                                                                                                                                                                                       |
+| `site`                  | Set which Datadog site to send data, only needed when flushMetricsToLogs is `false`. Defaults to `datadoghq.com`. Set to `datadoghq.eu` for the Datadog EU site.                                                                                                                                                                                                                                                                                                                                 |
+| `apiKey`                | The Datadog API Key, only needed when `flushMetricsToLogs` is set to `false`.                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `apiKMSKey`             | Datadog API Key encrypted using KMS. Use this parameter in place of `apiKey` when `flushMetricsToLogs` is false, and you are using KMS encryption.                                                                                                                                                                                                                                                                                                                                               |
+| `enableEnhancedMetrics` | Enable enhanced metrics for Lambda functions. Defaults to `true`. The Datadog Forwarder Lambda function must subscribe the function log group.                                                                                                                                                                                                                                                                                                                                            |
+| `enableXrayTracing`     | Enable tracing on Lambda functions. Defaults to false.                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `enableDDTracing`       | Enable tracing on Lambda function using dd-trace, Datadog's APM library. Defaults to `true`. The Datadog Forwarder Lambda function must subscribe the function log group.                                                                                                                                                                                                                                                                                                                       |
+| `service`               | When set, the macro adds a `service` tag to all Lambda functions with the provided value.                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `env`                   | When set, the macro adds an `env` tag to all Lambda functions with the provided value.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `logLevel`              | The log level, set to `DEBUG` for extended logging. Defaults to `info`.                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ## How it works
 
 This macro modifies your CloudFormation template to install the Datadog Lambda Library by attaching the Lambda Layers for [Node.js][2] and [Python][1] to your functions. It redirects to a replacement handler that initializes the Lambda Library without any required code changes.
 
-**IMPORTANT NOTE:** Because the plugin automatically wraps your Lambda handler function, you do **NOT** need to wrap your handler function as stated in the Node.js and Python Layer documentation.
-
-**Node.js**
-```js
-module.exports.myHandler = datadog(
-  // This wrapper is NOT needed when using this plugin
-  async function myHandler(event, context) {},
-);
-```
-
-**Python**
-```python
-@datadog_lambda_wrapper # This wrapper is NOT needed when using this plugin
-def lambda_handler(event, context):
-```
 
 ## Troubleshooting
 
@@ -254,7 +185,7 @@ const subscription = new CfnSubscriptionFilter(this, `DatadogForwarderSubscripti
 
 ### Error message: 'logGroupNamePrefix' failed to satisfy constraint...
 
-The `forwarderArn` option does not work when `FunctionName` contains CloudFormation functions, such as `!Sub`. In this case, the macro does not have access to the actual function name (CloudFormation executes functions after transformations). It therefore cannot create log groups and subscription filters for your functions. 
+The `forwarderArn` option does not work when `FunctionName` contains CloudFormation functions, such as `!Sub`. In this case, the macro does not have access to the actual function name (CloudFormation executes functions after transformations). It therefore cannot create log groups and subscription filters for your functions.
 
 Remove the `forwarderArn` parameter from the SAM template or CDK source code, and instead define the subscription filters using the [AWS::Logs::SubscriptionFilter][7] resource like below.
 

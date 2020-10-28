@@ -4,6 +4,7 @@ import {
   RuntimeType,
   applyLayers,
   DD_ACCOUNT_ID,
+  DD_GOV_ACCOUNT_ID,
   getMissingLayerVersionErrorMsg,
 } from "../src/layer";
 
@@ -125,5 +126,21 @@ describe("applyLayers", () => {
     ]);
     expect(pythonLambda.properties.Layers).toBeUndefined();
     expect(nodeLambda.properties.Layers).toBeUndefined();
+  });
+});
+
+describe("isGovCloud", () => {
+  it("applies the GovCloud layer", () => {
+    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON);
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs10.x", RuntimeType.NODE);
+    const errors = applyLayers("us-gov-east-1", [pythonLambda, nodeLambda], 21, 30);
+
+    expect(errors.length).toEqual(0);
+    expect(pythonLambda.properties.Layers).toEqual([
+      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python38:21`,
+    ]);
+    expect(nodeLambda.properties.Layers).toEqual([
+      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node10-x:30`,
+    ]);
   });
 });

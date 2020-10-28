@@ -2,6 +2,7 @@ import { FunctionProperties, Resources } from "./index";
 
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
 export const DD_ACCOUNT_ID = "464622532012";
+export const DD_GOV_ACCOUNT_ID = "002406178527";
 
 export enum RuntimeType {
   NODE,
@@ -56,6 +57,8 @@ const availableRegions = new Set([
   "eu-west-2",
   "eu-west-3",
   "sa-east-1",
+  "us-gov-east-1",
+  "us-gov-west-1",
 ]);
 
 /**
@@ -144,6 +147,12 @@ export function applyLayers(
 
 function getLayerARN(region: string, version: number, runtime: string) {
   const layerName = runtimeToLayerName[runtime];
+  const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
+
+  // if this is a GovCloud region, use the GovCloud lambda layer
+  if (isGovCloud) {
+    return `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:${layerName}:${version}`;
+  }
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
 }
 
