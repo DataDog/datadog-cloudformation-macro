@@ -182,11 +182,11 @@ function lambdaHasDynamicallyGeneratedName(lambdas: LambdaFunction[]) {
 function addOutputLinks(outputs: Outputs, lambdas: LambdaFunction[], site: string) {
   for (const lambda of lambdas) {
     const functionKey = lambda.key;
-    const key = `DatadogMonitor${functionKey}`.replace(/[^a-z0-9]/gi, "");
+    const key = `DatadogServerless${functionKey}`.replace(/[^a-z0-9]/gi, "");
     // Create Fn::Sub string using the Logical ID of the function and AWS::Region/AccountId pseudoparameters
     // https://app.datadoghq.com/functions/${LogicalID}:${AWS::Region}:${AWS::AccountId}:aws?source=cfn-macro
     outputs[key] = {
-      Description: `See ${functionKey} in Datadog`,
+      Description: `Monitor ${functionKey} in Datadog:`,
       Value: {
         "Fn::Sub": `https://app.${site}/functions/\${${functionKey}}:\${AWS::Region}:\${AWS::AccountId}:aws?source=cfn-macro`,
       },
