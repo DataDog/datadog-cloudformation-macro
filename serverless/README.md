@@ -5,7 +5,7 @@ Datadog recommends the Serverless CloudFormation macro for customers using AWS S
 
 The plugin automatically configures ingestion of metrics, traces, and logs from your serverless applications by:
 
-- Installing and configures the Datadog Lambda library for your [Python][1] and [Node.js][2] Lambda functions.
+- Installing and configuring the Datadog Lambda library for your [Python][1] and [Node.js][2] Lambda functions.
 - Enabling the collection of enhanced Lambda metrics and custom metrics from your Lambda functions.
 - Managing subscriptions from the Datadog Forwarder to your Lambda function log groups.
 
