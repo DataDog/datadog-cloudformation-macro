@@ -17,19 +17,9 @@ export interface Resources {
   };
 }
 
-interface Outputs {
-  [key: string]: {
-    Description: string;
-    Value: {
-      [Fn: string]: string;
-    };
-  };
-}
-
 interface CfnTemplate {
   Mappings?: any;
   Resources: Resources;
-  Outputs: Outputs;
 }
 
 export interface InputEvent {
@@ -60,7 +50,6 @@ export const handler = async (event: InputEvent, _: any) => {
     const fragment = event.fragment;
     const resources = fragment.Resources;
     const lambdas = findLambdas(resources);
-    const outputs = fragment.Outputs;
 
     let config;
 
@@ -142,9 +131,6 @@ export const handler = async (event: InputEvent, _: any) => {
     // Redirect handlers
     redirectHandlers(lambdas, config.addLayers);
 
-    // Add Output Links to Datadog Function
-    addOutputLinks(outputs, lambdas, config.site);
-
     return {
       requestId: event.requestId,
       status: SUCCESS,
@@ -173,25 +159,6 @@ function lambdaHasDynamicallyGeneratedName(lambdas: LambdaFunction[]) {
     }
   }
   return dynmicallyNamedLambdas;
-}
-
-/**
- * Builds the CloudFormation Outputs containing the alphanumeric key, description,
- * and value (URL) to the function in Datadog
- */
-function addOutputLinks(outputs: Outputs, lambdas: LambdaFunction[], site: string) {
-  for (const lambda of lambdas) {
-    const functionKey = lambda.key;
-    const key = `DatadogServerless${functionKey}`.replace(/[^a-z0-9]/gi, "");
-    // Create Fn::Sub string using the Logical ID of the function and AWS::Region/AccountId pseudoparameters
-    // https://app.datadoghq.com/functions/${LogicalID}:${AWS::Region}:${AWS::AccountId}:aws?source=cfn-macro
-    outputs[key] = {
-      Description: `Monitor ${functionKey} in Datadog:`,
-      Value: {
-        "Fn::Sub": `https://app.${site}/functions/\${${functionKey}}:\${AWS::Region}:\${AWS::AccountId}:aws?source=cfn-macro`,
-      },
-    };
-  }
 }
 
 export function getMissingStackNameErrorMsg(lambdaKeys: string[]) {
