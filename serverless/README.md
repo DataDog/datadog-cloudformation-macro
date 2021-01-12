@@ -1,5 +1,6 @@
 # Datadog Serverless Macro
 ![build_serverless](https://github.com/DataDog/datadog-cloudformation-macro/workflows/build_serverless/badge.svg)
+[![Slack](https://chat.datadoghq.com/badge.svg?bg=632CA6)](https://chat.datadoghq.com/)
 
 Datadog recommends the Serverless CloudFormation macro for customers using AWS SAM or AWS CDK to deploy their serverless applications.
 
@@ -210,6 +211,10 @@ const subscription = new CfnSubscriptionFilter(this, `DatadogForwarderSubscripti
     filterPattern: ''
 });
 ```
+
+## Community
+
+For product feedback and questions, join the `#serverless` channel in the [Datadog community on Slack](https://chat.datadoghq.com/).
 
 [1]: https://github.com/DataDog/datadog-lambda-layer-python
 [2]: https://github.com/DataDog/datadog-lambda-layer-js
