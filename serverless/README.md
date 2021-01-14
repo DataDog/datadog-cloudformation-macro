@@ -1,5 +1,6 @@
 # Datadog Serverless Macro
 ![build_serverless](https://github.com/DataDog/datadog-cloudformation-macro/workflows/build_serverless/badge.svg)
+[![Slack](https://chat.datadoghq.com/badge.svg?bg=632CA6)](https://chat.datadoghq.com/)
 
 Datadog recommends the Serverless CloudFormation macro for customers using AWS SAM or AWS CDK to deploy their serverless applications.
 
@@ -115,7 +116,7 @@ To further configure your plugin, use the following custom parameters:
 | `forwarderArn:`         | When set, the plugin will automatically subscribe the functions' log groups to the Datadog Forwarder. Alternatively, you can define the log subscription using the [AWS::Logs::SubscriptionFilter][7] resource. **Note**: The 'FunctionName' property must be defined for functions that are deployed for the first time because the macro needs the function name to create the log groups and subscription filters. 'FunctionName' must NOT contain any CloudFormation functions, such as `!Sub`. |
 | `stackName`             | The name of the CloudFormation stack being deployed. Only required when a `forwarderArn` is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For more information on how to add this parameter for SAM and CDK, see the examples below.                                                                                                                                                                                           |
 | `flushMetricsToLogs`    | Send custom metrics via logs with the Datadog Forwarder Lambda function (recommended). Defaults to `true`. When set to `false`, the Datadog API key must be defined using `apiKey` or `apiKMSKey`.                                                                                                                                                                                                                                                                                       |
-| `site`                  | Set which Datadog site to send data, only needed when flushMetricsToLogs is `false`. Defaults to `datadoghq.com`. Set to `datadoghq.eu` for the Datadog EU site.                                                                                                                                                                                                                                                                                                                                 |
+| `site`                  | Set which Datadog site to send data, only needed when flushMetricsToLogs is `false`. Possible values are `datadoghq.com`, `datadoghq.eu`, `us3.datadoghq.com` and `ddog-gov.com`. The default is `datadoghq.com`.                                                                                                                                                                                                                                                                                                                                 |
 | `apiKey`                | The Datadog API Key, only needed when `flushMetricsToLogs` is set to `false`.                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `apiKMSKey`             | Datadog API Key encrypted using KMS. Use this parameter in place of `apiKey` when `flushMetricsToLogs` is false, and you are using KMS encryption.                                                                                                                                                                                                                                                                                                                                               |
 | `enableEnhancedMetrics` | Enable enhanced metrics for Lambda functions. Defaults to `true`. The Datadog Forwarder Lambda function must subscribe the function log group.                                                                                                                                                                                                                                                                                                                                            |
@@ -210,6 +211,10 @@ const subscription = new CfnSubscriptionFilter(this, `DatadogForwarderSubscripti
     filterPattern: ''
 });
 ```
+
+## Community
+
+For product feedback and questions, join the `#serverless` channel in the [Datadog community on Slack](https://chat.datadoghq.com/).
 
 [1]: https://github.com/DataDog/datadog-lambda-layer-python
 [2]: https://github.com/DataDog/datadog-lambda-layer-js
