@@ -57,8 +57,8 @@ export class MissingSubDeclarationError extends Error {
  *
  * We first check if a log group exists for a given lambda. If it does, we then check if there
  * are existing subscriptions. If we do not find an existing datadog-cloudformation-macro subscription and
- * the number of existing subscription filters is less than the MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS then 
- * we will go ahead and add the subscription to the forwarder ARN (using AWS SDK). Otherwise we do not add 
+ * the number of existing subscription filters is less than the MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS then
+ * we will go ahead and add the subscription to the forwarder ARN (using AWS SDK). Otherwise we do not add
  * the subscription.
  *
  * If no log group exists and none are declared in the customer template, we will create one
@@ -211,7 +211,7 @@ export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogs, lo
   const subscriptionFilters = await describeSubscriptionFilters(cloudWatchLogs, logGroupName);
   let foundDatadogSubscriptionFilter = false;
   const numberOfActiveSubscriptionFilters = subscriptionFilters.length;
-  if (numberOfActiveSubscriptionFilters === MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS){
+  if (numberOfActiveSubscriptionFilters === MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS) {
     return false;
   }
   for (const subscription of subscriptionFilters) {

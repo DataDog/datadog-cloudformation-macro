@@ -137,7 +137,7 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     });
     expect(resources).toEqual(mockResources([lambda])); // template should not be modified
   });
-  
+
   //At the moment this test assumes a log group subscriptions is full when it has 2 existing subscriptions.
   it("does not overwrite existing subscriptions on a log group that already has the maximum number of subscriptions", async () => {
     const lambda = mockLambdaFunction("FunctionKey", "FunctionName");
