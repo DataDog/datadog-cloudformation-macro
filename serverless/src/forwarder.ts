@@ -8,8 +8,9 @@ const LAMBDA_LOG_GROUP_PREFIX = "/aws/lambda/";
 const FN_SUB = "Fn::Sub";
 const FN_JOIN = "Fn::Join";
 const REF = "Ref";
-export const SUBSCRIPTION_FILTER_NAME = "datadog-serverless-macro-filter";
+const maxAllowableLogGroupSubscriptions = 2;
 
+export const SUBSCRIPTION_FILTER_NAME = "datadog-serverless-macro-filter";
 export interface LogGroupDefinition {
   key: string;
   logGroupResource: {
@@ -55,8 +56,10 @@ export class MissingSubDeclarationError extends Error {
  * log group for each lambda function.
  *
  * We first check if a log group exists for a given lambda. If it does, we then check if there
- * are existing subscriptions. We can go ahead and add the subscription to the forwarder ARN
- * (using AWS SDK) if no other unknown subscriptions exist.
+ * are existing subscriptions. We cannot add the subscription to the forwarder ARN if the number
+ * of existing subscriptions equals the maximum number allowed by AWS cloudwatch logs.
+ * We can go ahead and add the subscription to the forwarder ARN
+ * (using AWS SDK) in any other case.
  *
  * If no log group exists and none are declared in the customer template, we will create one
  * through AWS SDK. We will also add a subscription to the forwarder ARN on this newly created
@@ -113,7 +116,8 @@ export async function addCloudWatchForwarderSubscriptions(
     }
 
     // If log group exists, we need to check if there are any existing subsciption filters.
-    // We will only add a new subscription to the provided forwarder ARN if no current subscriptions exist.
+    // If the number of existing subscription filters equals the maximum allowed by AWS cloudwatch log groups
+    // then we cannot subscribe to the provided forwarder ARN.
     if (logGroup) {
       // The log group exists in this case, so the logGroupName must also be defined, since
       // that's the property we used to find this log group.
@@ -206,9 +210,30 @@ export async function getExistingLambdaLogGroupsOnStack(cloudWatchLogs: CloudWat
   return logGroups ?? [];
 }
 
+/*
+Grab all the subscription filters from the log group
+Loop through the subscription filters, checking if any of the filters is a existing datadog-cloudformation-macro filter
+If we did not find a datadog-cloudformation-macro filter and the number of active subscription filters on the log group 
+is less than the maxAllowableLogGroupSubscriptions from AWS cloudwatch log groups then we subscribe.
+Otherwise we do not subscribe.
+*/
 export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogs, logGroupName: string) {
   const subscriptionFilters = await describeSubscriptionFilters(cloudWatchLogs, logGroupName);
-  return subscriptionFilters.length === 0;
+  let foundDatadogSubscriptionFilter = false;
+  const activeSubscriptionFilters = subscriptionFilters.length;
+  for (const subscription of subscriptionFilters) {
+    const filterName = subscription.filterName;
+    if (filterName === SUBSCRIPTION_FILTER_NAME) {
+      foundDatadogSubscriptionFilter = true;
+    }
+  }
+  if (foundDatadogSubscriptionFilter === false && activeSubscriptionFilters < maxAllowableLogGroupSubscriptions) {
+    //We should subscribe
+    return true;
+  } else {
+    //We should not subscribe
+    return false;
+  }
 }
 
 async function describeSubscriptionFilters(cloudWatchLogs: CloudWatchLogs, logGroupName: string) {

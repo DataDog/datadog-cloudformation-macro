@@ -137,8 +137,8 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     });
     expect(resources).toEqual(mockResources([lambda])); // template should not be modified
   });
-
-  it("does not overwrite existing unknown subscription on log group", async () => {
+  //At the moment this test assumes a log group subscriptions is full when it has 2 existing subscriptions.
+  it("does not overwrite existing subscriptions on a log group whose subscriptions slots are full", async () => {
     const lambda = mockLambdaFunction("FunctionKey", "FunctionName");
     const resources = mockResources([lambda]);
     const logGroupName = "/aws/lambda/FunctionName";
@@ -150,6 +150,11 @@ describe("addCloudWatchForwarderSubscriptions", () => {
             {
               destinationArn: "other-forwarder-arn",
               filterName: "other-filter",
+              logGroupName,
+            },
+            {
+              destinationArn: "other-forwarder-arn2",
+              filterName: "other-filter2",
               logGroupName,
             },
           ],
@@ -353,10 +358,75 @@ describe("shouldSubscribeLogGroup", () => {
       [logGroupName]: { logGroup: { logGroupName } },
     });
     const shouldSub = await shouldSubscribeLogGroup(cloudWatchLogs as any, logGroupName);
-    expect(shouldSub).toBeTruthy();
+    expect(shouldSub).toBe(true);
   });
-
-  it("returns false if there is an existing subscription", async () => {
+  it("returns false if the log group only has 1 existing datadog-serverless-macro-filter subscription filter.", async () => {
+    const functionNamePrefix = "stack-name-FunctionKey";
+    const logGroupName = `/aws/lambda/${functionNamePrefix}`;
+    const cloudWatchLogs = mockCloudWatchLogs({
+      [logGroupName]: {
+        logGroup: { logGroupName },
+        filters: {
+          subscriptionFilters: [
+            {
+              destinationArn: "destination-arn",
+              filterName: "datadog-serverless-macro-filter",
+              logGroupName,
+            },
+          ],
+        },
+      },
+    });
+    const shouldSub = await shouldSubscribeLogGroup(cloudWatchLogs as any, logGroupName);
+    expect(shouldSub).toBe(false);
+  });
+  it("returns true if the log group only has 1 existing non-Datadog subscription filter.", async () => {
+    const functionNamePrefix = "stack-name-FunctionKey";
+    const logGroupName = `/aws/lambda/${functionNamePrefix}`;
+    const cloudWatchLogs = mockCloudWatchLogs({
+      [logGroupName]: {
+        logGroup: { logGroupName },
+        filters: {
+          subscriptionFilters: [
+            {
+              destinationArn: "destination-arn",
+              filterName: "non-Datadog-filter",
+              logGroupName,
+            },
+          ],
+        },
+      },
+    });
+    const shouldSub = await shouldSubscribeLogGroup(cloudWatchLogs as any, logGroupName);
+    expect(shouldSub).toBe(true);
+  });
+  it("returns false if the log group has 2 existing subscription filters, 1 datadog-cloudformation-macro filter, and 1 non-Datadog filter.", async () => {
+    const functionNamePrefix = "stack-name-FunctionKey";
+    const logGroupName = `/aws/lambda/${functionNamePrefix}`;
+    const cloudWatchLogs = mockCloudWatchLogs({
+      [logGroupName]: {
+        logGroup: { logGroupName },
+        filters: {
+          subscriptionFilters: [
+            {
+              destinationArn: "destination-arn",
+              filterName: "non-Datadog-filter",
+              logGroupName,
+            },
+            {
+              destinationArn: "forwarder-arn",
+              filterName: "datadog-serverless-macro-filter",
+              logGroupName,
+            },
+          ],
+        },
+      },
+    });
+    const shouldSub = await shouldSubscribeLogGroup(cloudWatchLogs as any, logGroupName);
+    expect(shouldSub).toBe(false);
+  });
+  //This test assumes the maximum allowed subscriptions by a AWS Cloudwatch log group is 2.
+  it("returns false if the log group has 2 existing non-datadog subscription filters", async () => {
     const functionNamePrefix = "stack-name-FunctionKey";
     const logGroupName = `/aws/lambda/${functionNamePrefix}`;
     const cloudWatchLogs = mockCloudWatchLogs({
@@ -367,6 +437,11 @@ describe("shouldSubscribeLogGroup", () => {
             {
               destinationArn: "destination-arn",
               filterName: "another-filter",
+              logGroupName,
+            },
+            {
+              destinationArn: "other-forwarder-arn2",
+              filterName: "other-filter2",
               logGroupName,
             },
           ],
