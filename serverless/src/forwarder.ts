@@ -209,9 +209,8 @@ export async function getExistingLambdaLogGroupsOnStack(cloudWatchLogs: CloudWat
 
 export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogs, logGroupName: string) {
   const subscriptionFilters = await describeSubscriptionFilters(cloudWatchLogs, logGroupName);
-  let foundDatadogSubscriptionFilter = false;
   const numberOfActiveSubscriptionFilters = subscriptionFilters.length;
-  if (numberOfActiveSubscriptionFilters === MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS) {
+  if (numberOfActiveSubscriptionFilters >= MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS) {
     return false;
   }
   for (const subscription of subscriptionFilters) {
