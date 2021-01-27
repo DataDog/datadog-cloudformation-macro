@@ -8,6 +8,7 @@ const LAMBDA_LOG_GROUP_PREFIX = "/aws/lambda/";
 const FN_SUB = "Fn::Sub";
 const FN_JOIN = "Fn::Join";
 const REF = "Ref";
+const MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS = 2;
 export const SUBSCRIPTION_FILTER_NAME = "datadog-serverless-macro-filter";
 
 export interface LogGroupDefinition {
@@ -55,8 +56,10 @@ export class MissingSubDeclarationError extends Error {
  * log group for each lambda function.
  *
  * We first check if a log group exists for a given lambda. If it does, we then check if there
- * are existing subscriptions. We can go ahead and add the subscription to the forwarder ARN
- * (using AWS SDK) if no other unknown subscriptions exist.
+ * are existing subscriptions. If we do not find an existing datadog-cloudformation-macro subscription and
+ * the number of existing subscription filters is less than the MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS then
+ * we will go ahead and add the subscription to the forwarder ARN (using AWS SDK). Otherwise we do not add
+ * the subscription.
  *
  * If no log group exists and none are declared in the customer template, we will create one
  * through AWS SDK. We will also add a subscription to the forwarder ARN on this newly created
@@ -112,8 +115,6 @@ export async function addCloudWatchForwarderSubscriptions(
       }
     }
 
-    // If log group exists, we need to check if there are any existing subsciption filters.
-    // We will only add a new subscription to the provided forwarder ARN if no current subscriptions exist.
     if (logGroup) {
       // The log group exists in this case, so the logGroupName must also be defined, since
       // that's the property we used to find this log group.
@@ -208,7 +209,18 @@ export async function getExistingLambdaLogGroupsOnStack(cloudWatchLogs: CloudWat
 
 export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogs, logGroupName: string) {
   const subscriptionFilters = await describeSubscriptionFilters(cloudWatchLogs, logGroupName);
-  return subscriptionFilters.length === 0;
+  const numberOfActiveSubscriptionFilters = subscriptionFilters.length;
+  if (numberOfActiveSubscriptionFilters >= MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS) {
+    return false;
+  }
+  for (const subscription of subscriptionFilters) {
+    const filterName = subscription.filterName;
+    if (filterName === SUBSCRIPTION_FILTER_NAME) {
+      //We found an existing datadog-cloudformation-macro subscription
+      return false;
+    }
+  }
+  return true;
 }
 
 async function describeSubscriptionFilters(cloudWatchLogs: CloudWatchLogs, logGroupName: string) {
