@@ -216,7 +216,7 @@ export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogs, lo
   for (const subscription of subscriptionFilters) {
     const filterName = subscription.filterName;
     if (filterName === SUBSCRIPTION_FILTER_NAME) {
-      //We found a existing datadog-cloudformation-macro subscription
+      //We found an existing datadog-cloudformation-macro subscription
       return false;
     }
   }
