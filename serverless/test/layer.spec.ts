@@ -38,11 +38,12 @@ describe("findLambdas", () => {
       FunctionA: mockFunctionResource("nodejs8.10"),
       FunctionB: mockFunctionResource("nodejs10.x"),
       FunctionC: mockFunctionResource("nodejs12.x"),
-      FunctionD: mockFunctionResource("python2.7"),
-      FunctionE: mockFunctionResource("python3.6"),
-      FunctionF: mockFunctionResource("python3.7"),
-      FunctionG: mockFunctionResource("python3.8"),
-      FunctionH: mockFunctionResource("go1.10"),
+      FunctionD: mockFunctionResource("nodejs14.x"),
+      FunctionE: mockFunctionResource("python2.7"),
+      FunctionF: mockFunctionResource("python3.6"),
+      FunctionG: mockFunctionResource("python3.7"),
+      FunctionH: mockFunctionResource("python3.8"),
+      FunctionI: mockFunctionResource("go1.10"),
     };
     const lambdas = findLambdas(resources);
 
@@ -50,11 +51,12 @@ describe("findLambdas", () => {
       mockLambdaFunction("FunctionA", "nodejs8.10", RuntimeType.NODE),
       mockLambdaFunction("FunctionB", "nodejs10.x", RuntimeType.NODE),
       mockLambdaFunction("FunctionC", "nodejs12.x", RuntimeType.NODE),
-      mockLambdaFunction("FunctionD", "python2.7", RuntimeType.PYTHON),
-      mockLambdaFunction("FunctionE", "python3.6", RuntimeType.PYTHON),
-      mockLambdaFunction("FunctionF", "python3.7", RuntimeType.PYTHON),
-      mockLambdaFunction("FunctionG", "python3.8", RuntimeType.PYTHON),
-      mockLambdaFunction("FunctionH", "go1.10", RuntimeType.UNSUPPORTED),
+      mockLambdaFunction("FunctionD", "nodejs14.x", RuntimeType.NODE),
+      mockLambdaFunction("FunctionE", "python2.7", RuntimeType.PYTHON),
+      mockLambdaFunction("FunctionF", "python3.6", RuntimeType.PYTHON),
+      mockLambdaFunction("FunctionG", "python3.7", RuntimeType.PYTHON),
+      mockLambdaFunction("FunctionH", "python3.8", RuntimeType.PYTHON),
+      mockLambdaFunction("FunctionI", "go1.10", RuntimeType.UNSUPPORTED),
     ]);
   });
 });
