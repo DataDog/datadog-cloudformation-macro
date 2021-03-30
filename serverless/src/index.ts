@@ -4,7 +4,7 @@ import { getTracingMode, enableTracing, MissingIamRoleError } from "./tracing";
 import { addServiceAndEnvTags, addMacroTag, addCDKTag, addSAMTag } from "./tags";
 import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
-import { CloudWatchLogs } from "aws-sdk";
+import { CloudWatchLogs, LexModelBuildingService } from "aws-sdk";
 import { version } from "../package.json";
 import log from "loglevel";
 
@@ -47,7 +47,8 @@ export interface FunctionProperties {
 
 export const handler = async (event: InputEvent, _: any) => {
   try {
-    /* TODO: set loglevel here */
+    /* TODO: set loglevel here using config or env var */
+    log.setLevel("debug");
 
     const region = event.region;
     const fragment = event.fragment;
@@ -118,7 +119,7 @@ export const handler = async (event: InputEvent, _: any) => {
 
       const cloudWatchLogs = new CloudWatchLogs({ region });
 
-      log.debug("Add Datadog Forwarder CloudWatch subscriptions...");
+      log.debug("Adding Datadog Forwarder CloudWatch subscriptions...");
       await addCloudWatchForwarderSubscriptions(
         resources,
         lambdas,
@@ -130,11 +131,14 @@ export const handler = async (event: InputEvent, _: any) => {
 
     // Add service & env tags if values are provided
     if (config.service || config.env) {
+      log.debug("Adding service & env tags...");
       addServiceAndEnvTags(lambdas, config.service, config.env);
     }
 
+    log.debug("Adding macro version tag...");
     addMacroTag(lambdas, version);
 
+    log.debug("Adding dd_sls_macro_by tag...");
     if (resources.CDKMetadata) {
       addCDKTag(lambdas);
     } else {
@@ -142,6 +146,7 @@ export const handler = async (event: InputEvent, _: any) => {
     }
 
     // Redirect handlers
+    log.debug("Wrapping Lambda function handlers with Datadog handler...");
     redirectHandlers(lambdas, config.addLayers);
 
     return {

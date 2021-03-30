@@ -137,6 +137,8 @@ export async function addCloudWatchForwarderSubscriptions(
 
       // First check if user is already explicitly declaring log group resource in template,
       // so we avoid duplicate declarations (which would cause the deployment to fail).
+      log.debug("Unable to find an existing log group");
+
       if (logGroupsInTemplate === undefined) {
         log.debug("Looking for log groups in CloudFormation template");
         logGroupsInTemplate = findLogGroupsInTemplate(resources);
@@ -147,9 +149,13 @@ export async function addCloudWatchForwarderSubscriptions(
         logGroupName = declaredLogGroup.logGroupResource.Properties.LogGroupName;
         logGroupKey = declaredLogGroup.key;
 
+        log.debug(`Found log group in CloudFormation template: ${logGroupName}`);
+
         if (subscriptionsInTemplate === undefined) {
           subscriptionsInTemplate = findSubscriptionsInTemplate(resources);
         }
+
+        log.debug("Making sure log group subscription is defined in CloudFormation template");
         const declaredSub = findDeclaredSub(subscriptionsInTemplate, logGroupName, logGroupKey);
         if (declaredSub === undefined) {
           // In this case, we cannot use the 'putSubscriptionFilter' function from AWS SDK to add
@@ -177,9 +183,14 @@ export async function addCloudWatchForwarderSubscriptions(
         // If the function name is dynamically generated, we cannot predict the randomly generated
         // component, and will throw an error for the user to either add a function name or
         // declare a log group in their CloudFormation stack.
+
+        log.debug("No declared log group description found in the CloudFormation template");
         if (lambda.properties.FunctionName) {
           logGroupName = `${LAMBDA_LOG_GROUP_PREFIX}${lambda.properties.FunctionName}`;
+          log.debug(`Creating log group for: ${lambda.properties.FunctionName}`);
           await createLogGroup(cloudWatchLogs, logGroupName);
+
+          log.debug(`Adding subscription filter for: ${logGroupName}`);
           await putSubscriptionFilter(cloudWatchLogs, forwarderArn, logGroupName);
         } else {
           throw new MissingFunctionNameError(
