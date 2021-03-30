@@ -68,7 +68,7 @@ export const handler = async (event: InputEvent, _: any) => {
     }
 
     const lambdas = findLambdas(resources);
-    log.debug(`Lambda resources found: ${lambdas}`);
+    log.debug(`Lambda resources found: ${JSON.stringify(lambdas)}`);
 
     log.debug("Setting environment variables for Lambda function resources");
     setEnvConfiguration(config, lambdas);
