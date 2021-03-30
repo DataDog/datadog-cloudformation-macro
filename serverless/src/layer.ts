@@ -1,4 +1,5 @@
 import { FunctionProperties, Resources } from "./index";
+import log from "loglevel";
 
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
 export const DD_ACCOUNT_ID = "464622532012";
@@ -75,6 +76,7 @@ export function findLambdas(resources: Resources) {
   return Object.entries(resources)
     .map(([key, resource]) => {
       if (resource.Type !== LAMBDA_FUNCTION_RESOURCE_TYPE) {
+        log.debug("Resource is not a Lambda function, skipping...");
         return;
       }
 
@@ -115,6 +117,7 @@ export function applyLayers(
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
     if (lambda.runtimeType === RuntimeType.UNSUPPORTED) {
+      log.debug(`No Lambda layer available for runtime: ${lambda.runtime}`);
       return;
     }
 
@@ -125,6 +128,8 @@ export function applyLayers(
         errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Python", "python"));
         return;
       }
+
+      log.debug(`Setting Python Lambda layer for ${lambda.key}`);
       layerARN = getLayerARN(region, pythonLayerVersion, lambda.runtime);
     }
 
@@ -133,6 +138,8 @@ export function applyLayers(
         errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Node.js", "node"));
         return;
       }
+
+      log.debug(`Setting Node Lambda layer for ${lambda.key}`);
       layerARN = getLayerARN(region, nodeLayerVersion, lambda.runtime);
     }
 
@@ -153,6 +160,7 @@ function getLayerARN(region: string, version: number, runtime: string) {
 
   // if this is a GovCloud region, use the GovCloud lambda layer
   if (isGovCloud) {
+    log.debug("GovCloud region detected, using GovCloud Lambda layer");
     return `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:${layerName}:${version}`;
   }
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;

@@ -1,6 +1,7 @@
 import { CloudWatchLogs } from "aws-sdk";
 import { LambdaFunction } from "./layer";
 import { Resources } from "./index";
+import log from "loglevel";
 
 const LOG_GROUP_TYPE = "AWS::Logs::LogGroup";
 const SUBSCRIPTION_FILTER_TYPE = "AWS::Logs::SubscriptionFilter";
@@ -96,6 +97,7 @@ export async function addCloudWatchForwarderSubscriptions(
     // to search for existing log groups.
     if (lambda.properties.FunctionName) {
       functionNamePrefix = lambda.properties.FunctionName;
+      log.debug(`Searching log groups using: ${functionNamePrefix}`);
       logGroup = await findExistingLogGroupWithFunctionName(cloudWatchLogs, lambda.properties.FunctionName);
     } else {
       // If the lambda function is not explicity named, we search for existing log groups
@@ -108,6 +110,8 @@ export async function addCloudWatchForwarderSubscriptions(
       if (logGroupsOnStack === undefined && stackName !== undefined) {
         logGroupsOnStack = await getExistingLambdaLogGroupsOnStack(cloudWatchLogs, stackName);
       }
+
+      log.debug(`Searching log groups using: ${functionNamePrefix}`);
       if (logGroupsOnStack) {
         logGroup = logGroupsOnStack.find(
           (lg) => lg.logGroupName && lg.logGroupName.startsWith(`${LAMBDA_LOG_GROUP_PREFIX}${stackName}-${lambda.key}`),
@@ -119,8 +123,10 @@ export async function addCloudWatchForwarderSubscriptions(
       // The log group exists in this case, so the logGroupName must also be defined, since
       // that's the property we used to find this log group.
       logGroupName = logGroup.logGroupName as string;
+      log.debug(`Using existing log group: ${logGroupName}`);
       const shouldSub = await shouldSubscribeLogGroup(cloudWatchLogs, logGroupName);
       if (shouldSub) {
+        log.debug(`Adding subscription filter for: ${logGroupName}`);
         await putSubscriptionFilter(cloudWatchLogs, forwarderArn, logGroupName);
       }
     } else {
@@ -132,6 +138,7 @@ export async function addCloudWatchForwarderSubscriptions(
       // First check if user is already explicitly declaring log group resource in template,
       // so we avoid duplicate declarations (which would cause the deployment to fail).
       if (logGroupsInTemplate === undefined) {
+        log.debug("Looking for log groups in CloudFormation template");
         logGroupsInTemplate = findLogGroupsInTemplate(resources);
       }
       const declaredLogGroup = findDeclaredLogGroup(logGroupsInTemplate, lambda.key, lambda.properties.FunctionName);
@@ -211,12 +218,14 @@ export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogs, lo
   const subscriptionFilters = await describeSubscriptionFilters(cloudWatchLogs, logGroupName);
   const numberOfActiveSubscriptionFilters = subscriptionFilters.length;
   if (numberOfActiveSubscriptionFilters >= MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS) {
+    log.debug(`Log group already has 2 or more subscriptions: ${subscriptionFilters}`);
     return false;
   }
   for (const subscription of subscriptionFilters) {
     const filterName = subscription.filterName;
     if (filterName === SUBSCRIPTION_FILTER_NAME) {
       //We found an existing datadog-cloudformation-macro subscription
+      log.debug("We found an existing datadog-cloudformation-macro subscription");
       return false;
     }
   }
@@ -244,6 +253,7 @@ export function findDeclaredLogGroup(logGroups: LogGroupDefinition[], functionKe
     // If in this function, 'FunctionName' property doesn't exist on the lambda,
     // so search through logGroupNames that use intrinsic functions ('Fn::Sub', 'Fn::Join') in definition
 
+    log.debug("Searching through logGroupNames that use intrinsic functions ('Fn::Sub', 'Fn::Join') in definition");
     if (typeof logGroupName === "string") {
       if (functionName && logGroupName.includes(functionName)) {
         return resource;

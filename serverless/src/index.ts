@@ -6,6 +6,7 @@ import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 import { CloudWatchLogs } from "aws-sdk";
 import { version } from "../package.json";
+import log from "loglevel";
 
 const SUCCESS = "success";
 const FAILURE = "failure";
@@ -46,25 +47,34 @@ export interface FunctionProperties {
 
 export const handler = async (event: InputEvent, _: any) => {
   try {
+    /* TODO: set loglevel here */
+
     const region = event.region;
     const fragment = event.fragment;
     const resources = fragment.Resources;
-    const lambdas = findLambdas(resources);
 
     let config;
 
     // Use the parameters given for this specific transform/macro if it exists
     const transformParams = event.params ?? {};
     if (Object.keys(transformParams).length > 0) {
+      log.debug("Parsing config from CloudFormation transform/macro parameters");
       config = getConfigFromCfnParams(transformParams);
     } else {
       // If not, check the Mappings section for Datadog config parameters as well
+      log.debug("Parsing config from CloudFormation template mappings");
       config = getConfigFromCfnMappings(fragment.Mappings);
     }
+
+    const lambdas = findLambdas(resources);
+    log.debug(`Lambda resources found: ${lambdas}`);
+
+    log.debug("Setting environment variables for Lambda function resources");
     setEnvConfiguration(config, lambdas);
 
     // Apply layers
     if (config.addLayers) {
+      log.debug("Applying Layers to Lambda functions...");
       const errors = applyLayers(region, lambdas, config.pythonLayerVersion, config.nodeLayerVersion);
       if (errors.length > 0) {
         return {
@@ -79,6 +89,7 @@ export const handler = async (event: InputEvent, _: any) => {
     // Enable tracing
     const tracingMode = getTracingMode(config);
     try {
+      log.debug(`Setting tracing mode to ${tracingMode} for Lambda functions...`);
       enableTracing(tracingMode, lambdas, resources);
     } catch (err) {
       if (err instanceof MissingIamRoleError) {
@@ -106,6 +117,8 @@ export const handler = async (event: InputEvent, _: any) => {
       }
 
       const cloudWatchLogs = new CloudWatchLogs({ region });
+
+      log.debug("Add Datadog Forwarder CloudWatch subscriptions...");
       await addCloudWatchForwarderSubscriptions(
         resources,
         lambdas,
