@@ -8,6 +8,7 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
+    "postbuild": "cp package.json dist/package.json && cd dist && yarn install --prod",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage": "jest --coverage",

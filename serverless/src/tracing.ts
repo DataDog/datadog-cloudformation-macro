@@ -119,7 +119,7 @@ export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[
     });
   }
   if (tracingMode === TracingMode.HYBRID || tracingMode === TracingMode.DD_TRACE) {
-    log.debug("Enabling ddtrace...");
+    log.debug("Enabling ddtrace for all Lambda functions...");
     lambdas.forEach((lambda) => {
       const environment = lambda.properties.Environment ?? {};
       const envVariables = environment.Variables ?? {};

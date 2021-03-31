@@ -76,7 +76,7 @@ export function findLambdas(resources: Resources) {
   return Object.entries(resources)
     .map(([key, resource]) => {
       if (resource.Type !== LAMBDA_FUNCTION_RESOURCE_TYPE) {
-        log.debug("Resource is not a Lambda function, skipping...");
+        log.debug(`Resource ${key} is not a Lambda function, skipping...`);
         return;
       }
 

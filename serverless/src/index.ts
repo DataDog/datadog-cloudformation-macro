@@ -1,6 +1,6 @@
 import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration } from "./env";
 import { findLambdas, applyLayers, LambdaFunction } from "./layer";
-import { getTracingMode, enableTracing, MissingIamRoleError } from "./tracing";
+import { getTracingMode, enableTracing, MissingIamRoleError, TracingMode } from "./tracing";
 import { addServiceAndEnvTags, addMacroTag, addCDKTag, addSAMTag } from "./tags";
 import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
@@ -90,7 +90,7 @@ export const handler = async (event: InputEvent, _: any) => {
     // Enable tracing
     const tracingMode = getTracingMode(config);
     try {
-      log.debug(`Setting tracing mode to ${tracingMode} for Lambda functions...`);
+      log.debug(`Setting tracing mode to ${TracingMode[tracingMode]} for Lambda functions...`);
       enableTracing(tracingMode, lambdas, resources);
     } catch (err) {
       if (err instanceof MissingIamRoleError) {
