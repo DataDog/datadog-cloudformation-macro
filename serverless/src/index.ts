@@ -1,11 +1,12 @@
 import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration } from "./env";
 import { findLambdas, applyLayers, LambdaFunction } from "./layer";
-import { getTracingMode, enableTracing, MissingIamRoleError } from "./tracing";
+import { getTracingMode, enableTracing, MissingIamRoleError, TracingMode } from "./tracing";
 import { addServiceAndEnvTags, addMacroTag, addCDKTag, addSAMTag } from "./tags";
 import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
-import { CloudWatchLogs } from "aws-sdk";
+import { CloudWatchLogs, LexModelBuildingService } from "aws-sdk";
 import { version } from "../package.json";
+import log from "loglevel";
 
 const SUCCESS = "success";
 const FAILURE = "failure";
@@ -46,25 +47,35 @@ export interface FunctionProperties {
 
 export const handler = async (event: InputEvent, _: any) => {
   try {
+    /* TODO: set loglevel here using config or env var */
+    log.setLevel("debug");
+
     const region = event.region;
     const fragment = event.fragment;
     const resources = fragment.Resources;
-    const lambdas = findLambdas(resources);
 
     let config;
 
     // Use the parameters given for this specific transform/macro if it exists
     const transformParams = event.params ?? {};
     if (Object.keys(transformParams).length > 0) {
+      log.debug("Parsing config from CloudFormation transform/macro parameters");
       config = getConfigFromCfnParams(transformParams);
     } else {
       // If not, check the Mappings section for Datadog config parameters as well
+      log.debug("Parsing config from CloudFormation template mappings");
       config = getConfigFromCfnMappings(fragment.Mappings);
     }
+
+    const lambdas = findLambdas(resources);
+    log.debug(`Lambda resources found: ${JSON.stringify(lambdas)}`);
+
+    log.debug("Setting environment variables for Lambda function resources");
     setEnvConfiguration(config, lambdas);
 
     // Apply layers
     if (config.addLayers) {
+      log.debug("Applying Layers to Lambda functions...");
       const errors = applyLayers(region, lambdas, config.pythonLayerVersion, config.nodeLayerVersion);
       if (errors.length > 0) {
         return {
@@ -79,6 +90,7 @@ export const handler = async (event: InputEvent, _: any) => {
     // Enable tracing
     const tracingMode = getTracingMode(config);
     try {
+      log.debug(`Setting tracing mode to ${TracingMode[tracingMode]} for Lambda functions...`);
       enableTracing(tracingMode, lambdas, resources);
     } catch (err) {
       if (err instanceof MissingIamRoleError) {
@@ -106,6 +118,8 @@ export const handler = async (event: InputEvent, _: any) => {
       }
 
       const cloudWatchLogs = new CloudWatchLogs({ region });
+
+      log.debug("Adding Datadog Forwarder CloudWatch subscriptions...");
       await addCloudWatchForwarderSubscriptions(
         resources,
         lambdas,
@@ -117,11 +131,14 @@ export const handler = async (event: InputEvent, _: any) => {
 
     // Add service & env tags if values are provided
     if (config.service || config.env) {
+      log.debug("Adding service & env tags...");
       addServiceAndEnvTags(lambdas, config.service, config.env);
     }
 
+    log.debug("Adding macro version tag...");
     addMacroTag(lambdas, version);
 
+    log.debug("Adding dd_sls_macro_by tag...");
     if (resources.CDKMetadata) {
       addCDKTag(lambdas);
     } else {
@@ -129,6 +146,7 @@ export const handler = async (event: InputEvent, _: any) => {
     }
 
     // Redirect handlers
+    log.debug("Wrapping Lambda function handlers with Datadog handler...");
     redirectHandlers(lambdas, config.addLayers);
 
     return {

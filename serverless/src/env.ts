@@ -1,4 +1,5 @@
 import { LambdaFunction } from "./layer";
+import log from "loglevel";
 
 export interface Configuration {
   // Whether to add the lambda layers, or expect the users to bring their own
@@ -73,6 +74,7 @@ export const defaultConfiguration: Configuration = {
  */
 export function getConfigFromCfnMappings(mappings: any): Configuration {
   if (mappings === undefined || mappings[DATADOG] === undefined) {
+    log.debug("No Datadog mappings found in the CloudFormation template, using the default config");
     return defaultConfiguration;
   }
   return getConfigFromCfnParams(mappings[DATADOG][PARAMETERS]);
@@ -90,6 +92,7 @@ export function getConfigFromCfnMappings(mappings: any): Configuration {
 export function getConfigFromCfnParams(params: CfnParams) {
   let datadogConfig = params as Partial<Configuration> | undefined;
   if (datadogConfig === undefined) {
+    log.debug("No Datadog config found, using the default config");
     datadogConfig = {};
   }
   return {
@@ -106,18 +109,23 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     if (config.apiKey !== undefined && envVariables[apiKeyEnvVar] === undefined) {
       envVariables[apiKeyEnvVar] = config.apiKey;
     }
+
     if (config.apiKMSKey !== undefined && envVariables[apiKeyKMSEnvVar] === undefined) {
       envVariables[apiKeyKMSEnvVar] = config.apiKMSKey;
     }
+
     if (envVariables[siteURLEnvVar] === undefined) {
       envVariables[siteURLEnvVar] = config.site;
     }
+
     if (envVariables[logLevelEnvVar] === undefined) {
       envVariables[logLevelEnvVar] = config.logLevel;
     }
+
     if (envVariables[logForwardingEnvVar] === undefined) {
       envVariables[logForwardingEnvVar] = config.flushMetricsToLogs;
     }
+
     if (envVariables[enhancedMetricsEnvVar] === undefined) {
       envVariables[enhancedMetricsEnvVar] = config.enableEnhancedMetrics;
     }

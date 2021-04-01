@@ -1,6 +1,7 @@
 import { LambdaFunction } from "./layer";
 import { Configuration } from "./env";
 import { Resources } from "./index";
+import log from "loglevel";
 
 const FN_GET_ATT = "Fn::GetAtt";
 const FN_JOIN = "Fn::Join";
@@ -78,11 +79,13 @@ export function getTracingMode(config: Configuration) {
 
 export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[], resources: Resources) {
   if (tracingMode === TracingMode.XRAY || tracingMode === TracingMode.HYBRID) {
+    log.debug("Enabling Xray tracing...");
     const xrayPolicies = {
       Effect: ALLOW,
       Action: [PUT_TRACE_SEGMENTS, PUT_TELEMETRY_RECORDS],
       Resource: ["*"],
     };
+    log.debug(`Xray policies: ${xrayPolicies}`);
 
     lambdas.forEach((lambda) => {
       const role = findIamRole(resources, lambda);
@@ -92,6 +95,8 @@ export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[
           `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`,
         );
       }
+
+      log.debug(`Using IAM role: ${role}`);
 
       if (role.Policies && role.Policies.length > 0) {
         const policy = role.Policies[0];
@@ -114,6 +119,7 @@ export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[
     });
   }
   if (tracingMode === TracingMode.HYBRID || tracingMode === TracingMode.DD_TRACE) {
+    log.debug("Enabling ddtrace for all Lambda functions...");
     lambdas.forEach((lambda) => {
       const environment = lambda.properties.Environment ?? {};
       const envVariables = environment.Variables ?? {};
