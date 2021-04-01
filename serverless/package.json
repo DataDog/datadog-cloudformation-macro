@@ -1,6 +1,6 @@
 {
   "name": "datadog-serverless-macro",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Cloudformation macro to automatically instrument python and node functions with datadog tracing",
   "repository": "https://github.com/DataDog/datadog-cloudformation-macro",
   "author": "Datadog",
@@ -8,6 +8,7 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
+    "postbuild": "cp package.json dist/package.json && cd dist && yarn install --prod",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage": "jest --coverage",
@@ -26,7 +27,8 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "aws-sdk": "^2.712.0"
+    "aws-sdk": "^2.712.0",
+    "loglevel": "^1.7.1"
   },
   "jest": {
     "verbose": true,
