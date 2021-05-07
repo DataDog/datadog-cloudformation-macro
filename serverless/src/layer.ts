@@ -4,7 +4,7 @@ import log from "loglevel";
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
 export const DD_ACCOUNT_ID = "464622532012";
 export const DD_GOV_ACCOUNT_ID = "002406178527";
-const DD_LAMBDA_EXTENSION_LAYER_NAME= "Datadog-Extension";
+const DD_LAMBDA_EXTENSION_LAYER_NAME = "Datadog-Extension";
 
 export enum RuntimeType {
   NODE,
@@ -169,10 +169,9 @@ function addLayer(layerArn: string, lambda: LambdaFunction) {
 
 export function getLayerARN(region: string, version: number, runtime: string, addExtension?: boolean) {
   let layerName;
-  if (addExtension===true){
+  if (addExtension === true) {
     layerName = DD_LAMBDA_EXTENSION_LAYER_NAME;
-  }
-  else {
+  } else {
     layerName = runtimeToLayerName[runtime];
   }
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
