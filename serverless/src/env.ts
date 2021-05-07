@@ -108,7 +108,9 @@ export function validateParameters(config: Configuration) {
   const errors: string[] = [];
   const siteList: string[] = ["datadoghq.com", "datadoghq.eu", "us3.datadoghq.com", "ddog-gov.com"];
   if (config.site !== undefined && !siteList.includes(config.site.toLowerCase())) {
-    errors.push("Warning: Invalid site URL. Must be either datadoghq.com, datadoghq.eu, us3.datadoghq.com, or ddog-gov.com.");
+    errors.push(
+      "Warning: Invalid site URL. Must be either datadoghq.com, datadoghq.eu, us3.datadoghq.com, or ddog-gov.com.",
+    );
   }
   if (config.extensionLayerVersion !== undefined) {
     if (config.forwarderArn !== undefined) {
