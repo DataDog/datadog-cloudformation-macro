@@ -180,8 +180,7 @@ describe("getLayerARN", () => {
   it("gets the layer arn for the Datadog Lambda Extension", () => {
     const region = "us-east-1";
     const version = 22;
-    const runtime = "LambdaExtension";
-    const layerArn = getLayerARN(region, version, runtime);
+    const layerArn = getLayerARN(region, version, "test", true);
     expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${version}`);
   });
   it("gets the layer arn for the Datadog Node Lambda Library", () => {

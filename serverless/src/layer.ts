@@ -4,6 +4,7 @@ import log from "loglevel";
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
 export const DD_ACCOUNT_ID = "464622532012";
 export const DD_GOV_ACCOUNT_ID = "002406178527";
+const DD_LAMBDA_EXTENSION_LAYER_NAME= "Datadog-Extension";
 
 export enum RuntimeType {
   NODE,
@@ -40,7 +41,6 @@ const runtimeToLayerName: { [key: string]: string } = {
   "python3.6": "Datadog-Python36",
   "python3.7": "Datadog-Python37",
   "python3.8": "Datadog-Python38",
-  LambdaExtension: "Datadog-Extension",
 };
 
 const availableRegions = new Set([
@@ -150,7 +150,7 @@ export function applyLayers(
 
     if (extensionLayerVersion !== undefined) {
       log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
-      lambdaExtensionLayerArn = getLayerARN(region, extensionLayerVersion, "LambdaExtension");
+      lambdaExtensionLayerArn = getLayerARN(region, extensionLayerVersion, lambda.runtime, true);
       addLayer(lambdaExtensionLayerArn, lambda);
     }
   });
@@ -160,15 +160,21 @@ export function applyLayers(
 function addLayer(layerArn: string, lambda: LambdaFunction) {
   if (layerArn !== undefined) {
     const currentLayers = lambda.properties.Layers ?? [];
-    if (!new Set(currentLayers).has(layerArn)) {
+    if (!currentLayers.includes(layerArn)) {
       currentLayers.push(layerArn);
     }
     lambda.properties.Layers = currentLayers;
   }
 }
 
-export function getLayerARN(region: string, version: number, runtime: string) {
-  const layerName = runtimeToLayerName[runtime];
+export function getLayerARN(region: string, version: number, runtime: string, addExtension?: boolean) {
+  let layerName;
+  if (addExtension===true){
+    layerName = DD_LAMBDA_EXTENSION_LAYER_NAME;
+  }
+  else {
+    layerName = runtimeToLayerName[runtime];
+  }
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
   // if this is a GovCloud region, use the GovCloud lambda layer
