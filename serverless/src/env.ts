@@ -106,9 +106,9 @@ export function getConfigFromCfnParams(params: CfnParams) {
 export function validateParameters(config: Configuration) {
   log.debug("Validating parameters...");
   const errors: string[] = [];
-  const siteList: string[] = ["datadoghq.com", "datadoghq.eu"];
+  const siteList: string[] = ["datadoghq.com", "datadoghq.eu", "us3.datadoghq.com", "ddog-gov.com"];
   if (config.site !== undefined && !siteList.includes(config.site.toLowerCase())) {
-    errors.push("Warning: Invalid site URL. Must be either datadoghq.com or datadoghq.eu.");
+    errors.push("Warning: Invalid site URL. Must be either datadoghq.com, datadoghq.eu, us3.datadoghq.com, or ddog-gov.com.");
   }
   if (config.extensionLayerVersion !== undefined) {
     if (config.forwarderArn !== undefined) {

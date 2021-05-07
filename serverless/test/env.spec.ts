@@ -132,7 +132,7 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
-    expect(errors.includes("Warning: Invalid site URL. Must be either datadoghq.com or datadoghq.eu.")).toBe(true);
+    expect(errors.includes("Warning: Invalid site URL. Must be either datadoghq.com, datadoghq.eu, us3.datadoghq.com, or ddog-gov.com.")).toBe(true);
   });
 
   it("returns an error when extensionLayerVersion and forwarderArn are set", () => {
