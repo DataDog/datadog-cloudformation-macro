@@ -40,6 +40,7 @@ const runtimeToLayerName: { [key: string]: string } = {
   "python3.6": "Datadog-Python36",
   "python3.7": "Datadog-Python37",
   "python3.8": "Datadog-Python38",
+  "LambdaExtension":"Datadog-Extension",
 };
 
 const availableRegions = new Set([
@@ -109,6 +110,7 @@ export function applyLayers(
   lambdas: LambdaFunction[],
   pythonLayerVersion?: number,
   nodeLayerVersion?: number,
+  extensionLayerVersion?: number,
 ) {
   if (!availableRegions.has(region)) {
     return [];
@@ -121,7 +123,8 @@ export function applyLayers(
       return;
     }
 
-    let layerARN;
+    let lambdaLibraryLayerArn;
+    let lambdaExtensionLayerArn;
 
     if (lambda.runtimeType === RuntimeType.PYTHON) {
       if (pythonLayerVersion === undefined) {
@@ -130,7 +133,8 @@ export function applyLayers(
       }
 
       log.debug(`Setting Python Lambda layer for ${lambda.key}`);
-      layerARN = getLayerARN(region, pythonLayerVersion, lambda.runtime);
+      lambdaLibraryLayerArn = getLayerARN(region, pythonLayerVersion, lambda.runtime);
+      addLayer(lambdaLibraryLayerArn, lambda);
     }
 
     if (lambda.runtimeType === RuntimeType.NODE) {
@@ -140,21 +144,30 @@ export function applyLayers(
       }
 
       log.debug(`Setting Node Lambda layer for ${lambda.key}`);
-      layerARN = getLayerARN(region, nodeLayerVersion, lambda.runtime);
+      lambdaLibraryLayerArn = getLayerARN(region, nodeLayerVersion, lambda.runtime);
+      addLayer(lambdaLibraryLayerArn, lambda);
     }
 
-    if (layerARN !== undefined) {
-      const currentLayers = lambda.properties.Layers ?? [];
-      if (!new Set(currentLayers).has(layerARN)) {
-        currentLayers.push(layerARN);
-      }
-      lambda.properties.Layers = currentLayers;
+    if (extensionLayerVersion !== undefined) {
+      log.debug(`Setting Lambda Extension layer for ${lambda.key}`)
+      lambdaExtensionLayerArn = getLayerARN(region, extensionLayerVersion, "LambdaExtension");
+      addLayer(lambdaExtensionLayerArn, lambda);
     }
   });
   return errors;
 }
 
-function getLayerARN(region: string, version: number, runtime: string) {
+function addLayer(layerArn: string, lambda: LambdaFunction){
+  if (layerArn !== undefined) {
+    const currentLayers = lambda.properties.Layers ?? [];
+    if (!new Set(currentLayers).has(layerArn)) {
+      currentLayers.push(layerArn);
+    }
+    lambda.properties.Layers = currentLayers;
+  }
+}
+
+export function getLayerARN(region: string, version: number, runtime: string) {
   const layerName = runtimeToLayerName[runtime];
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 

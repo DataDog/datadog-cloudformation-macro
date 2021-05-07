@@ -2,12 +2,14 @@ import { LambdaFunction } from "./layer";
 import log from "loglevel";
 
 export interface Configuration {
-  // Whether to add the lambda layers, or expect the users to bring their own
+  // Whether to add the Datadog Lambda Library layers, or expect the users to bring their own
   addLayers: boolean;
   // Python Lambda layer version
   pythonLayerVersion?: number;
   // Node.js Lambda layer version
   nodeLayerVersion?: number;
+  // Datadog Lambda Extension layer version
+  extensionLayerVersion?:number;
   // Datadog API Key, only necessary when using metrics without log forwarding
   apiKey?: string;
   // Datadog API Key encrypted using KMS, only necessary when using metrics without log forwarding
@@ -101,6 +103,23 @@ export function getConfigFromCfnParams(params: CfnParams) {
   };
 }
 
+export function validateParameters(config: Configuration) {
+  log.debug("Validating parameters...");
+  const errors: string[] = [];
+  const siteList: string[] = ["datadoghq.com", "datadoghq.eu"];
+  if (config.site !== undefined && !siteList.includes(config.site.toLowerCase())) {
+    errors.push("Warning: Invalid site URL. Must be either datadoghq.com or datadoghq.eu.");
+  }
+  if (config.extensionLayerVersion !== undefined) {
+    if (config.forwarderArn !== undefined) {
+      errors.push("`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.");
+    }
+    if (config.apiKey === undefined && config.apiKMSKey === undefined) {
+      errors.push("When `extensionLayer` is set, `apiKey` or `apiKmsKey` must also be set.");
+    }
+  }
+  return errors;
+}
 export function setEnvConfiguration(config: Configuration, lambdas: LambdaFunction[]) {
   lambdas.forEach((lambda) => {
     const environment = lambda.properties.Environment ?? {};

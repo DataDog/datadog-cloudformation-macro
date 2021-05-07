@@ -3,6 +3,7 @@ import {
   getConfigFromCfnParams,
   defaultConfiguration,
   setEnvConfiguration,
+  validateParameters,
 } from "../src/env";
 import { LambdaFunction, RuntimeType } from "../src/layer";
 
@@ -115,5 +116,55 @@ describe("setEnvConfiguration", () => {
     expect(lambda.properties.Environment).toEqual({
       Variables: originalEnvVars,
     });
+  });
+});
+
+describe("validateParameters", () => {
+  it("returns an error when given an invalid site url", () => {
+    const params = {
+      addLayers: true,
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datacathq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableEnhancedMetrics: true,
+    };
+    
+    let errors = validateParameters(params);
+    expect(errors.includes('Warning: Invalid site URL. Must be either datadoghq.com or datadoghq.eu.')).toBe(true);
+  });
+
+  it("returns an error when extensionLayerVersion and forwarderArn are set", () => {
+    const params = {
+      addLayers: true,
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableEnhancedMetrics: true,
+      extensionLayerVersion: 6,
+      forwarderArn: "test-forwarder",
+    };
+    
+    let errors = validateParameters(params);
+    expect(errors.includes('`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.')).toBe(true);
+  });
+
+  it("returns an error when extensionLayerVersion is set but neither apiKey nor apiKMSKey is set", () => {
+    const params = {
+      addLayers: true,
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableEnhancedMetrics: true,
+      extensionLayerVersion: 6,
+    };
+    
+    let errors = validateParameters(params);
+    expect(errors.includes('When `extensionLayer` is set, `apiKey` or `apiKmsKey` must also be set.')).toBe(true);
   });
 });
