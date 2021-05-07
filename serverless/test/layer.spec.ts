@@ -181,21 +181,21 @@ describe("getLayerARN", () => {
     const region = "us-east-1";
     const version = 22;
     const runtime = "LambdaExtension";
-    const layerArn = getLayerARN(region,version,runtime);
+    const layerArn = getLayerARN(region, version, runtime);
     expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${version}`);
   });
   it("gets the layer arn for the Datadog Node Lambda Library", () => {
     const region = "us-east-1";
     const version = 22;
     const runtime = "nodejs14.x";
-    const layerArn = getLayerARN(region,version,runtime);
+    const layerArn = getLayerARN(region, version, runtime);
     expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node14-x:${version}`);
   });
   it("gets the layer arn for the Datadog Python Lambda Library", () => {
     const region = "us-east-1";
     const version = 22;
     const runtime = "python3.6";
-    const layerArn = getLayerARN(region,version,runtime);
+    const layerArn = getLayerARN(region, version, runtime);
     expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python36:${version}`);
   });
 });

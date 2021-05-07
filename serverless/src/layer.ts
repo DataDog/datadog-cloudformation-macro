@@ -40,7 +40,7 @@ const runtimeToLayerName: { [key: string]: string } = {
   "python3.6": "Datadog-Python36",
   "python3.7": "Datadog-Python37",
   "python3.8": "Datadog-Python38",
-  "LambdaExtension":"Datadog-Extension",
+  LambdaExtension: "Datadog-Extension",
 };
 
 const availableRegions = new Set([
@@ -149,7 +149,7 @@ export function applyLayers(
     }
 
     if (extensionLayerVersion !== undefined) {
-      log.debug(`Setting Lambda Extension layer for ${lambda.key}`)
+      log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
       lambdaExtensionLayerArn = getLayerARN(region, extensionLayerVersion, "LambdaExtension");
       addLayer(lambdaExtensionLayerArn, lambda);
     }
@@ -157,7 +157,7 @@ export function applyLayers(
   return errors;
 }
 
-function addLayer(layerArn: string, lambda: LambdaFunction){
+function addLayer(layerArn: string, lambda: LambdaFunction) {
   if (layerArn !== undefined) {
     const currentLayers = lambda.properties.Layers ?? [];
     if (!new Set(currentLayers).has(layerArn)) {

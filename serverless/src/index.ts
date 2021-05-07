@@ -85,7 +85,13 @@ export const handler = async (event: InputEvent, _: any) => {
     // Apply layers
     if (config.addLayers) {
       log.debug("Applying Layers to Lambda functions...");
-      errors = applyLayers(region, lambdas, config.pythonLayerVersion, config.nodeLayerVersion, config.extensionLayerVersion);
+      errors = applyLayers(
+        region,
+        lambdas,
+        config.pythonLayerVersion,
+        config.nodeLayerVersion,
+        config.extensionLayerVersion,
+      );
       if (errors.length > 0) {
         return {
           requestId: event.requestId,

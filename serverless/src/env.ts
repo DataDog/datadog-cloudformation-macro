@@ -9,7 +9,7 @@ export interface Configuration {
   // Node.js Lambda layer version
   nodeLayerVersion?: number;
   // Datadog Lambda Extension layer version
-  extensionLayerVersion?:number;
+  extensionLayerVersion?: number;
   // Datadog API Key, only necessary when using metrics without log forwarding
   apiKey?: string;
   // Datadog API Key encrypted using KMS, only necessary when using metrics without log forwarding
