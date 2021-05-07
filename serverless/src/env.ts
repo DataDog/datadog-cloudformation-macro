@@ -115,7 +115,7 @@ export function validateParameters(config: Configuration) {
       errors.push("`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.");
     }
     if (config.apiKey === undefined && config.apiKMSKey === undefined) {
-      errors.push("When `extensionLayer` is set, `apiKey` or `apiKmsKey` must also be set.");
+      errors.push("When `extensionLayerVersion` is set, `apiKey` or `apiKmsKey` must also be set.");
     }
   }
   return errors;

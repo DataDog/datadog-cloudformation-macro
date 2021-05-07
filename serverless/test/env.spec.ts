@@ -165,6 +165,8 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
-    expect(errors.includes("When `extensionLayer` is set, `apiKey` or `apiKmsKey` must also be set.")).toBe(true);
+    expect(errors.includes("When `extensionLayerVersion` is set, `apiKey` or `apiKmsKey` must also be set.")).toBe(
+      true,
+    );
   });
 });
