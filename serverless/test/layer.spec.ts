@@ -6,7 +6,8 @@ import {
   DD_ACCOUNT_ID,
   DD_GOV_ACCOUNT_ID,
   getMissingLayerVersionErrorMsg,
-  getLayerARN,
+  getLambdaLibraryLayerArn,
+  getExtensionLayerArn,
 } from "../src/layer";
 
 function mockFunctionResource(runtime: string) {
@@ -176,25 +177,41 @@ describe("isGovCloud", () => {
   });
 });
 
-describe("getLayerARN", () => {
-  it("gets the layer arn for the Datadog Lambda Extension", () => {
-    const region = "us-east-1";
-    const version = 22;
-    const layerArn = getLayerARN(region, version, "test", true);
-    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${version}`);
-  });
-  it("gets the layer arn for the Datadog Node Lambda Library", () => {
+describe("getLambdaLibraryLayerArn", () => {
+  it("gets the us-east-1 layer arn for the Datadog Node14 Lambda Library", () => {
     const region = "us-east-1";
     const version = 22;
     const runtime = "nodejs14.x";
-    const layerArn = getLayerARN(region, version, runtime);
+    const layerArn = getLambdaLibraryLayerArn(region, version, runtime);
     expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node14-x:${version}`);
   });
-  it("gets the layer arn for the Datadog Python Lambda Library", () => {
+  it("gets the us-east-1 layer arn for the Datadog Python36 Lambda Library", () => {
     const region = "us-east-1";
     const version = 22;
     const runtime = "python3.6";
-    const layerArn = getLayerARN(region, version, runtime);
+    const layerArn = getLambdaLibraryLayerArn(region, version, runtime);
     expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python36:${version}`);
+  });
+  it("gets the us-gov-east-1 layer arn for the Datadog Python36 Lambda Library", () => {
+    const region = "us-gov-east-1";
+    const version = 22;
+    const runtime = "python3.6";
+    const layerArn = getLambdaLibraryLayerArn(region, version, runtime);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python36:${version}`);
+  });
+});
+
+describe("getExtensionLayerArn", () => {
+  it("gets the us-east-1 layer arn for the Datadog Lambda Extension", () => {
+    const region = "us-east-1";
+    const version = 6;
+    const layerArn = getExtensionLayerArn(region, version);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${version}`);
+  });
+  it("gets the us-gov-west-1 layer arn for the Datadog Lambda Extension", () => {
+    const region = "us-gov-west-1";
+    const version = 6;
+    const layerArn = getExtensionLayerArn(region, version);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Extension:${version}`);
   });
 });

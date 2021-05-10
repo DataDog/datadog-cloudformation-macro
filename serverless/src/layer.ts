@@ -133,7 +133,7 @@ export function applyLayers(
       }
 
       log.debug(`Setting Python Lambda layer for ${lambda.key}`);
-      lambdaLibraryLayerArn = getLayerARN(region, pythonLayerVersion, lambda.runtime);
+      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, pythonLayerVersion, lambda.runtime);
       addLayer(lambdaLibraryLayerArn, lambda);
     }
 
@@ -144,13 +144,13 @@ export function applyLayers(
       }
 
       log.debug(`Setting Node Lambda layer for ${lambda.key}`);
-      lambdaLibraryLayerArn = getLayerARN(region, nodeLayerVersion, lambda.runtime);
+      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, nodeLayerVersion, lambda.runtime);
       addLayer(lambdaLibraryLayerArn, lambda);
     }
 
     if (extensionLayerVersion !== undefined) {
       log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
-      lambdaExtensionLayerArn = getLayerARN(region, extensionLayerVersion, lambda.runtime, true);
+      lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion);
       addLayer(lambdaExtensionLayerArn, lambda);
     }
   });
@@ -167,13 +167,20 @@ function addLayer(layerArn: string, lambda: LambdaFunction) {
   }
 }
 
-export function getLayerARN(region: string, version: number, runtime: string, addExtension?: boolean) {
-  let layerName;
-  if (addExtension === true) {
-    layerName = DD_LAMBDA_EXTENSION_LAYER_NAME;
-  } else {
-    layerName = runtimeToLayerName[runtime];
+export function getLambdaLibraryLayerArn(region: string, version: number, runtime: string) {
+  const layerName = runtimeToLayerName[runtime];
+  const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
+
+  // if this is a GovCloud region, use the GovCloud lambda layer
+  if (isGovCloud) {
+    log.debug("GovCloud region detected, using GovCloud Lambda layer");
+    return `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:${layerName}:${version}`;
   }
+  return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
+}
+
+export function getExtensionLayerArn(region: string, version: number) {
+  const layerName = DD_LAMBDA_EXTENSION_LAYER_NAME;
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
   // if this is a GovCloud region, use the GovCloud lambda layer
