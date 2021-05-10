@@ -199,6 +199,13 @@ describe("getLambdaLibraryLayerArn", () => {
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime);
     expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python36:${version}`);
   });
+  it("gets the us-gov-east-1 layer arn for the Datadog Node14 Lambda Library", () => {
+    const region = "us-gov-east-1";
+    const version = 22;
+    const runtime = "nodejs14.x";
+    const layerArn = getLambdaLibraryLayerArn(region, version, runtime);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node14-x:${version}`);
+  });
 });
 
 describe("getExtensionLayerArn", () => {
