@@ -1,4 +1,4 @@
-import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration } from "./env";
+import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration, validateParameters } from "./env";
 import { findLambdas, applyLayers, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError, TracingMode } from "./tracing";
 import { addServiceAndEnvTags, addMacroTag, addCDKTag, addSAMTag } from "./tags";
@@ -55,7 +55,7 @@ export const handler = async (event: InputEvent, _: any) => {
     const resources = fragment.Resources;
 
     let config;
-
+    let errors;
     // Use the parameters given for this specific transform/macro if it exists
     const transformParams = event.params ?? {};
     if (Object.keys(transformParams).length > 0) {
@@ -65,6 +65,15 @@ export const handler = async (event: InputEvent, _: any) => {
       // If not, check the Mappings section for Datadog config parameters as well
       log.debug("Parsing config from CloudFormation template mappings");
       config = getConfigFromCfnMappings(fragment.Mappings);
+    }
+    errors = validateParameters(config);
+    if (errors.length > 0) {
+      return {
+        requestId: event.requestId,
+        status: FAILURE,
+        fragment,
+        errorMessage: errors.join("\n"),
+      };
     }
 
     const lambdas = findLambdas(resources);
@@ -76,7 +85,13 @@ export const handler = async (event: InputEvent, _: any) => {
     // Apply layers
     if (config.addLayers) {
       log.debug("Applying Layers to Lambda functions...");
-      const errors = applyLayers(region, lambdas, config.pythonLayerVersion, config.nodeLayerVersion);
+      errors = applyLayers(
+        region,
+        lambdas,
+        config.pythonLayerVersion,
+        config.nodeLayerVersion,
+        config.extensionLayerVersion,
+      );
       if (errors.length > 0) {
         return {
           requestId: event.requestId,

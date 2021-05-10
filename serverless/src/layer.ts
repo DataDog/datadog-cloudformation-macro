@@ -4,6 +4,7 @@ import log from "loglevel";
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
 export const DD_ACCOUNT_ID = "464622532012";
 export const DD_GOV_ACCOUNT_ID = "002406178527";
+const DD_LAMBDA_EXTENSION_LAYER_NAME = "Datadog-Extension";
 
 export enum RuntimeType {
   NODE,
@@ -109,6 +110,7 @@ export function applyLayers(
   lambdas: LambdaFunction[],
   pythonLayerVersion?: number,
   nodeLayerVersion?: number,
+  extensionLayerVersion?: number,
 ) {
   if (!availableRegions.has(region)) {
     return [];
@@ -121,7 +123,8 @@ export function applyLayers(
       return;
     }
 
-    let layerARN;
+    let lambdaLibraryLayerArn;
+    let lambdaExtensionLayerArn;
 
     if (lambda.runtimeType === RuntimeType.PYTHON) {
       if (pythonLayerVersion === undefined) {
@@ -130,7 +133,8 @@ export function applyLayers(
       }
 
       log.debug(`Setting Python Lambda layer for ${lambda.key}`);
-      layerARN = getLayerARN(region, pythonLayerVersion, lambda.runtime);
+      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, pythonLayerVersion, lambda.runtime);
+      addLayer(lambdaLibraryLayerArn, lambda);
     }
 
     if (lambda.runtimeType === RuntimeType.NODE) {
@@ -140,22 +144,43 @@ export function applyLayers(
       }
 
       log.debug(`Setting Node Lambda layer for ${lambda.key}`);
-      layerARN = getLayerARN(region, nodeLayerVersion, lambda.runtime);
+      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, nodeLayerVersion, lambda.runtime);
+      addLayer(lambdaLibraryLayerArn, lambda);
     }
 
-    if (layerARN !== undefined) {
-      const currentLayers = lambda.properties.Layers ?? [];
-      if (!new Set(currentLayers).has(layerARN)) {
-        currentLayers.push(layerARN);
-      }
-      lambda.properties.Layers = currentLayers;
+    if (extensionLayerVersion !== undefined) {
+      log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
+      lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion);
+      addLayer(lambdaExtensionLayerArn, lambda);
     }
   });
   return errors;
 }
 
-function getLayerARN(region: string, version: number, runtime: string) {
+function addLayer(layerArn: string, lambda: LambdaFunction) {
+  if (layerArn !== undefined) {
+    const currentLayers = lambda.properties.Layers ?? [];
+    if (!currentLayers.includes(layerArn)) {
+      currentLayers.push(layerArn);
+    }
+    lambda.properties.Layers = currentLayers;
+  }
+}
+
+export function getLambdaLibraryLayerArn(region: string, version: number, runtime: string) {
   const layerName = runtimeToLayerName[runtime];
+  const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
+
+  // if this is a GovCloud region, use the GovCloud lambda layer
+  if (isGovCloud) {
+    log.debug("GovCloud region detected, using GovCloud Lambda layer");
+    return `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:${layerName}:${version}`;
+  }
+  return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
+}
+
+export function getExtensionLayerArn(region: string, version: number) {
+  const layerName = DD_LAMBDA_EXTENSION_LAYER_NAME;
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
   // if this is a GovCloud region, use the GovCloud lambda layer

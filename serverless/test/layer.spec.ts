@@ -6,6 +6,8 @@ import {
   DD_ACCOUNT_ID,
   DD_GOV_ACCOUNT_ID,
   getMissingLayerVersionErrorMsg,
+  getLambdaLibraryLayerArn,
+  getExtensionLayerArn,
 } from "../src/layer";
 
 function mockFunctionResource(runtime: string) {
@@ -129,6 +131,34 @@ describe("applyLayers", () => {
     expect(pythonLambda.properties.Layers).toBeUndefined();
     expect(nodeLambda.properties.Layers).toBeUndefined();
   });
+
+  it("applies the node and extension lambda layers", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
+    const region = "us-east-1";
+    const nodeLayerVersion = 25;
+    const extensionLayerVersion = 6;
+    const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion, extensionLayerVersion);
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
+    ]);
+  });
+
+  it("applies the python and extension lambda layers", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "python3.6", RuntimeType.PYTHON);
+    const region = "us-east-1";
+    const pythonLayerVersion = 25;
+    const extensionLayerVersion = 6;
+    const errors = applyLayers(region, [lambda], pythonLayerVersion, undefined, extensionLayerVersion);
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python36:${pythonLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
+    ]);
+  });
 });
 
 describe("isGovCloud", () => {
@@ -144,5 +174,51 @@ describe("isGovCloud", () => {
     expect(nodeLambda.properties.Layers).toEqual([
       `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node10-x:30`,
     ]);
+  });
+});
+
+describe("getLambdaLibraryLayerArn", () => {
+  it("gets the us-east-1 layer arn for the Datadog Node14 Lambda Library", () => {
+    const region = "us-east-1";
+    const version = 22;
+    const runtime = "nodejs14.x";
+    const layerArn = getLambdaLibraryLayerArn(region, version, runtime);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node14-x:${version}`);
+  });
+  it("gets the us-east-1 layer arn for the Datadog Python36 Lambda Library", () => {
+    const region = "us-east-1";
+    const version = 22;
+    const runtime = "python3.6";
+    const layerArn = getLambdaLibraryLayerArn(region, version, runtime);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python36:${version}`);
+  });
+  it("gets the us-gov-east-1 layer arn for the Datadog Python36 Lambda Library", () => {
+    const region = "us-gov-east-1";
+    const version = 22;
+    const runtime = "python3.6";
+    const layerArn = getLambdaLibraryLayerArn(region, version, runtime);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python36:${version}`);
+  });
+  it("gets the us-gov-east-1 layer arn for the Datadog Node14 Lambda Library", () => {
+    const region = "us-gov-east-1";
+    const version = 22;
+    const runtime = "nodejs14.x";
+    const layerArn = getLambdaLibraryLayerArn(region, version, runtime);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node14-x:${version}`);
+  });
+});
+
+describe("getExtensionLayerArn", () => {
+  it("gets the us-east-1 layer arn for the Datadog Lambda Extension", () => {
+    const region = "us-east-1";
+    const version = 6;
+    const layerArn = getExtensionLayerArn(region, version);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${version}`);
+  });
+  it("gets the us-gov-west-1 layer arn for the Datadog Lambda Extension", () => {
+    const region = "us-gov-west-1";
+    const version = 6;
+    const layerArn = getExtensionLayerArn(region, version);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Extension:${version}`);
   });
 });

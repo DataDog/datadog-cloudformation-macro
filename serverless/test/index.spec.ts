@@ -134,7 +134,7 @@ function mockGovCloudInputEvent(params: any, mappings: any, logGroups?: LogGroup
 describe("Macro", () => {
   describe("parameters and config", () => {
     it("uses transform parameters if they are provided", async () => {
-      const transformParams = { site: "transform-params-site" };
+      const transformParams = { site: "datadoghq.com" };
       const mappings = {
         Datadog: {
           Parameters: { site: "mappings-site" },
@@ -145,14 +145,14 @@ describe("Macro", () => {
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
       expect(lambdaProperties.Environment).toMatchObject({
-        Variables: { DD_SITE: "transform-params-site" },
+        Variables: { DD_SITE: "datadoghq.com" },
       });
     });
 
     it("uses parameters under Mappings section if template parameters are not given", async () => {
       const mappings = {
         Datadog: {
-          Parameters: { site: "mappings-site" },
+          Parameters: { site: "datadoghq.eu" },
         },
       };
       const inputEvent = mockInputEvent({}, mappings);
@@ -160,7 +160,7 @@ describe("Macro", () => {
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
       expect(lambdaProperties.Environment).toMatchObject({
-        Variables: { DD_SITE: "mappings-site" },
+        Variables: { DD_SITE: "datadoghq.eu" },
       });
     });
   });
