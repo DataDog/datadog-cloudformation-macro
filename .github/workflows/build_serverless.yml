@@ -26,14 +26,10 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm install
+        run: yarn install
 
       - name: Check formatting
-        run: |
-          npx prettier --version
-          cd ./home/runner/.npm/_logs
-          cat *2021*.log
-          npm run check-formatting
+        run: yarn check-formatting
 
 
   cloudformation-linter:
@@ -71,10 +67,10 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm install
+        run: yarn install
 
       - name: Build
-        run: npm run build
+        run: yarn build
 
   test:
     defaults:
@@ -103,10 +99,10 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm install
+        run: yarn install
 
       - name: Run tests
-        run: npm test
+        run: yarn test
 
       - name: Upload code coverage report
         run: bash <(curl -s https://codecov.io/bash)
