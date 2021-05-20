@@ -26,7 +26,9 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dependencies
-        run: npm install
+        run: |
+         npm install
+         npm --version
 
       - name: Check formatting
         run: npm run check-formatting
