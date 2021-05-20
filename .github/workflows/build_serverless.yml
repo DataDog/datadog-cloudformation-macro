@@ -27,11 +27,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-         npm install
+         yarn install
          npm --version
 
       - name: Check formatting
-        run: npm run check-formatting
+        run: |
+         yarn check-formatting
+
 
   cloudformation-linter:
     runs-on: ubuntu-latest
