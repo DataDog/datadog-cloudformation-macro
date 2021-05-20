@@ -31,6 +31,7 @@ jobs:
       - name: Check formatting
         run: |
           npm run check-formatting
+          prettier --version
           cat /home/runner/.npm/_logs/2021*.log
 
   cloudformation-linter:
