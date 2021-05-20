@@ -30,7 +30,8 @@ jobs:
 
       - name: Check formatting
         run: |
-          cd /home/runner/.npm/_logs
+          npx prettier --version
+          cd ./home/runner/.npm/_logs
           cat *2021*.log
           npm run check-formatting
 
