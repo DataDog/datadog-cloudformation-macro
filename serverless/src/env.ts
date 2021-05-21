@@ -17,7 +17,7 @@ export interface Configuration {
   // Which Site to send to, (should be datadoghq.com or datadoghq.eu)
   site: string;
   // The log level, (set to DEBUG for extended logging)
-  logLevel: string;
+  logLevel: string | undefined;
   // Whether the log forwarder integration is enabled. Defaults to true.
   flushMetricsToLogs: boolean;
   // Enable enhanced metrics on Lambda functions. Defaults to true.
@@ -57,7 +57,7 @@ const PARAMETERS = "Parameters";
 export const defaultConfiguration: Configuration = {
   addLayers: true,
   flushMetricsToLogs: true,
-  logLevel: "info",
+  logLevel: undefined,
   site: "datadoghq.com",
   enableXrayTracing: false,
   enableDDTracing: true,
@@ -139,7 +139,7 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
       envVariables[siteURLEnvVar] = config.site;
     }
 
-    if (envVariables[logLevelEnvVar] === undefined) {
+    if (config.logLevel !== undefined) {
       envVariables[logLevelEnvVar] = config.logLevel;
     }
 
