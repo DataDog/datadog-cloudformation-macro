@@ -95,8 +95,6 @@ In order to help debug issues, you can look at the CloudWatch Logs for the macro
 
 This error occurs when you provide a `forwarderArn` and are deploying your Lambda function for the first time, so no log group currently exists, and the macro cannot create this log group or subscribe to the Forwarder for you. One way to fix this issue is to explicitly define the `FunctionName` property on your Lambda (see the example below).
 
-**AWS SAM**
-
 ```yml
 Resources:
   MyLambda:
@@ -107,13 +105,23 @@ Resources:
       FunctionName: MyFunctionName # Add this property to your Lambdas
 ```
 
+If you cannot (or prefer not) define the `FunctionName` explicitly, then remove the `forwarderArn` parameter from the SAM template or CDK source code, and instead define the subscription filters using the [AWS::Logs::SubscriptionFilter][7] resource like below.
+
+```yaml
+Resources:
+  MyLogSubscriptionFilter:
+    Type: "AWS::Logs::SubscriptionFilter"
+    Properties:
+      DestinationArn: "<DATADOG_FORWARDER_ARN>"
+      LogGroupName: "<CLOUDWATCH_LOG_GROUP_NAME>"
+      FilterPattern: ""
+```
+
 ### Error message: 'logGroupNamePrefix' failed to satisfy constraint...
 
 The `forwarderArn` option does not work when `FunctionName` contains CloudFormation functions, such as `!Sub`. In this case, the macro does not have access to the actual function name (CloudFormation executes functions after transformations). It therefore cannot create log groups and subscription filters for your functions.
 
 Remove the `forwarderArn` parameter from the SAM template or CDK source code, and instead define the subscription filters using the [AWS::Logs::SubscriptionFilter][7] resource like below.
-
-**AWS SAM**
 
 ```yaml
 Resources:
