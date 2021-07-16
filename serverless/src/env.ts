@@ -26,6 +26,8 @@ export interface Configuration {
   enableXrayTracing: boolean;
   // Enable tracing on Lambda function using dd-trace, datadog's APM library.
   enableDDTracing: boolean;
+  // Enable log collection via the Datadog Lambda extension
+  enableDDLogs: boolean;
   // When set, the macro will subscribe the lambdas to the forwarder with the given arn.
   forwarderArn?: string;
   // If a forwarder is provided and any lambdas have dynamically generated names,
@@ -51,6 +53,7 @@ const siteURLEnvVar = "DD_SITE";
 const logLevelEnvVar = "DD_LOG_LEVEL";
 const logForwardingEnvVar = "DD_FLUSH_TO_LOG";
 const enhancedMetricsEnvVar = "DD_ENHANCED_METRICS";
+const enableDDLogsEnvVar = "DD_SERVERLESS_LOGS_ENABLED";
 const DATADOG = "Datadog";
 const PARAMETERS = "Parameters";
 
@@ -61,6 +64,7 @@ export const defaultConfiguration: Configuration = {
   site: "datadoghq.com",
   enableXrayTracing: false,
   enableDDTracing: true,
+  enableDDLogs: true,
   enableEnhancedMetrics: true,
 };
 
@@ -149,6 +153,10 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
 
     if (envVariables[enhancedMetricsEnvVar] === undefined) {
       envVariables[enhancedMetricsEnvVar] = config.enableEnhancedMetrics;
+    }
+
+    if (config.enableDDLogs !== undefined && envVariables[enableDDLogsEnvVar] === undefined) {
+      envVariables[enableDDLogsEnvVar] = config.enableDDLogs;
     }
 
     environment.Variables = envVariables;
