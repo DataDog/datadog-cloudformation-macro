@@ -74,6 +74,7 @@ To further configure your plugin, use the following custom parameters:
 | `enableEnhancedMetrics` | Enable enhanced metrics for Lambda functions. Defaults to `true`. The Datadog Forwarder Lambda function must subscribe the function log group. |
 | `enableXrayTracing` | Enable tracing on Lambda functions. Defaults to false. |
 | `enableDDTracing` | Enable tracing on Lambda function using dd-trace, Datadog's APM library. Defaults to `true`. The Datadog Forwarder Lambda function must subscribe the function log group. |
+| `enableDDLogs` | Enable Datadog log collection for the Lambda function. Note: This setting has no effect on logs sent via the Datadog Forwarder. Defaults to true. |
 | `service` | When set, the macro adds a `service` tag to all Lambda functions with the provided value. |
 | `env` | When set, the macro adds an `env` tag to all Lambda functions with the provided value. |
 | `logLevel` | Sets the log level. Set to `DEBUG` for extended logging. |

@@ -35,6 +35,7 @@ describe("getConfig", () => {
       site: "my-site",
       enableXrayTracing: false,
       enableDDTracing: true,
+      enableDDLogs: true,
       enableEnhancedMetrics: true,
     });
   });
@@ -62,6 +63,7 @@ describe("setEnvConfiguration", () => {
       flushMetricsToLogs: true,
       enableXrayTracing: true,
       enableDDTracing: true,
+      enableDDLogs: true,
       enableEnhancedMetrics: true,
     };
     setEnvConfiguration(config, [lambda]);
@@ -74,6 +76,7 @@ describe("setEnvConfiguration", () => {
         DD_LOG_LEVEL: "debug",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_SERVERLESS_LOGS_ENABLED: true,
       },
     });
   });
@@ -108,6 +111,7 @@ describe("setEnvConfiguration", () => {
       flushMetricsToLogs: false,
       enableXrayTracing: true,
       enableDDTracing: true,
+      enableDDLogs: true,
       enableEnhancedMetrics: false,
     };
     setEnvConfiguration(config, [lambda]);
@@ -138,6 +142,7 @@ describe("setEnvConfiguration", () => {
       flushMetricsToLogs: true,
       enableXrayTracing: true,
       enableDDTracing: true,
+      enableDDLogs: true,
       enableEnhancedMetrics: true,
     };
     setEnvConfiguration(config, [lambda]);
@@ -149,6 +154,7 @@ describe("setEnvConfiguration", () => {
         DD_KMS_API_KEY: "5678",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_SERVERLESS_LOGS_ENABLED: true,
       },
     });
   });
@@ -174,6 +180,7 @@ describe("setEnvConfiguration", () => {
       flushMetricsToLogs: true,
       enableXrayTracing: true,
       enableDDTracing: true,
+      enableDDLogs: true,
       enableEnhancedMetrics: true,
     };
     setEnvConfiguration(config, [lambda]);
@@ -186,6 +193,7 @@ describe("setEnvConfiguration", () => {
         DD_LOG_LEVEL: "info",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_SERVERLESS_LOGS_ENABLED: true,
       },
     });
   });
@@ -200,6 +208,7 @@ describe("validateParameters", () => {
       site: "datacathq.com",
       enableXrayTracing: false,
       enableDDTracing: true,
+      enableDDLogs: true,
       enableEnhancedMetrics: true,
     };
 
@@ -219,6 +228,7 @@ describe("validateParameters", () => {
       site: "datadoghq.com",
       enableXrayTracing: false,
       enableDDTracing: true,
+      enableDDLogs: true,
       enableEnhancedMetrics: true,
       extensionLayerVersion: 6,
       forwarderArn: "test-forwarder",
@@ -236,6 +246,7 @@ describe("validateParameters", () => {
       site: "datadoghq.com",
       enableXrayTracing: false,
       enableDDTracing: true,
+      enableDDLogs: true,
       enableEnhancedMetrics: true,
       extensionLayerVersion: 6,
     };
