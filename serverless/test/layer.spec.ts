@@ -35,30 +35,30 @@ function mockLambdaFunction(key: string, runtime: string, runtimeType: RuntimeTy
 }
 
 describe("findLambdas", () => {
-  it("finds lambdas and correct assigns runtime types", () => {
+  it("finds lambdas and correctly assigns runtime types", () => {
     const resources = {
-      FunctionA: mockFunctionResource("nodejs8.10"),
-      FunctionB: mockFunctionResource("nodejs10.x"),
-      FunctionC: mockFunctionResource("nodejs12.x"),
-      FunctionD: mockFunctionResource("nodejs14.x"),
-      FunctionE: mockFunctionResource("python2.7"),
-      FunctionF: mockFunctionResource("python3.6"),
-      FunctionG: mockFunctionResource("python3.7"),
-      FunctionH: mockFunctionResource("python3.8"),
-      FunctionI: mockFunctionResource("go1.10"),
+      Node10Function: mockFunctionResource("nodejs10.x"),
+      Node12Function: mockFunctionResource("nodejs12.x"),
+      Node14Function: mockFunctionResource("nodejs14.x"),
+      Python27Function: mockFunctionResource("python2.7"),
+      Python36Function: mockFunctionResource("python3.6"),
+      Python37Function: mockFunctionResource("python3.7"),
+      Python38Function: mockFunctionResource("python3.8"),
+      Python39Function: mockFunctionResource("python3.9"),
+      GoFunction: mockFunctionResource("go1.10"),
     };
     const lambdas = findLambdas(resources);
 
     expect(lambdas).toEqual([
-      mockLambdaFunction("FunctionA", "nodejs8.10", RuntimeType.NODE),
-      mockLambdaFunction("FunctionB", "nodejs10.x", RuntimeType.NODE),
-      mockLambdaFunction("FunctionC", "nodejs12.x", RuntimeType.NODE),
-      mockLambdaFunction("FunctionD", "nodejs14.x", RuntimeType.NODE),
-      mockLambdaFunction("FunctionE", "python2.7", RuntimeType.PYTHON),
-      mockLambdaFunction("FunctionF", "python3.6", RuntimeType.PYTHON),
-      mockLambdaFunction("FunctionG", "python3.7", RuntimeType.PYTHON),
-      mockLambdaFunction("FunctionH", "python3.8", RuntimeType.PYTHON),
-      mockLambdaFunction("FunctionI", "go1.10", RuntimeType.UNSUPPORTED),
+      mockLambdaFunction("Node10Function", "nodejs10.x", RuntimeType.NODE),
+      mockLambdaFunction("Node12Function", "nodejs12.x", RuntimeType.NODE),
+      mockLambdaFunction("Node14Function", "nodejs14.x", RuntimeType.NODE),
+      mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON),
+      mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON),
+      mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON),
+      mockLambdaFunction("Python38Function", "python3.8", RuntimeType.PYTHON),
+      mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON),
+      mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED),
     ]);
   });
 });
@@ -101,14 +101,6 @@ describe("applyLayers", () => {
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([layerArn]);
-  });
-
-  it("only adds layer when region it is available in region", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
-    const errors = applyLayers("unsupported-region", [lambda], 18);
-
-    expect(errors.length).toEqual(0);
-    expect(lambda.properties.Layers).toBeUndefined();
   });
 
   it("doesn't add layer when runtime is not supported", () => {
