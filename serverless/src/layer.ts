@@ -22,7 +22,6 @@ export interface LambdaFunction {
 }
 
 const runtimeLookup: { [key: string]: RuntimeType } = {
-  "nodejs8.10": RuntimeType.NODE,
   "nodejs10.x": RuntimeType.NODE,
   "nodejs12.x": RuntimeType.NODE,
   "nodejs14.x": RuntimeType.NODE,
@@ -30,10 +29,10 @@ const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.6": RuntimeType.PYTHON,
   "python3.7": RuntimeType.PYTHON,
   "python3.8": RuntimeType.PYTHON,
+  "python3.9": RuntimeType.PYTHON,
 };
 
 const runtimeToLayerName: { [key: string]: string } = {
-  "nodejs8.10": "Datadog-Node8-10",
   "nodejs10.x": "Datadog-Node10-x",
   "nodejs12.x": "Datadog-Node12-x",
   "nodejs14.x": "Datadog-Node14-x",
@@ -41,29 +40,8 @@ const runtimeToLayerName: { [key: string]: string } = {
   "python3.6": "Datadog-Python36",
   "python3.7": "Datadog-Python37",
   "python3.8": "Datadog-Python38",
+  "python3.9": "Datadog-Python39",
 };
-
-const availableRegions = new Set([
-  "us-east-2",
-  "us-east-1",
-  "us-west-1",
-  "us-west-2",
-  "ap-east-1",
-  "ap-south-1",
-  "ap-northeast-2",
-  "ap-southeast-1",
-  "ap-southeast-2",
-  "ap-northeast-1",
-  "ca-central-1",
-  "eu-north-1",
-  "eu-central-1",
-  "eu-west-1",
-  "eu-west-2",
-  "eu-west-3",
-  "sa-east-1",
-  "us-gov-east-1",
-  "us-gov-west-1",
-]);
 
 /**
  * Parse through the Resources section of the provided CloudFormation template to find all lambda
@@ -112,10 +90,6 @@ export function applyLayers(
   nodeLayerVersion?: number,
   extensionLayerVersion?: number,
 ) {
-  if (!availableRegions.has(region)) {
-    return [];
-  }
-
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
     if (lambda.runtimeType === RuntimeType.UNSUPPORTED) {
