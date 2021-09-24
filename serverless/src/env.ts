@@ -41,6 +41,7 @@ export interface Configuration {
   // When set, the macro will use this value to add the 'env' tag to all lambdas,
   // but will not override existing 'env' tags on individual lambdas or those set in Globals.
   env?: string;
+  captureLambdaPayload: boolean;
 }
 
 // Same interface as Configuration above, except all parameters are optional, since user does
@@ -56,6 +57,7 @@ const enhancedMetricsEnvVar = "DD_ENHANCED_METRICS";
 const enableDDLogsEnvVar = "DD_SERVERLESS_LOGS_ENABLED";
 const DATADOG = "Datadog";
 const PARAMETERS = "Parameters";
+const captureLambdaPayloadEnvVar = "DD_CAPTURE_LAMBDA_PAYLOAD";
 
 export const defaultConfiguration: Configuration = {
   addLayers: true,
@@ -66,6 +68,7 @@ export const defaultConfiguration: Configuration = {
   enableDDTracing: true,
   enableDDLogs: true,
   enableEnhancedMetrics: true,
+  captureLambdaPayload: false,
 };
 
 /**
@@ -157,6 +160,10 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
 
     if (config.enableDDLogs !== undefined && envVariables[enableDDLogsEnvVar] === undefined) {
       envVariables[enableDDLogsEnvVar] = config.enableDDLogs;
+    }
+
+    if (config.captureLambdaPayload !== undefined && envVariables[captureLambdaPayloadEnvVar] === undefined) {
+      envVariables[captureLambdaPayloadEnvVar] = config.captureLambdaPayload;
     }
 
     environment.Variables = envVariables;
