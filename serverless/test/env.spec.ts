@@ -66,7 +66,7 @@ describe("setEnvConfiguration", () => {
       enableDDTracing: true,
       enableDDLogs: true,
       enableEnhancedMetrics: true,
-      captureLambdaPayload: false,
+      captureLambdaPayload: true,
     };
     setEnvConfiguration(config, [lambda]);
 
@@ -79,7 +79,7 @@ describe("setEnvConfiguration", () => {
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
-        DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_CAPTURE_LAMBDA_PAYLOAD: true,
       },
     });
   });
