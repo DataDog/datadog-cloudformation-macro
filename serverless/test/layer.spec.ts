@@ -142,6 +142,20 @@ describe("applyLayers", () => {
     ]);
   });
 
+  it("applies the node and extension lambda layers for arm", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64);
+    const region = "us-east-1";
+    const nodeLayerVersion = 25;
+    const extensionLayerVersion = 6;
+    const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion, extensionLayerVersion);
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
+    ]);
+  });
+
   it("applies the python and extension lambda layers", () => {
     const lambda = mockLambdaFunction("FunctionKey", "python3.6", RuntimeType.PYTHON);
     const region = "us-east-1";
@@ -153,6 +167,20 @@ describe("applyLayers", () => {
     expect(lambda.properties.Layers).toEqual([
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python36:${pythonLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
+    ]);
+  });
+
+  it("applies the python and extension lambda layers for arm", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "python3.9", RuntimeType.PYTHON, "arm64", ArchitectureType.ARM64);
+    const region = "us-east-1";
+    const pythonLayerVersion = 25;
+    const extensionLayerVersion = 6;
+    const errors = applyLayers(region, [lambda], pythonLayerVersion, undefined, extensionLayerVersion);
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python39:${pythonLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
     ]);
   });
 });
