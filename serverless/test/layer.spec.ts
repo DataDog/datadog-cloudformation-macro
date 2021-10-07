@@ -179,7 +179,7 @@ describe("applyLayers", () => {
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python39:${pythonLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python39-ARM:${pythonLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
     ]);
   });
