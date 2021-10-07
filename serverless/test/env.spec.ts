@@ -5,7 +5,7 @@ import {
   setEnvConfiguration,
   validateParameters,
 } from "../src/env";
-import { LambdaFunction, RuntimeType } from "../src/layer";
+import { ArchitectureType, LambdaFunction, RuntimeType } from "../src/layer";
 
 describe("getConfig", () => {
   it("correctly parses parameters from Mappings", () => {
@@ -54,6 +54,8 @@ describe("setEnvConfiguration", () => {
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64
     };
     const config = {
       addLayers: false,
@@ -105,6 +107,8 @@ describe("setEnvConfiguration", () => {
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64
     };
     const config = {
       addLayers: false,
@@ -137,6 +141,8 @@ describe("setEnvConfiguration", () => {
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64
     };
     const config = {
       addLayers: false,
@@ -177,6 +183,8 @@ describe("setEnvConfiguration", () => {
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64
     };
     const config = {
       addLayers: false,

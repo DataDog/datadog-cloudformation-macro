@@ -4,12 +4,16 @@ import log from "loglevel";
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
 export const DD_ACCOUNT_ID = "464622532012";
 export const DD_GOV_ACCOUNT_ID = "002406178527";
-const DD_LAMBDA_EXTENSION_LAYER_NAME = "Datadog-Extension";
 
 export enum RuntimeType {
   NODE,
   PYTHON,
   UNSUPPORTED,
+}
+
+export enum ArchitectureType {
+  ARM64,
+  x86_64
 }
 
 // Self defined interface that only applies to the macro - the FunctionProperties interface
@@ -19,7 +23,19 @@ export interface LambdaFunction {
   key: string;
   runtimeType: RuntimeType;
   runtime: string;
+  architectureType: ArchitectureType;
+  architecture: string;
 }
+
+const architctureLookup: { [key: string]: ArchitectureType } = {
+  "x86_64": ArchitectureType.x86_64,
+  "arm64": ArchitectureType.ARM64,
+};
+
+const architectureToExtensionLayerName: { [key: string]: string } = {
+  "x86_64": "Datadog-Extension",
+  "arm64": "Datadog-Extension-ARM"
+};
 
 const runtimeLookup: { [key: string]: RuntimeType } = {
   "nodejs10.x": RuntimeType.NODE,
@@ -32,15 +48,35 @@ const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.9": RuntimeType.PYTHON,
 };
 
-const runtimeToLayerName: { [key: string]: string } = {
-  "nodejs10.x": "Datadog-Node10-x",
-  "nodejs12.x": "Datadog-Node12-x",
-  "nodejs14.x": "Datadog-Node14-x",
-  "python2.7": "Datadog-Python27",
-  "python3.6": "Datadog-Python36",
-  "python3.7": "Datadog-Python37",
-  "python3.8": "Datadog-Python38",
-  "python3.9": "Datadog-Python39",
+function runtimeToLayerName(runtime: string, architecture: string): string {
+  const nodeLookup: { [key: string]: string } = {
+    "nodejs10.x": "Datadog-Node10-x",
+    "nodejs12.x": "Datadog-Node12-x",
+    "nodejs14.x": "Datadog-Node14-x",
+  }
+
+  const pythonLookup: { [key: string]: string } = {
+    "python2.7": "Datadog-Python27",
+    "python3.6": "Datadog-Python36",
+    "python3.7": "Datadog-Python37",
+    "python3.8": "Datadog-Python38",
+    "python3.9": "Datadog-Python39",
+  }
+
+  const pythonArmLookup: { [key: string]: string } = {
+    "python3.8": "Datadog-Python38-ARM",
+    "python3.9": "Datadog-Python39-ARM",
+  }
+
+  if (runtimeLookup[runtime] === RuntimeType.NODE) {
+    return nodeLookup[runtime];
+  }
+
+  if (runtimeLookup[runtime] === RuntimeType.PYTHON && architctureLookup[architecture] === ArchitectureType.ARM64) {
+    return pythonArmLookup[runtime];
+  }
+
+  return pythonLookup[runtime];  
 };
 
 /**
@@ -61,10 +97,15 @@ export function findLambdas(resources: Resources) {
 
       const properties: FunctionProperties = resource.Properties;
       const runtime = properties.Runtime;
+      const architecture = properties.Architectures?.[0] ?? "x86_64";
       let runtimeType = RuntimeType.UNSUPPORTED;
+      let architectureType = ArchitectureType.x86_64;
 
       if (runtime !== undefined && runtime in runtimeLookup) {
         runtimeType = runtimeLookup[runtime];
+      }
+      if (architecture !== undefined && architecture in architctureLookup) {
+        architectureType = architctureLookup[architecture];
       }
 
       return {
@@ -72,6 +113,8 @@ export function findLambdas(resources: Resources) {
         key,
         runtimeType,
         runtime,
+        architecture,
+        architectureType,
       } as LambdaFunction;
     })
     .filter((lambda) => lambda !== undefined) as LambdaFunction[];
@@ -107,7 +150,7 @@ export function applyLayers(
       }
 
       log.debug(`Setting Python Lambda layer for ${lambda.key}`);
-      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, pythonLayerVersion, lambda.runtime);
+      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, pythonLayerVersion, lambda.runtime, lambda.architecture);
       addLayer(lambdaLibraryLayerArn, lambda);
     }
 
@@ -118,13 +161,13 @@ export function applyLayers(
       }
 
       log.debug(`Setting Node Lambda layer for ${lambda.key}`);
-      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, nodeLayerVersion, lambda.runtime);
+      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, nodeLayerVersion, lambda.runtime, lambda.architecture);
       addLayer(lambdaLibraryLayerArn, lambda);
     }
 
     if (extensionLayerVersion !== undefined) {
       log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
-      lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion);
+      lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion, lambda.architecture);
       addLayer(lambdaExtensionLayerArn, lambda);
     }
   });
@@ -141,8 +184,8 @@ function addLayer(layerArn: string, lambda: LambdaFunction) {
   }
 }
 
-export function getLambdaLibraryLayerArn(region: string, version: number, runtime: string) {
-  const layerName = runtimeToLayerName[runtime];
+export function getLambdaLibraryLayerArn(region: string, version: number, runtime: string, architcture: string) {
+  const layerName = runtimeToLayerName(runtime, architcture);
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
   // if this is a GovCloud region, use the GovCloud lambda layer
@@ -153,8 +196,9 @@ export function getLambdaLibraryLayerArn(region: string, version: number, runtim
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
 }
 
-export function getExtensionLayerArn(region: string, version: number) {
-  const layerName = DD_LAMBDA_EXTENSION_LAYER_NAME;
+export function getExtensionLayerArn(region: string, version: number, architecture: string) {
+  let layerName = architectureToExtensionLayerName[architecture];
+
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
   // if this is a GovCloud region, use the GovCloud lambda layer
