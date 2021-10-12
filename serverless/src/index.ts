@@ -43,6 +43,7 @@ export interface FunctionProperties {
   Layers?: string[];
   TracingConfig?: { [key: string]: string };
   FunctionName?: string;
+  Architectures?: [string];
 }
 
 export const handler = async (event: InputEvent, _: any) => {
