@@ -27,7 +27,7 @@ export interface LambdaFunction {
   architecture: string;
 }
 
-const architctureLookup: { [key: string]: ArchitectureType } = {
+const architectureLookup: { [key: string]: ArchitectureType } = {
   "x86_64": ArchitectureType.x86_64,
   "arm64": ArchitectureType.ARM64,
 };
