@@ -104,8 +104,8 @@ export function findLambdas(resources: Resources) {
       if (runtime !== undefined && runtime in runtimeLookup) {
         runtimeType = runtimeLookup[runtime];
       }
-      if (architecture !== undefined && architecture in architctureLookup) {
-        architectureType = architctureLookup[architecture];
+      if (architecture !== undefined && architecture in architectureLookup) {
+        architectureType = architectureLookup[architecture];
       }
 
       return {
