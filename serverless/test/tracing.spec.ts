@@ -16,7 +16,7 @@ function mockLambdaFunction() {
     runtimeType: RuntimeType.NODE,
     runtime: "nodejs10.x",
     architecture: "x86_64",
-    architectureType: ArchitectureType.x86_64
+    architectureType: ArchitectureType.x86_64,
   } as LambdaFunction;
 }
 
@@ -147,7 +147,7 @@ describe("enableTracing", () => {
       runtimeType: RuntimeType.NODE,
       runtime: "nodejs10.x",
       architecture: "x86_64",
-      architectureType: ArchitectureType.x86_64
+      architectureType: ArchitectureType.x86_64,
     };
     const resources: Record<string, any> = {
       HelloWorldFunction: {

@@ -55,7 +55,7 @@ describe("setEnvConfiguration", () => {
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
       architecture: "x86_64",
-      architectureType: ArchitectureType.x86_64
+      architectureType: ArchitectureType.x86_64,
     };
     const config = {
       addLayers: false,
@@ -108,7 +108,7 @@ describe("setEnvConfiguration", () => {
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
       architecture: "x86_64",
-      architectureType: ArchitectureType.x86_64
+      architectureType: ArchitectureType.x86_64,
     };
     const config = {
       addLayers: false,
@@ -142,7 +142,7 @@ describe("setEnvConfiguration", () => {
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
       architecture: "x86_64",
-      architectureType: ArchitectureType.x86_64
+      architectureType: ArchitectureType.x86_64,
     };
     const config = {
       addLayers: false,
@@ -184,7 +184,7 @@ describe("setEnvConfiguration", () => {
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
       architecture: "x86_64",
-      architectureType: ArchitectureType.x86_64
+      architectureType: ArchitectureType.x86_64,
     };
     const config = {
       addLayers: false,

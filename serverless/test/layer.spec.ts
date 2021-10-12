@@ -18,12 +18,18 @@ function mockFunctionResource(runtime: string, architectures?: string[]) {
       Handler: "app.handler",
       Role: "role-arn",
       Runtime: runtime,
-      Architectures: architectures
+      Architectures: architectures,
     },
   };
 }
 
-function mockLambdaFunction(key: string, runtime: string, runtimeType: RuntimeType, architecture: string = "x86_64", architectureType: ArchitectureType = ArchitectureType.x86_64) {
+function mockLambdaFunction(
+  key: string,
+  runtime: string,
+  runtimeType: RuntimeType,
+  architecture: "x86_64",
+  architectureType: ArchitectureType = ArchitectureType.x86_64,
+) {
   return {
     properties: {
       Handler: "app.handler",
@@ -34,7 +40,7 @@ function mockLambdaFunction(key: string, runtime: string, runtimeType: RuntimeTy
     runtimeType,
     runtime,
     architecture,
-    architectureType
+    architectureType,
   } as LambdaFunction;
 }
 
@@ -235,7 +241,9 @@ describe("getLambdaLibraryLayerArn", () => {
     const version = 22;
     const runtime = "python3.9";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "arm64");
-    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python39-ARM:${version}`);
+    expect(layerArn).toEqual(
+      `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python39-ARM:${version}`,
+    );
   });
   it("gets the us-gov-east-1 layer arn for the Datadog Node14 Lambda Library", () => {
     const region = "us-gov-east-1";
@@ -269,6 +277,8 @@ describe("getExtensionLayerArn", () => {
     const region = "us-gov-west-1";
     const version = 6;
     const layerArn = getExtensionLayerArn(region, version, "arm64");
-    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${version}`);
+    expect(layerArn).toEqual(
+      `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${version}`,
+    );
   });
 });

@@ -13,7 +13,7 @@ export enum RuntimeType {
 
 export enum ArchitectureType {
   ARM64,
-  x86_64
+  x86_64,
 }
 
 // Self defined interface that only applies to the macro - the FunctionProperties interface
@@ -28,13 +28,13 @@ export interface LambdaFunction {
 }
 
 const architectureLookup: { [key: string]: ArchitectureType } = {
-  "x86_64": ArchitectureType.x86_64,
-  "arm64": ArchitectureType.ARM64,
+  x86_64: ArchitectureType.x86_64,
+  arm64: ArchitectureType.ARM64,
 };
 
 const architectureToExtensionLayerName: { [key: string]: string } = {
-  "x86_64": "Datadog-Extension",
-  "arm64": "Datadog-Extension-ARM"
+  x86_64: "Datadog-Extension",
+  arm64: "Datadog-Extension-ARM",
 };
 
 const runtimeLookup: { [key: string]: RuntimeType } = {
@@ -53,7 +53,7 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     "nodejs10.x": "Datadog-Node10-x",
     "nodejs12.x": "Datadog-Node12-x",
     "nodejs14.x": "Datadog-Node14-x",
-  }
+  };
 
   const pythonLookup: { [key: string]: string } = {
     "python2.7": "Datadog-Python27",
@@ -61,12 +61,12 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     "python3.7": "Datadog-Python37",
     "python3.8": "Datadog-Python38",
     "python3.9": "Datadog-Python39",
-  }
+  };
 
   const pythonArmLookup: { [key: string]: string } = {
     "python3.8": "Datadog-Python38-ARM",
     "python3.9": "Datadog-Python39-ARM",
-  }
+  };
 
   if (runtimeLookup[runtime] === RuntimeType.NODE) {
     return nodeLookup[runtime];
@@ -76,8 +76,8 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     return pythonArmLookup[runtime];
   }
 
-  return pythonLookup[runtime];  
-};
+  return pythonLookup[runtime];
+}
 
 /**
  * Parse through the Resources section of the provided CloudFormation template to find all lambda
