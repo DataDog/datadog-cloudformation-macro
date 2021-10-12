@@ -72,7 +72,7 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     return nodeLookup[runtime];
   }
 
-  if (runtimeLookup[runtime] === RuntimeType.PYTHON && architctureLookup[architecture] === ArchitectureType.ARM64) {
+  if (runtimeLookup[runtime] === RuntimeType.PYTHON && architectureLookup[architecture] === ArchitectureType.ARM64) {
     return pythonArmLookup[runtime];
   }
 
