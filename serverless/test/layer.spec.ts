@@ -27,7 +27,7 @@ function mockLambdaFunction(
   key: string,
   runtime: string,
   runtimeType: RuntimeType,
-  architecture: "x86_64",
+  architecture: string,
   architectureType: ArchitectureType = ArchitectureType.x86_64,
 ) {
   return {
@@ -60,22 +60,22 @@ describe("findLambdas", () => {
     const lambdas = findLambdas(resources);
 
     expect(lambdas).toEqual([
-      mockLambdaFunction("Node10Function", "nodejs10.x", RuntimeType.NODE),
-      mockLambdaFunction("Node12Function", "nodejs12.x", RuntimeType.NODE),
-      mockLambdaFunction("Node14Function", "nodejs14.x", RuntimeType.NODE),
-      mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON),
-      mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON),
-      mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON),
-      mockLambdaFunction("Python38Function", "python3.8", RuntimeType.PYTHON),
-      mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON),
-      mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED),
+      mockLambdaFunction("Node10Function", "nodejs10.x", RuntimeType.NODE, "x86_64"),
+      mockLambdaFunction("Node12Function", "nodejs12.x", RuntimeType.NODE, "x86_64"),
+      mockLambdaFunction("Node14Function", "nodejs14.x", RuntimeType.NODE, "x86_64"),
+      mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON, "x86_64"),
+      mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON, "x86_64"),
+      mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64"),
+      mockLambdaFunction("Python38Function", "python3.8", RuntimeType.PYTHON, "x86_64"),
+      mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON, "x86_64"),
+      mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64"),
     ]);
   });
 });
 
 describe("applyLayers", () => {
   it("adds a layer array if none are present", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
     const region = "us-east-1";
     const nodeLayerVersion = 25;
     const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion);
@@ -87,7 +87,7 @@ describe("applyLayers", () => {
   });
 
   it("appends to the layer array if already present", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
     lambda.properties.Layers = ["node:2"];
 
     const region = "us-east-1";
@@ -102,7 +102,7 @@ describe("applyLayers", () => {
   });
 
   it("doesn't add duplicate layers", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
     const region = "us-east-1";
     const nodeLayerVersion = 25;
     const layerArn = `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`;
@@ -114,7 +114,7 @@ describe("applyLayers", () => {
   });
 
   it("doesn't add layer when runtime is not supported", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "go1.10", RuntimeType.UNSUPPORTED);
+    const lambda = mockLambdaFunction("FunctionKey", "go1.10", RuntimeType.UNSUPPORTED, "x86_64");
     const errors = applyLayers("us-east-1", [lambda]);
 
     expect(errors.length).toEqual(0);
@@ -122,8 +122,8 @@ describe("applyLayers", () => {
   });
 
   it("returns errors if layer versions are not provided for corresponding Lambda runtimes", () => {
-    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python2.7", RuntimeType.PYTHON);
-    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs12.x", RuntimeType.NODE);
+    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python2.7", RuntimeType.PYTHON, "x86_64");
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
     const errors = applyLayers("us-east-1", [pythonLambda, nodeLambda]);
 
     expect(errors).toEqual([
@@ -135,7 +135,7 @@ describe("applyLayers", () => {
   });
 
   it("applies the node and extension lambda layers", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE);
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
     const region = "us-east-1";
     const nodeLayerVersion = 25;
     const extensionLayerVersion = 6;
@@ -163,7 +163,7 @@ describe("applyLayers", () => {
   });
 
   it("applies the python and extension lambda layers", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "python3.6", RuntimeType.PYTHON);
+    const lambda = mockLambdaFunction("FunctionKey", "python3.6", RuntimeType.PYTHON, "x86_64");
     const region = "us-east-1";
     const pythonLayerVersion = 25;
     const extensionLayerVersion = 6;
@@ -193,8 +193,8 @@ describe("applyLayers", () => {
 
 describe("isGovCloud", () => {
   it("applies the GovCloud layer", () => {
-    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON);
-    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs10.x", RuntimeType.NODE);
+    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON, "x86_64");
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs10.x", RuntimeType.NODE, "x86_64");
     const errors = applyLayers("us-gov-east-1", [pythonLambda, nodeLambda], 21, 30);
 
     expect(errors.length).toEqual(0);
