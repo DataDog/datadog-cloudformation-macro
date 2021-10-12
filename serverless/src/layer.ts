@@ -197,7 +197,7 @@ export function getLambdaLibraryLayerArn(region: string, version: number, runtim
 }
 
 export function getExtensionLayerArn(region: string, version: number, architecture: string) {
-  let layerName = architectureToExtensionLayerName[architecture];
+  const layerName = architectureToExtensionLayerName[architecture];
 
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
