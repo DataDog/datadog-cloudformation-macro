@@ -5,7 +5,7 @@ import {
   setEnvConfiguration,
   validateParameters,
 } from "../src/env";
-import { LambdaFunction, RuntimeType } from "../src/layer";
+import { ArchitectureType, LambdaFunction, RuntimeType } from "../src/layer";
 
 describe("getConfig", () => {
   it("correctly parses parameters from Mappings", () => {
@@ -37,6 +37,7 @@ describe("getConfig", () => {
       enableDDTracing: true,
       enableDDLogs: true,
       enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
     });
   });
 });
@@ -53,6 +54,8 @@ describe("setEnvConfiguration", () => {
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
     };
     const config = {
       addLayers: false,
@@ -65,6 +68,7 @@ describe("setEnvConfiguration", () => {
       enableDDTracing: true,
       enableDDLogs: true,
       enableEnhancedMetrics: true,
+      captureLambdaPayload: true,
     };
     setEnvConfiguration(config, [lambda]);
 
@@ -77,6 +81,7 @@ describe("setEnvConfiguration", () => {
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_CAPTURE_LAMBDA_PAYLOAD: true,
       },
     });
   });
@@ -89,6 +94,7 @@ describe("setEnvConfiguration", () => {
       DD_LOG_LEVEL: "debug",
       DD_SITE: "datadoghq.eu",
       DD_ENHANCED_METRICS: true,
+      DD_CAPTURE_LAMBDA_PAYLOAD: false,
     };
     const lambda: LambdaFunction = {
       properties: {
@@ -101,6 +107,8 @@ describe("setEnvConfiguration", () => {
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
     };
     const config = {
       addLayers: false,
@@ -113,6 +121,7 @@ describe("setEnvConfiguration", () => {
       enableDDTracing: true,
       enableDDLogs: true,
       enableEnhancedMetrics: false,
+      captureLambdaPayload: false,
     };
     setEnvConfiguration(config, [lambda]);
 
@@ -132,6 +141,8 @@ describe("setEnvConfiguration", () => {
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
     };
     const config = {
       addLayers: false,
@@ -144,6 +155,7 @@ describe("setEnvConfiguration", () => {
       enableDDTracing: true,
       enableDDLogs: true,
       enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
     };
     setEnvConfiguration(config, [lambda]);
 
@@ -155,6 +167,7 @@ describe("setEnvConfiguration", () => {
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
       },
     });
   });
@@ -170,6 +183,8 @@ describe("setEnvConfiguration", () => {
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
       runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
     };
     const config = {
       addLayers: false,
@@ -182,6 +197,7 @@ describe("setEnvConfiguration", () => {
       enableDDTracing: true,
       enableDDLogs: true,
       enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
     };
     setEnvConfiguration(config, [lambda]);
 
@@ -194,6 +210,7 @@ describe("setEnvConfiguration", () => {
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
       },
     });
   });
@@ -210,6 +227,7 @@ describe("validateParameters", () => {
       enableDDTracing: true,
       enableDDLogs: true,
       enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
     };
 
     const errors = validateParameters(params);
@@ -232,6 +250,7 @@ describe("validateParameters", () => {
       enableEnhancedMetrics: true,
       extensionLayerVersion: 6,
       forwarderArn: "test-forwarder",
+      captureLambdaPayload: false,
     };
 
     const errors = validateParameters(params);
@@ -249,6 +268,7 @@ describe("validateParameters", () => {
       enableDDLogs: true,
       enableEnhancedMetrics: true,
       extensionLayerVersion: 6,
+      captureLambdaPayload: false,
     };
 
     const errors = validateParameters(params);
