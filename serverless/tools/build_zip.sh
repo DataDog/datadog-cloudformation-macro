@@ -2,6 +2,9 @@
 
 set -e
 
+# Build with the new version number
+yarn build
+
 # Move into the tools directory
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR

@@ -43,7 +43,6 @@ aws cloudformation validate-template --template-body file://template.yml
 # Build and run test suite
 echo "Running unit tests and build script"
 yarn test 
-yarn build
 
 if [ "$PROD_RELEASE" = true ] ; then
 
