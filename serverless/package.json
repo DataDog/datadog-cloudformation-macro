@@ -1,6 +1,6 @@
 {
   "name": "datadog-serverless-macro",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Cloudformation macro to automatically instrument python and node functions with datadog tracing",
   "repository": "https://github.com/DataDog/datadog-cloudformation-macro",
   "author": "Datadog",
