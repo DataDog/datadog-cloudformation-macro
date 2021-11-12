@@ -37,7 +37,7 @@ const architectureToExtensionLayerName: { [key: string]: string } = {
   arm64: "Datadog-Extension-ARM",
 };
 
-const runtimeLookup: { [key: string]: RuntimeType } = {
+export const runtimeLookup: { [key: string]: RuntimeType } = {
   "nodejs10.x": RuntimeType.NODE,
   "nodejs12.x": RuntimeType.NODE,
   "nodejs14.x": RuntimeType.NODE,

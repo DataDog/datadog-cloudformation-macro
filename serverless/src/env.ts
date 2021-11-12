@@ -1,4 +1,4 @@
-import { LambdaFunction } from "./layer";
+import { LambdaFunction, runtimeLookup, RuntimeType } from "./layer";
 import log from "loglevel";
 
 export interface Configuration {
@@ -12,6 +12,8 @@ export interface Configuration {
   extensionLayerVersion?: number;
   // Datadog API Key, only necessary when using metrics without log forwarding
   apiKey?: string;
+  // The ARN of the secret in AWS Secrets Manager containing the Datadog API key.
+  apiKeySecretArn?: string;
   // Datadog API Key encrypted using KMS, only necessary when using metrics without log forwarding
   apiKMSKey?: string;
   // Which Site to send to, (should be datadoghq.com or datadoghq.eu)
@@ -49,6 +51,7 @@ export interface Configuration {
 interface CfnParams extends Partial<Configuration> {}
 
 const apiKeyEnvVar = "DD_API_KEY";
+const apiKeySecretArnEnvVar = "DD_API_KEY_SECRET_ARN";
 const apiKeyKMSEnvVar = "DD_KMS_API_KEY";
 const siteURLEnvVar = "DD_SITE";
 const logLevelEnvVar = "DD_LOG_LEVEL";
@@ -113,6 +116,11 @@ export function getConfigFromCfnParams(params: CfnParams) {
 export function validateParameters(config: Configuration) {
   log.debug("Validating parameters...");
   const errors: string[] = [];
+
+  const multipleApiKeysMessage = checkForMultipleApiKeys(config);
+  if (multipleApiKeysMessage) {
+    errors.push(`${multipleApiKeysMessage} should not be set at the same time.`);
+  }
   const siteList: string[] = [
     "datadoghq.com",
     "datadoghq.eu",
@@ -129,12 +137,28 @@ export function validateParameters(config: Configuration) {
     if (config.forwarderArn !== undefined) {
       errors.push("`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.");
     }
-    if (config.apiKey === undefined && config.apiKMSKey === undefined) {
-      errors.push("When `extensionLayerVersion` is set, `apiKey` or `apiKmsKey` must also be set.");
+    if (config.apiKey === undefined && config.apiKeySecretArn === undefined && config.apiKMSKey === undefined) {
+      errors.push("When `extensionLayerVersion` is set, `apiKey`, `apiKeySecretArn`, or `apiKmsKey` must also be set.");
     }
   }
   return errors;
 }
+
+export function checkForMultipleApiKeys(config: Configuration) {
+  let multipleApiKeysMessage;
+  if (config.apiKey !== undefined && config.apiKMSKey !== undefined && config.apiKeySecretArn !== undefined) {
+    multipleApiKeysMessage = "`apiKey`, `apiKMSKey`, and `apiKeySecretArn`";
+  } else if (config.apiKey !== undefined && config.apiKMSKey !== undefined) {
+    multipleApiKeysMessage = "`apiKey` and `apiKMSKey`";
+  } else if (config.apiKey !== undefined && config.apiKeySecretArn !== undefined) {
+    multipleApiKeysMessage = "`apiKey` and `apiKeySecretArn`";
+  } else if (config.apiKMSKey !== undefined && config.apiKeySecretArn !== undefined) {
+    multipleApiKeysMessage = "`apiKMSKey` and `apiKeySecretArn`";
+  }
+
+  return multipleApiKeysMessage;
+}
+
 export function setEnvConfiguration(config: Configuration, lambdas: LambdaFunction[]) {
   lambdas.forEach((lambda) => {
     const environment = lambda.properties.Environment ?? {};
@@ -142,6 +166,17 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
 
     if (config.apiKey !== undefined && envVariables[apiKeyEnvVar] === undefined) {
       envVariables[apiKeyEnvVar] = config.apiKey;
+    }
+
+    if (config.apiKeySecretArn !== undefined && envVariables[apiKeySecretArnEnvVar] === undefined) {
+      const isNode = runtimeLookup[lambda.runtime] === RuntimeType.NODE;
+      const isSendingSynchronousMetrics = config.extensionLayerVersion === undefined && !config.flushMetricsToLogs;
+      if (isSendingSynchronousMetrics && isNode) {
+        throw new Error(
+          `\`apiKeySecretArn\` is not supported for Node runtimes (${lambda.properties.FunctionName}) when using Synchronous Metrics. Use either \`apiKey\` or \`apiKmsKey\`.`,
+        );
+      }
+      envVariables[apiKeySecretArnEnvVar] = config.apiKeySecretArn;
     }
 
     if (config.apiKMSKey !== undefined && envVariables[apiKeyKMSEnvVar] === undefined) {
