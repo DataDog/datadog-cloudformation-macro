@@ -27,7 +27,7 @@
     "typescript": "^3.9.5"
   },
   "dependencies": {
-    "aws-sdk": "^2.712.0",
+    "aws-sdk": "^2.814.0",
     "loglevel": "^1.7.1"
   },
   "jest": {
