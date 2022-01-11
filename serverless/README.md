@@ -1,4 +1,9 @@
-# Datadog Serverless CloudFormation Macro
+---
+title: Datadog Serverless Macro
+kind: documentation
+aliases:
+  - /serverless/serverless_integrations/macro/
+---
 
 ![build_serverless](https://github.com/DataDog/datadog-cloudformation-macro/workflows/build_serverless/badge.svg)
 [![Slack](https://chat.datadoghq.com/badge.svg?bg=632CA6)](https://chat.datadoghq.com/)
