@@ -1,4 +1,4 @@
-import { FunctionProperties, Resources } from "./index";
+import { FunctionProperties, Resources, Parameters } from "./index";
 import log from "loglevel";
 
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
@@ -87,7 +87,7 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
  * Also assigns a general runtime type to the output lambdas. This helps to determine which lambda
  * layers to add & which handler to redirect to later on in the macro.
  */
-export function findLambdas(resources: Resources) {
+export function findLambdas(resources: Resources, templateParameterValues: Parameters) {
   return Object.entries(resources)
     .map(([key, resource]) => {
       if (resource.Type !== LAMBDA_FUNCTION_RESOURCE_TYPE) {
@@ -96,8 +96,9 @@ export function findLambdas(resources: Resources) {
       }
 
       const properties: FunctionProperties = resource.Properties;
-      const runtime = properties.Runtime;
-      const architecture = properties.Architectures?.[0] ?? "x86_64";
+      const runtime = useOrRef(properties.Runtime, templateParameterValues);
+      const architecture = useOrRef(properties.Architectures?.[0], templateParameterValues) ?? "x86_64";
+
       let runtimeType = RuntimeType.UNSUPPORTED;
       let architectureType = ArchitectureType.x86_64;
 
@@ -118,6 +119,12 @@ export function findLambdas(resources: Resources) {
       } as LambdaFunction;
     })
     .filter((lambda) => lambda !== undefined) as LambdaFunction[];
+}
+
+function useOrRef(value: undefined | string | { Ref: any }, templateParameterValues: Parameters): undefined | string {
+  if (!value) return undefined;
+  if (typeof value === "string") return value;
+  return templateParameterValues[value.Ref] ?? value;
 }
 
 /**
