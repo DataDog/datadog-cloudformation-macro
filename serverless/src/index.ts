@@ -11,6 +11,8 @@ import log from "loglevel";
 const SUCCESS = "success";
 const FAILURE = "failure";
 
+export type Parameters = { [key: string]: any }
+
 export interface Resources {
   [logicalId: string]: {
     Type: string;
@@ -28,9 +30,9 @@ export interface InputEvent {
   accountId: string;
   fragment: CfnTemplate;
   transformId: string; // Name of the macro
-  params: { [key: string]: any };
+  params: Parameters;
   requestId: string;
-  templateParameterValues: { [key: string]: any };
+  templateParameterValues: Parameters;
 }
 
 export interface FunctionProperties {
@@ -77,7 +79,7 @@ export const handler = async (event: InputEvent, _: any) => {
       };
     }
 
-    const lambdas = findLambdas(resources);
+    const lambdas = findLambdas(resources, event.templateParameterValues);
     log.debug(`Lambda resources found: ${JSON.stringify(lambdas)}`);
 
     log.debug("Setting environment variables for Lambda function resources");

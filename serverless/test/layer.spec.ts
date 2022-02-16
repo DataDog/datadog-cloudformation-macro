@@ -11,7 +11,7 @@ import {
   ArchitectureType,
 } from "../src/layer";
 
-function mockFunctionResource(runtime: string, architectures?: string[]) {
+function mockFunctionResource(runtime: string | { Ref: string }, architectures?: string[]) {
   return {
     Type: "AWS::Lambda::Function",
     Properties: {
@@ -29,12 +29,14 @@ function mockLambdaFunction(
   runtimeType: RuntimeType,
   architecture: string,
   architectureType: ArchitectureType = ArchitectureType.x86_64,
+  runtimeProperty?: { Ref: string },
 ) {
   return {
     properties: {
       Handler: "app.handler",
-      Runtime: runtime,
+      Runtime: runtimeProperty ?? runtime,
       Role: "role-arn",
+      Architectures: [architecture],
     },
     key,
     runtimeType,
@@ -47,28 +49,32 @@ function mockLambdaFunction(
 describe("findLambdas", () => {
   it("finds lambdas and correctly assigns runtime types", () => {
     const resources = {
-      Node10Function: mockFunctionResource("nodejs10.x"),
-      Node12Function: mockFunctionResource("nodejs12.x"),
-      Node14Function: mockFunctionResource("nodejs14.x"),
-      Python27Function: mockFunctionResource("python2.7"),
-      Python36Function: mockFunctionResource("python3.6"),
-      Python37Function: mockFunctionResource("python3.7"),
-      Python38Function: mockFunctionResource("python3.8"),
-      Python39Function: mockFunctionResource("python3.9"),
-      GoFunction: mockFunctionResource("go1.10"),
+      Node10Function: mockFunctionResource("nodejs10.x", ["x86_64"]),
+      Node12Function: mockFunctionResource("nodejs12.x", ["x86_64"]),
+      Node14Function: mockFunctionResource("nodejs14.x", ["x86_64"]),
+      Python27Function: mockFunctionResource("python2.7", ["x86_64"]),
+      Python36Function: mockFunctionResource("python3.6", ["x86_64"]),
+      Python37Function: mockFunctionResource("python3.7", ["x86_64"]),
+      Python38Function: mockFunctionResource("python3.8", ["x86_64"]),
+      Python39Function: mockFunctionResource("python3.9", ["x86_64"]),
+      GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
+      RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
-    const lambdas = findLambdas(resources);
+    const lambdas = findLambdas(resources, { ValueRef: "nodejs14.x" });
 
     expect(lambdas).toEqual([
-      mockLambdaFunction("Node10Function", "nodejs10.x", RuntimeType.NODE, "x86_64"),
-      mockLambdaFunction("Node12Function", "nodejs12.x", RuntimeType.NODE, "x86_64"),
-      mockLambdaFunction("Node14Function", "nodejs14.x", RuntimeType.NODE, "x86_64"),
-      mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON, "x86_64"),
-      mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON, "x86_64"),
-      mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64"),
-      mockLambdaFunction("Python38Function", "python3.8", RuntimeType.PYTHON, "x86_64"),
-      mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON, "x86_64"),
-      mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64"),
+      mockLambdaFunction("Node10Function", "nodejs10.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Node12Function", "nodejs12.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Node14Function", "nodejs14.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Python38Function", "python3.8", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
+        Ref: "ValueRef",
+      }),
     ]);
   });
 });
