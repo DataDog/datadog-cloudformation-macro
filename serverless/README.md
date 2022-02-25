@@ -141,6 +141,10 @@ Resources:
       FilterPattern: ""
 ```
 
+### Error message: 'Failed to execute transform DatadogServerless'
+
+This error can occur if the IAM user executing the command lacks the `lambda:InvokeFunction` permission. Add the permission to the user's IAM role.
+
 ## Community
 
 For product feedback and questions, join the `#serverless` channel in the [Datadog community on Slack](https://chat.datadoghq.com/).
