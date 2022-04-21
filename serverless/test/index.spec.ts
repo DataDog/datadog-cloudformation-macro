@@ -106,12 +106,7 @@ function mockInputEvent(
   }
 
   if (fromSAM) {
-    fragment.Resources.HelloWorldFunction.Properties.Tags = [
-      {
-        Key: "lambda:createdBy",
-        Value: "SAM",
-      },
-    ];
+    fragment.Resources.HelloWorldFunction.Properties.Tags = { "lambda:createdBy": "SAM" };
   }
 
   return {
@@ -248,7 +243,7 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toEqual([{ Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" }]);
+      expect(lambdaProperties.Tags).toEqual({ dd_sls_macro: expect.stringMatching(VERSION_REGEX) });
     });
 
     it("only adds cdk created tag when CDKMetadata is present", async () => {
@@ -257,10 +252,10 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toEqual([
-        { Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" },
-        { Value: "CDK", Key: "dd_sls_macro_by" },
-      ]);
+      expect(lambdaProperties.Tags).toEqual({
+        dd_sls_macro: expect.stringMatching(VERSION_REGEX),
+        dd_sls_macro_by: "CDK",
+      });
     });
 
     it("only adds SAM created tag when lambda:createdBy:SAM tag is present", async () => {
@@ -269,28 +264,50 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toEqual([
-        { Value: "SAM", Key: "lambda:createdBy" },
-        { Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" },
-        { Value: "SAM", Key: "dd_sls_macro_by" },
-      ]);
+      expect(lambdaProperties.Tags).toEqual({
+        "lambda:createdBy": "SAM",
+        dd_sls_macro: expect.stringMatching(VERSION_REGEX),
+        dd_sls_macro_by: "SAM",
+      });
     });
 
-    it("adds tags if either 'service' or 'env' params are provided", async () => {
+    it("adds tags if tag params are provided and forwarderArn is set", async () => {
       const params = {
         service: "my-service",
         env: "test",
+        version: "1",
+        tags: "team:avengers,project:marvel",
+        forwarderArn: "forwarder-arn",
+        stackName: "stack-name",
         nodeLayerVersion: 25,
       };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toEqual([
-        { Value: "my-service", Key: "service" },
-        { Value: "test", Key: "env" },
-        { Value: expect.stringMatching(VERSION_REGEX), Key: "dd_sls_macro" },
-      ]);
+      expect(lambdaProperties.Tags).toEqual({
+        service: "my-service",
+        env: "test",
+        version: "1",
+        team: "avengers",
+        project: "marvel",
+        dd_sls_macro: expect.stringMatching(VERSION_REGEX),
+      });
+    });
+
+    it("doesn't add tags if tags params are provided but forwarderArn is not set", async () => {
+      const params = {
+        service: "my-service",
+        env: "test",
+        version: "1",
+        tags: "team:avengers,project:marvel",
+        nodeLayerVersion: 25,
+      };
+      const inputEvent = mockInputEvent(params, {});
+      const output = await handler(inputEvent, {});
+      const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
+      expect(lambdaProperties.Tags).toEqual({ dd_sls_macro: expect.stringMatching(VERSION_REGEX) });
     });
   });
 });

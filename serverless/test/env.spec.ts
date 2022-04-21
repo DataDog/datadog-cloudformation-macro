@@ -44,7 +44,7 @@ describe("getConfig", () => {
 });
 
 describe("setEnvConfiguration", () => {
-  it("sets env vars", () => {
+  it("sets env vars (with extension)", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
@@ -70,6 +70,62 @@ describe("setEnvConfiguration", () => {
       enableDDLogs: true,
       enableEnhancedMetrics: true,
       captureLambdaPayload: true,
+      extensionLayerVersion: 13,
+      service: "my-service",
+      env: "test",
+      version: "1",
+      tags: "team:avengers,project:marvel",
+    };
+    setEnvConfiguration(config, [lambda]);
+
+    expect(lambda.properties.Environment).toEqual({
+      Variables: {
+        DD_API_KEY: "1234",
+        DD_FLUSH_TO_LOG: true,
+        DD_KMS_API_KEY: "5678",
+        DD_LOG_LEVEL: "debug",
+        DD_SITE: "datadoghq.eu",
+        DD_ENHANCED_METRICS: true,
+        DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_CAPTURE_LAMBDA_PAYLOAD: true,
+        DD_ENV: "test",
+        DD_SERVICE: "my-service",
+        DD_VERSION: "1",
+        DD_TAGS: "team:avengers,project:marvel",
+      },
+    });
+  });
+
+  it("sets env vars (without extension)", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        Handler: "app.handler",
+        Runtime: "python2.7",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.PYTHON,
+      runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    const config = {
+      addLayers: false,
+      apiKey: "1234",
+      apiKMSKey: "5678",
+      site: "datadoghq.eu",
+      logLevel: "debug",
+      flushMetricsToLogs: true,
+      enableXrayTracing: true,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: true,
+      service: "my-service",
+      env: "test",
+      version: "1",
+      tags: "team:avengers,project:marvel",
     };
     setEnvConfiguration(config, [lambda]);
 
@@ -87,7 +143,7 @@ describe("setEnvConfiguration", () => {
     });
   });
 
-  it("doesn't overwrite already present env vars on lambdas", () => {
+  it("doesn't overwrite already present env vars on lambdas (with extension)", () => {
     const originalEnvVars = {
       DD_API_KEY: "1234",
       DD_FLUSH_TO_LOG: true,
@@ -96,6 +152,10 @@ describe("setEnvConfiguration", () => {
       DD_SITE: "datadoghq.eu",
       DD_ENHANCED_METRICS: true,
       DD_CAPTURE_LAMBDA_PAYLOAD: false,
+      DD_ENV: "test",
+      DD_SERVICE: "my-service",
+      DD_VERSION: "1",
+      DD_TAGS: "team:avengers,project:marvel",
     };
     const lambda: LambdaFunction = {
       properties: {
@@ -123,6 +183,11 @@ describe("setEnvConfiguration", () => {
       enableDDLogs: true,
       enableEnhancedMetrics: false,
       captureLambdaPayload: false,
+      extensionLayerVersion: 13,
+      service: "config-service",
+      env: "config-test",
+      version: "2",
+      tags: "team:serverless,project:lambda",
     };
     setEnvConfiguration(config, [lambda]);
 

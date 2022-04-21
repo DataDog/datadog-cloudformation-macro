@@ -37,18 +37,28 @@ export interface Configuration {
   // If a forwarder is provided with dynamically named lambdas, and a stack name is not provided,
   // the subscription will not be added.
   stackName?: string;
-  // When set, the macro will use this value to add the 'service' tag to all lambdas,
-  // but will not override existing 'service' tags on individual lambdas or those set in Globals.
+  // When set, if an extension version is provided, the macro will use this value to add the 'DD_SERVICE' environment variable to all lambdas,
+  // When set, if a forwarder is provided, the macro will use this value to add the 'service' tag to all lambdas
+  // but will not override existing 'service' tags/"DD_ENV" environment variables on individual lambdas or those set in Globals.
   service?: string;
-  // When set, the macro will use this value to add the 'env' tag to all lambdas,
-  // but will not override existing 'env' tags on individual lambdas or those set in Globals.
+  // When set, if an extension version is provided, the macro will use this value to add the 'DD_ENV' environment variable to all lambdas,
+  // When set, if a forwarder is provided, the macro will use this value to add the 'env' tag to all lambdas
+  // but will not override existing 'env' tags/"DD_ENV" environment variables on individual lambdas or those set in Globals.
   env?: string;
+  // When set, if an extension version is provided, the macro will use this value to add the 'DD_VERSION' environment variable to all lambdas,
+  // When set, if a forwarder is provided, the macro will use this value to add the 'version' tag to all lambdas
+  // but will not override existing 'version' tags/"DD_VERSION" environment variables on individual lambdas or those set in Globals.
+  version?: string;
+  // When set, if an extension version is provided, the macro will use this value to add the 'DD_TAGS' environment variable to all lambdas,
+  // When set, if a forwarder is provided, the macro will use this value to parse the tags and set the key:value pairs to all lambdas
+  // but will not override existing tags/"DD_TAGS" environment variables on individual lambdas or those set in Globals.
+  tags?: string;
   captureLambdaPayload: boolean;
 }
 
 // Same interface as Configuration above, except all parameters are optional, since user does
 // not have to provide the values (in which case we will use the default configuration below).
-interface CfnParams extends Partial<Configuration> {}
+interface CfnParams extends Partial<Configuration> { }
 
 const apiKeyEnvVar = "DD_API_KEY";
 const apiKeySecretArnEnvVar = "DD_API_KEY_SECRET_ARN";
@@ -61,6 +71,10 @@ const enableDDLogsEnvVar = "DD_SERVERLESS_LOGS_ENABLED";
 const DATADOG = "Datadog";
 const PARAMETERS = "Parameters";
 const captureLambdaPayloadEnvVar = "DD_CAPTURE_LAMBDA_PAYLOAD";
+const serviceEnvVar = "DD_SERVICE";
+const envEnvVar = "DD_ENV";
+const versionEnvVar = "DD_VERSION";
+const tagsEnvVar = "DD_TAGS";
 
 export const defaultConfiguration: Configuration = {
   addLayers: true,
@@ -205,6 +219,21 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
 
     if (config.captureLambdaPayload !== undefined && envVariables[captureLambdaPayloadEnvVar] === undefined) {
       envVariables[captureLambdaPayloadEnvVar] = config.captureLambdaPayload;
+    }
+
+    if (config.extensionLayerVersion) {
+      if (config.service !== undefined && envVariables[serviceEnvVar] === undefined) {
+        envVariables[serviceEnvVar] = config.service;
+      }
+      if (config.env !== undefined && envVariables[envEnvVar] === undefined) {
+        envVariables[envEnvVar] = config.env;
+      }
+      if (config.version !== undefined && envVariables[versionEnvVar] === undefined) {
+        envVariables[versionEnvVar] = config.version;
+      }
+      if (config.tags !== undefined && envVariables[tagsEnvVar] === undefined) {
+        envVariables[tagsEnvVar] = config.tags;
+      }
     }
 
     environment.Variables = envVariables;

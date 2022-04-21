@@ -1,13 +1,14 @@
+import { defaultConfiguration } from "../src/env";
 import { RuntimeType, LambdaFunction } from "../src/layer";
-import { addServiceAndEnvTags, addMacroTag, addCDKTag, addSAMTag } from "../src/tags";
+import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "../src/tags";
 
-function mockLambdaFunction(tags: any) {
+function mockLambdaFunction(tags: { [key: string]: string } | undefined) {
   return {
     properties: {
       Handler: "app.handler",
       Runtime: "nodejs12.x",
       Role: "role-arn",
-      Tags: tags,
+      Tags: { ...tags },
     },
     key: "FunctionKey",
     runtimeType: RuntimeType.NODE,
@@ -15,50 +16,73 @@ function mockLambdaFunction(tags: any) {
   } as LambdaFunction;
 }
 
-describe("addServiceAndEnvTags", () => {
+describe("addDDTags", () => {
   it("does not override existing tags on function", () => {
-    const existingTags = [
-      { Value: "dev", Key: "env" },
-      { Value: "my-service", Key: "service" },
-    ];
+    const config = {
+      ...defaultConfiguration,
+      service: "my-other-service",
+      env: "test",
+      version: "1",
+      tags: "team:avengers,project:marvel",
+    }
+    const existingTags = { env: "dev", service: "my-service", version: "2", team: "serverless" };
     const lambda = mockLambdaFunction(existingTags);
-    addServiceAndEnvTags([lambda], "my-other-service", "test");
+    addDDTags([lambda], config);
 
-    expect(lambda.properties.Tags).toEqual(existingTags);
+    expect(lambda.properties.Tags).toEqual({ ...existingTags, project: "marvel" });
   });
 
-  it("does not add service or env tags if provided param is undefined", () => {
+  it("does not add tags if provided config doesn't have tags", () => {
     const lambda = mockLambdaFunction(undefined);
-    addServiceAndEnvTags([lambda], undefined, undefined);
+    addDDTags([lambda], defaultConfiguration);
 
-    expect(lambda.properties.Tags).toBeUndefined();
+    expect(lambda.properties.Tags).toEqual({});
   });
 
   it("creates tags property if needed", () => {
+    const config = {
+      ...defaultConfiguration,
+      service: "my-service",
+      env: "test",
+      version: "1",
+      tags: "team:avengers,project:marvel",
+    }
     const lambda = mockLambdaFunction(undefined);
-    addServiceAndEnvTags([lambda], "my-service", "test");
+    addDDTags([lambda], config);
 
-    expect(lambda.properties.Tags).toEqual([
-      { Value: "my-service", Key: "service" },
-      { Value: "test", Key: "env" },
-    ]);
+    expect(lambda.properties.Tags).toEqual({
+      service: "my-service",
+      env: "test",
+      version: "1",
+      team: "avengers",
+      project: "marvel",
+    });
   });
 
   it("adds to existing tags property if needed", () => {
-    const existingTags = [{ Value: "dev", Key: "env" }];
+    const config = {
+      ...defaultConfiguration,
+      service: "my-service",
+      version: "1",
+      tags: "team:avengers",
+    }
+    const existingTags = { env: "dev", project: "lambda" };
     const lambda = mockLambdaFunction(existingTags);
-    addServiceAndEnvTags([lambda], "my-service", undefined);
+    addDDTags([lambda], config);
 
-    expect(lambda.properties.Tags).toEqual([
-      { Value: "dev", Key: "env" },
-      { Value: "my-service", Key: "service" },
-    ]);
+    expect(lambda.properties.Tags).toEqual({
+      env: "dev",
+      project: "lambda",
+      service: "my-service",
+      version: "1",
+      team: "avengers",
+    });
   });
 });
 
 describe("addMacroTag", () => {
   it("does not update tags if no version is passed in", () => {
-    const existingTags = [{ Value: "ironmaiden", Key: "band" }];
+    const existingTags = { band: "ironmaiden" };
     const lambda = mockLambdaFunction(existingTags);
     addMacroTag([lambda], undefined);
 
@@ -69,18 +93,18 @@ describe("addMacroTag", () => {
     const lambda = mockLambdaFunction(undefined);
     addMacroTag([lambda], "6.6.6");
 
-    expect(lambda.properties.Tags).toEqual([{ Value: "v6.6.6", Key: "dd_sls_macro" }]);
+    expect(lambda.properties.Tags).toEqual({ dd_sls_macro: "v6.6.6" });
   });
 
   it("appends version tag if needed", () => {
-    const existingTags = [{ Value: "dev", Key: "env" }];
+    const existingTags = { env: "dev" };
     const lambda = mockLambdaFunction(existingTags);
     addMacroTag([lambda], "6.6.6");
 
-    expect(lambda.properties.Tags).toEqual([
-      { Value: "dev", Key: "env" },
-      { Value: "v6.6.6", Key: "dd_sls_macro" },
-    ]);
+    expect(lambda.properties.Tags).toEqual({
+      env: "dev",
+      dd_sls_macro: "v6.6.6",
+    });
   });
 });
 
@@ -89,18 +113,18 @@ describe("addCDKTag", () => {
     const lambda = mockLambdaFunction(undefined);
     addCDKTag([lambda]);
 
-    expect(lambda.properties.Tags).toEqual([{ Value: "CDK", Key: "dd_sls_macro_by" }]);
+    expect(lambda.properties.Tags).toEqual({ dd_sls_macro_by: "CDK" });
   });
 
   it("appends version tag if needed", () => {
-    const existingTags = [{ Value: "dev", Key: "env" }];
+    const existingTags = { env: "dev" };
     const lambda = mockLambdaFunction(existingTags);
     addCDKTag([lambda]);
 
-    expect(lambda.properties.Tags).toEqual([
-      { Value: "dev", Key: "env" },
-      { Value: "CDK", Key: "dd_sls_macro_by" },
-    ]);
+    expect(lambda.properties.Tags).toEqual({
+      env: "dev",
+      dd_sls_macro_by: "CDK",
+    });
   });
 });
 
@@ -109,17 +133,18 @@ describe("addSAMTag", () => {
     const lambda = mockLambdaFunction(undefined);
     addSAMTag([lambda]);
 
-    expect(lambda.properties.Tags).toEqual([]);
+    expect(lambda.properties.Tags).toEqual({});
   });
 
   it("appends version tag if needed", () => {
-    const existingTags = [{ Value: "SAM", Key: "lambda:createdBy" }];
+    const existingTags = { "lambda:createdBy": "SAM" };
     const lambda = mockLambdaFunction(existingTags);
     addSAMTag([lambda]);
 
-    expect(lambda.properties.Tags).toEqual([
-      { Value: "SAM", Key: "lambda:createdBy" },
-      { Value: "SAM", Key: "dd_sls_macro_by" },
-    ]);
+
+    expect(lambda.properties.Tags).toEqual({
+      "lambda:createdBy": "SAM",
+      dd_sls_macro_by: "SAM",
+    });
   });
 });

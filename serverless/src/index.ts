@@ -1,10 +1,10 @@
 import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration, validateParameters } from "./env";
 import { findLambdas, applyLayers, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError, TracingMode } from "./tracing";
-import { addServiceAndEnvTags, addMacroTag, addCDKTag, addSAMTag } from "./tags";
+import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "./tags";
 import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
-import { CloudWatchLogs, LexModelBuildingService } from "aws-sdk";
+import { CloudWatchLogs } from "aws-sdk";
 import { version } from "../package.json";
 import log from "loglevel";
 
@@ -41,7 +41,7 @@ export interface FunctionProperties {
   Role: string | { [func: string]: string[] };
   Code: any;
   Environment?: { Variables?: { [key: string]: string | boolean } };
-  Tags?: { Value: string; Key: string }[];
+  Tags?: { [key: string]: string };
   Layers?: string[];
   TracingConfig?: { [key: string]: string };
   FunctionName?: string;
@@ -147,10 +147,10 @@ export const handler = async (event: InputEvent, _: any) => {
       );
     }
 
-    // Add service & env tags if values are provided
-    if (config.service || config.env) {
-      log.debug("Adding service & env tags...");
-      addServiceAndEnvTags(lambdas, config.service, config.env);
+    // Add the optional datadog tags if forwarder is being used
+    if (config.forwarderArn) {
+      log.debug("Adding optional tags...");
+      addDDTags(lambdas, config);
     }
 
     log.debug("Adding macro version tag...");
@@ -172,7 +172,7 @@ export const handler = async (event: InputEvent, _: any) => {
       status: SUCCESS,
       fragment,
     };
-  } catch (error) {
+  } catch (error: any) {
     return {
       requestId: event.requestId,
       status: FAILURE,
