@@ -11,7 +11,7 @@ import log from "loglevel";
 const SUCCESS = "success";
 const FAILURE = "failure";
 
-export type Parameters = { [key: string]: any }
+export type Parameters = { [key: string]: any };
 
 export interface Resources {
   [logicalId: string]: {

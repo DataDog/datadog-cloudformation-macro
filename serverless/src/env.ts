@@ -58,7 +58,7 @@ export interface Configuration {
 
 // Same interface as Configuration above, except all parameters are optional, since user does
 // not have to provide the values (in which case we will use the default configuration below).
-interface CfnParams extends Partial<Configuration> { }
+interface CfnParams extends Partial<Configuration> {}
 
 const apiKeyEnvVar = "DD_API_KEY";
 const apiKeySecretArnEnvVar = "DD_API_KEY_SECRET_ARN";

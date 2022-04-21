@@ -24,7 +24,7 @@ describe("addDDTags", () => {
       env: "test",
       version: "1",
       tags: "team:avengers,project:marvel",
-    }
+    };
     const existingTags = { env: "dev", service: "my-service", version: "2", team: "serverless" };
     const lambda = mockLambdaFunction(existingTags);
     addDDTags([lambda], config);
@@ -46,7 +46,7 @@ describe("addDDTags", () => {
       env: "test",
       version: "1",
       tags: "team:avengers,project:marvel",
-    }
+    };
     const lambda = mockLambdaFunction(undefined);
     addDDTags([lambda], config);
 
@@ -65,7 +65,7 @@ describe("addDDTags", () => {
       service: "my-service",
       version: "1",
       tags: "team:avengers",
-    }
+    };
     const existingTags = { env: "dev", project: "lambda" };
     const lambda = mockLambdaFunction(existingTags);
     addDDTags([lambda], config);
@@ -140,7 +140,6 @@ describe("addSAMTag", () => {
     const existingTags = { "lambda:createdBy": "SAM" };
     const lambda = mockLambdaFunction(existingTags);
     addSAMTag([lambda]);
-
 
     expect(lambda.properties.Tags).toEqual({
       "lambda:createdBy": "SAM",

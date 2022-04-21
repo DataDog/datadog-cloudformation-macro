@@ -3,7 +3,7 @@ import { LambdaFunction } from "./layer";
 
 const SERVICE = "service";
 const ENV = "env";
-const VERSION = "version"
+const VERSION = "version";
 const MACRO_VERSION = "dd_sls_macro";
 // Following the same pattern from SAM
 const MACRO_BY = "dd_sls_macro_by";
@@ -60,7 +60,7 @@ export function addSAMTag(lambdas: LambdaFunction[]) {
   lambdas.forEach((lambda) => {
     const tags = lambda.properties.Tags ?? {};
     if (tags["lambda:createdBy"] === "SAM") {
-      tags[MACRO_BY] = "SAM"
+      tags[MACRO_BY] = "SAM";
     }
 
     lambda.properties.Tags = tags;
