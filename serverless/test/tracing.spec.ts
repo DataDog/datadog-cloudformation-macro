@@ -163,7 +163,7 @@ describe("enableTracing", () => {
     expect.assertions(2);
     try {
       enableTracing(tracingMode, [lambda], resources);
-    } catch (err) {
+    } catch (err: any) {
       expect(err).toBeInstanceOf(MissingIamRoleError);
       expect(err.message).toEqual(
         `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`,
