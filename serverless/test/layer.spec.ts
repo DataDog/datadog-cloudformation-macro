@@ -49,7 +49,6 @@ function mockLambdaFunction(
 describe("findLambdas", () => {
   it("finds lambdas and correctly assigns runtime types", () => {
     const resources = {
-      Node10Function: mockFunctionResource("nodejs10.x", ["x86_64"]),
       Node12Function: mockFunctionResource("nodejs12.x", ["x86_64"]),
       Node14Function: mockFunctionResource("nodejs14.x", ["x86_64"]),
       Node16Function: mockFunctionResource("nodejs16.x", ["x86_64"]),
@@ -64,7 +63,6 @@ describe("findLambdas", () => {
     const lambdas = findLambdas(resources, { ValueRef: "nodejs14.x" });
 
     expect(lambdas).toEqual([
-      mockLambdaFunction("Node10Function", "nodejs10.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node12Function", "nodejs12.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node14Function", "nodejs14.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node16Function", "nodejs16.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
@@ -202,7 +200,7 @@ describe("applyLayers", () => {
 describe("isGovCloud", () => {
   it("applies the GovCloud layer", () => {
     const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON, "x86_64");
-    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs10.x", RuntimeType.NODE, "x86_64");
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs16.x", RuntimeType.NODE, "x86_64");
     const errors = applyLayers("us-gov-east-1", [pythonLambda, nodeLambda], 21, 30);
 
     expect(errors.length).toEqual(0);
@@ -210,7 +208,7 @@ describe("isGovCloud", () => {
       `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python38:21`,
     ]);
     expect(nodeLambda.properties.Layers).toEqual([
-      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node10-x:30`,
+      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node16-x:30`,
     ]);
   });
 });

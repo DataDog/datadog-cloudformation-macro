@@ -5,7 +5,7 @@ function mockLambdaFunction() {
   return {
     properties: {
       Handler: "app.handler",
-      Runtime: "nodejs10.x",
+      Runtime: "nodejs16.x",
       Role: { "Fn::GetAtt": ["HelloWorldFunctionRole", "Arn"] },
       Code: {
         S3Bucket: "s3-bucket",
@@ -14,7 +14,7 @@ function mockLambdaFunction() {
     },
     key: "HelloWorldFunction",
     runtimeType: RuntimeType.NODE,
-    runtime: "nodejs10.x",
+    runtime: "nodejs16.x",
     architecture: "x86_64",
     architectureType: ArchitectureType.x86_64,
   } as LambdaFunction;
@@ -136,7 +136,7 @@ describe("enableTracing", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "nodejs10.x",
+        Runtime: "nodejs16.x",
         Role: "role-arn",
         Code: {
           S3Bucket: "s3-bucket",
@@ -145,7 +145,7 @@ describe("enableTracing", () => {
       },
       key: "HelloWorldFunction",
       runtimeType: RuntimeType.NODE,
-      runtime: "nodejs10.x",
+      runtime: "nodejs16.x",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
