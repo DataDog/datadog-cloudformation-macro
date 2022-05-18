@@ -41,6 +41,7 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "nodejs10.x": RuntimeType.NODE,
   "nodejs12.x": RuntimeType.NODE,
   "nodejs14.x": RuntimeType.NODE,
+  "nodejs16.x": RuntimeType.NODE,
   "python2.7": RuntimeType.PYTHON,
   "python3.6": RuntimeType.PYTHON,
   "python3.7": RuntimeType.PYTHON,
