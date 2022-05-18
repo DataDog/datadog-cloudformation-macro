@@ -38,9 +38,9 @@ const architectureToExtensionLayerName: { [key: string]: string } = {
 };
 
 export const runtimeLookup: { [key: string]: RuntimeType } = {
-  "nodejs10.x": RuntimeType.NODE,
   "nodejs12.x": RuntimeType.NODE,
   "nodejs14.x": RuntimeType.NODE,
+  "nodejs16.x": RuntimeType.NODE,
   "python2.7": RuntimeType.PYTHON,
   "python3.6": RuntimeType.PYTHON,
   "python3.7": RuntimeType.PYTHON,
@@ -50,9 +50,9 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
 
 function runtimeToLayerName(runtime: string, architecture: string): string {
   const nodeLookup: { [key: string]: string } = {
-    "nodejs10.x": "Datadog-Node10-x",
     "nodejs12.x": "Datadog-Node12-x",
     "nodejs14.x": "Datadog-Node14-x",
+    "nodejs16.x": "Datadog-Node16-x",
   };
 
   const pythonLookup: { [key: string]: string } = {

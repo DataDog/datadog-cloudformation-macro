@@ -49,9 +49,9 @@ function mockLambdaFunction(
 describe("findLambdas", () => {
   it("finds lambdas and correctly assigns runtime types", () => {
     const resources = {
-      Node10Function: mockFunctionResource("nodejs10.x", ["x86_64"]),
       Node12Function: mockFunctionResource("nodejs12.x", ["x86_64"]),
       Node14Function: mockFunctionResource("nodejs14.x", ["x86_64"]),
+      Node16Function: mockFunctionResource("nodejs16.x", ["x86_64"]),
       Python27Function: mockFunctionResource("python2.7", ["x86_64"]),
       Python36Function: mockFunctionResource("python3.6", ["x86_64"]),
       Python37Function: mockFunctionResource("python3.7", ["x86_64"]),
@@ -63,9 +63,9 @@ describe("findLambdas", () => {
     const lambdas = findLambdas(resources, { ValueRef: "nodejs14.x" });
 
     expect(lambdas).toEqual([
-      mockLambdaFunction("Node10Function", "nodejs10.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node12Function", "nodejs12.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node14Function", "nodejs14.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Node16Function", "nodejs16.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
@@ -200,7 +200,7 @@ describe("applyLayers", () => {
 describe("isGovCloud", () => {
   it("applies the GovCloud layer", () => {
     const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON, "x86_64");
-    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs10.x", RuntimeType.NODE, "x86_64");
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs16.x", RuntimeType.NODE, "x86_64");
     const errors = applyLayers("us-gov-east-1", [pythonLambda, nodeLambda], 21, 30);
 
     expect(errors.length).toEqual(0);
@@ -208,18 +208,18 @@ describe("isGovCloud", () => {
       `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python38:21`,
     ]);
     expect(nodeLambda.properties.Layers).toEqual([
-      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node10-x:30`,
+      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node16-x:30`,
     ]);
   });
 });
 
 describe("getLambdaLibraryLayerArn", () => {
-  it("gets the us-east-1 layer arn for the Datadog Node14 Lambda Library", () => {
+  it("gets the us-east-1 layer arn for the Datadog Node16 Lambda Library", () => {
     const region = "us-east-1";
     const version = 22;
-    const runtime = "nodejs14.x";
+    const runtime = "nodejs16.x";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "x86_64");
-    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node14-x:${version}`);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node16-x:${version}`);
   });
   it("gets the us-east-1 layer arn for the Datadog Python36 Lambda Library", () => {
     const region = "us-east-1";
@@ -251,12 +251,12 @@ describe("getLambdaLibraryLayerArn", () => {
       `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python39-ARM:${version}`,
     );
   });
-  it("gets the us-gov-east-1 layer arn for the Datadog Node14 Lambda Library", () => {
+  it("gets the us-gov-east-1 layer arn for the Datadog Node16 Lambda Library", () => {
     const region = "us-gov-east-1";
     const version = 22;
-    const runtime = "nodejs14.x";
+    const runtime = "nodejs16.x";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "x86_64");
-    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node14-x:${version}`);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node16-x:${version}`);
   });
 });
 
