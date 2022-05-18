@@ -53,6 +53,7 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     "nodejs10.x": "Datadog-Node10-x",
     "nodejs12.x": "Datadog-Node12-x",
     "nodejs14.x": "Datadog-Node14-x",
+    "nodejs16.x": "Datadog-Node16-x",
   };
 
   const pythonLookup: { [key: string]: string } = {
