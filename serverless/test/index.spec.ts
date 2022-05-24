@@ -107,7 +107,12 @@ function mockInputEvent(
   }
 
   if (fromSAM) {
-    fragment.Resources.HelloWorldFunction.Properties.Tags = { "lambda:createdBy": "SAM" };
+    fragment.Resources.HelloWorldFunction.Properties.Tags = [
+      {
+        Key: "lambda:createdBy",
+        Value: "SAM",
+      },
+    ];
   }
 
   return {
@@ -244,7 +249,7 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toEqual({ dd_sls_macro: expect.stringMatching(VERSION_REGEX) });
+      expect(lambdaProperties.Tags).toEqual([{ Key: "dd_sls_macro", Value: expect.stringMatching(VERSION_REGEX) }]);
     });
 
     it("only adds cdk created tag when CDKMetadata is present", async () => {
@@ -253,10 +258,10 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toEqual({
-        dd_sls_macro: expect.stringMatching(VERSION_REGEX),
-        dd_sls_macro_by: "CDK",
-      });
+      expect(lambdaProperties.Tags).toEqual([
+        { Key: "dd_sls_macro", Value: expect.stringMatching(VERSION_REGEX) },
+        { Key: "dd_sls_macro_by", Value: "CDK" },
+      ]);
     });
 
     it("only adds SAM created tag when lambda:createdBy:SAM tag is present", async () => {
@@ -265,11 +270,11 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toEqual({
-        "lambda:createdBy": "SAM",
-        dd_sls_macro: expect.stringMatching(VERSION_REGEX),
-        dd_sls_macro_by: "SAM",
-      });
+      expect(lambdaProperties.Tags).toEqual([
+        { Key: "lambda:createdBy", Value: "SAM" },
+        { Key: "dd_sls_macro", Value: expect.stringMatching(VERSION_REGEX) },
+        { Key: "dd_sls_macro_by", Value: "SAM" },
+      ]);
     });
 
     it("adds tags if tag params are provided and forwarderArn is set", async () => {
@@ -286,14 +291,14 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toEqual({
-        service: "my-service",
-        env: "test",
-        version: "1",
-        team: "avengers",
-        project: "marvel",
-        dd_sls_macro: expect.stringMatching(VERSION_REGEX),
-      });
+      expect(lambdaProperties.Tags).toEqual([
+        { Key: "service", Value: "my-service" },
+        { Key: "env", Value: "test" },
+        { Key: "version", Value: "1" },
+        { Key: "team", Value: "avengers" },
+        { Key: "project", Value: "marvel" },
+        { Key: "dd_sls_macro", Value: expect.stringMatching(VERSION_REGEX) },
+      ]);
     });
 
     it("doesn't add tags if tags params are provided but forwarderArn is not set", async () => {
@@ -308,7 +313,7 @@ describe("Macro", () => {
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      expect(lambdaProperties.Tags).toEqual({ dd_sls_macro: expect.stringMatching(VERSION_REGEX) });
+      expect(lambdaProperties.Tags).toEqual([{ Key: "dd_sls_macro", Value: expect.stringMatching(VERSION_REGEX) }]);
     });
   });
 });

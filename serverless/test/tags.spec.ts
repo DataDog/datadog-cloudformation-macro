@@ -2,13 +2,13 @@ import { defaultConfiguration } from "../src/env";
 import { RuntimeType, LambdaFunction } from "../src/layer";
 import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "../src/tags";
 
-function mockLambdaFunction(tags: { [key: string]: string } | undefined) {
+function mockLambdaFunction(tags: { Key: string; Value: string }[]) {
   return {
     properties: {
       Handler: "app.handler",
       Runtime: "nodejs12.x",
       Role: "role-arn",
-      Tags: { ...tags },
+      Tags: [...tags],
     },
     key: "FunctionKey",
     runtimeType: RuntimeType.NODE,
@@ -25,18 +25,23 @@ describe("addDDTags", () => {
       version: "1",
       tags: "team:avengers,project:marvel",
     };
-    const existingTags = { env: "dev", service: "my-service", version: "2", team: "serverless" };
+    const existingTags = [
+      { Key: "env", Value: "dev" },
+      { Key: "service", Value: "my-service" },
+      { Key: "version", Value: "2" },
+      { Key: "team", Value: "serverless" },
+    ];
     const lambda = mockLambdaFunction(existingTags);
     addDDTags([lambda], config);
 
-    expect(lambda.properties.Tags).toEqual({ ...existingTags, project: "marvel" });
+    expect(lambda.properties.Tags).toEqual([...existingTags, { Key: "project", Value: "marvel" }]);
   });
 
   it("does not add tags if provided config doesn't have tags", () => {
-    const lambda = mockLambdaFunction(undefined);
+    const lambda = mockLambdaFunction([]);
     addDDTags([lambda], defaultConfiguration);
 
-    expect(lambda.properties.Tags).toEqual({});
+    expect(lambda.properties.Tags).toEqual([]);
   });
 
   it("creates tags property if needed", () => {
@@ -47,16 +52,16 @@ describe("addDDTags", () => {
       version: "1",
       tags: "team:avengers,project:marvel",
     };
-    const lambda = mockLambdaFunction(undefined);
+    const lambda = mockLambdaFunction([]);
     addDDTags([lambda], config);
 
-    expect(lambda.properties.Tags).toEqual({
-      service: "my-service",
-      env: "test",
-      version: "1",
-      team: "avengers",
-      project: "marvel",
-    });
+    expect(lambda.properties.Tags).toEqual([
+      { Key: "service", Value: "my-service" },
+      { Key: "env", Value: "test" },
+      { Key: "version", Value: "1" },
+      { Key: "team", Value: "avengers" },
+      { Key: "project", Value: "marvel" },
+    ]);
   });
 
   it("adds to existing tags property if needed", () => {
@@ -66,23 +71,26 @@ describe("addDDTags", () => {
       version: "1",
       tags: "team:avengers",
     };
-    const existingTags = { env: "dev", project: "lambda" };
+    const existingTags = [
+      { Key: "env", Value: "dev" },
+      { Key: "project", Value: "lambda" },
+    ];
     const lambda = mockLambdaFunction(existingTags);
     addDDTags([lambda], config);
 
-    expect(lambda.properties.Tags).toEqual({
-      env: "dev",
-      project: "lambda",
-      service: "my-service",
-      version: "1",
-      team: "avengers",
-    });
+    expect(lambda.properties.Tags).toEqual([
+      { Key: "env", Value: "dev" },
+      { Key: "project", Value: "lambda" },
+      { Key: "service", Value: "my-service" },
+      { Key: "version", Value: "1" },
+      { Key: "team", Value: "avengers" },
+    ]);
   });
 });
 
 describe("addMacroTag", () => {
   it("does not update tags if no version is passed in", () => {
-    const existingTags = { band: "ironmaiden" };
+    const existingTags = [{ Key: "band", Value: "ironmaiden" }];
     const lambda = mockLambdaFunction(existingTags);
     addMacroTag([lambda], undefined);
 
@@ -90,60 +98,60 @@ describe("addMacroTag", () => {
   });
 
   it("creates tags property if needed", () => {
-    const lambda = mockLambdaFunction(undefined);
+    const lambda = mockLambdaFunction([]);
     addMacroTag([lambda], "6.6.6");
 
-    expect(lambda.properties.Tags).toEqual({ dd_sls_macro: "v6.6.6" });
+    expect(lambda.properties.Tags).toEqual([{ Key: "dd_sls_macro", Value: "v6.6.6" }]);
   });
 
   it("appends version tag if needed", () => {
-    const existingTags = { env: "dev" };
+    const existingTags = [{ Key: "env", Value: "dev" }];
     const lambda = mockLambdaFunction(existingTags);
     addMacroTag([lambda], "6.6.6");
 
-    expect(lambda.properties.Tags).toEqual({
-      env: "dev",
-      dd_sls_macro: "v6.6.6",
-    });
+    expect(lambda.properties.Tags).toEqual([
+      { Key: "env", Value: "dev" },
+      { Key: "dd_sls_macro", Value: "v6.6.6" },
+    ]);
   });
 });
 
 describe("addCDKTag", () => {
   it("creates tags property if needed", () => {
-    const lambda = mockLambdaFunction(undefined);
+    const lambda = mockLambdaFunction([]);
     addCDKTag([lambda]);
 
-    expect(lambda.properties.Tags).toEqual({ dd_sls_macro_by: "CDK" });
+    expect(lambda.properties.Tags).toEqual([{ Key: "dd_sls_macro_by", Value: "CDK" }]);
   });
 
   it("appends version tag if needed", () => {
-    const existingTags = { env: "dev" };
+    const existingTags = [{ Key: "env", Value: "dev" }];
     const lambda = mockLambdaFunction(existingTags);
     addCDKTag([lambda]);
 
-    expect(lambda.properties.Tags).toEqual({
-      env: "dev",
-      dd_sls_macro_by: "CDK",
-    });
+    expect(lambda.properties.Tags).toEqual([
+      { Key: "env", Value: "dev" },
+      { Key: "dd_sls_macro_by", Value: "CDK" },
+    ]);
   });
 });
 
 describe("addSAMTag", () => {
   it("creates tags property if needed", () => {
-    const lambda = mockLambdaFunction(undefined);
+    const lambda = mockLambdaFunction([]);
     addSAMTag([lambda]);
 
-    expect(lambda.properties.Tags).toEqual({});
+    expect(lambda.properties.Tags).toEqual([]);
   });
 
   it("appends version tag if needed", () => {
-    const existingTags = { "lambda:createdBy": "SAM" };
+    const existingTags = [{ Key: "lambda:createdBy", Value: "SAM" }];
     const lambda = mockLambdaFunction(existingTags);
     addSAMTag([lambda]);
 
-    expect(lambda.properties.Tags).toEqual({
-      "lambda:createdBy": "SAM",
-      dd_sls_macro_by: "SAM",
-    });
+    expect(lambda.properties.Tags).toEqual([
+      { Key: "lambda:createdBy", Value: "SAM" },
+      { Key: "dd_sls_macro_by", Value: "SAM" },
+    ]);
   });
 });

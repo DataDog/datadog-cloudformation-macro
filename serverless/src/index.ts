@@ -41,7 +41,7 @@ export interface FunctionProperties {
   Role: string | { [func: string]: string[] };
   Code: any;
   Environment?: { Variables?: { [key: string]: string | boolean } };
-  Tags?: { [key: string]: string };
+  Tags?: { Key: string; Value: string }[];
   Layers?: string[];
   TracingConfig?: { [key: string]: string };
   FunctionName?: string;
