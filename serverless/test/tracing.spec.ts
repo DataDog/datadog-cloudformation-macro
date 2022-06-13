@@ -1,6 +1,8 @@
 import { enableTracing, TracingMode, IamRoleProperties, MissingIamRoleError } from "../src/tracing";
 import { ArchitectureType, LambdaFunction, RuntimeType } from "../src/layer";
 
+const DD_MERGE_XRAY_TRACES = "DD_MERGE_XRAY_TRACES";
+
 function mockLambdaFunction() {
   return {
     properties: {
@@ -10,6 +12,33 @@ function mockLambdaFunction() {
       Code: {
         S3Bucket: "s3-bucket",
         S3Key: "stack-name/key",
+      },
+    },
+    key: "HelloWorldFunction",
+    runtimeType: RuntimeType.NODE,
+    runtime: "nodejs16.x",
+    architecture: "x86_64",
+    architectureType: ArchitectureType.x86_64,
+  } as LambdaFunction;
+}
+
+function mockLambdaFunctionWithEnvironment() {
+  return {
+    properties: {
+      Handler: "app.handler",
+      Runtime: "nodejs16.x",
+      Role: { "Fn::GetAtt": ["HelloWorldFunctionRole", "Arn"] },
+      Code: {
+        S3Bucket: "s3-bucket",
+        S3Key: "stack-name/key",
+      },
+      Environment: {
+        Variables: {
+          DD_MERGE_XRAY_TRACES: true,
+        },
+      },
+      TracingConfig: {
+        Mode: "Active",
       },
     },
     key: "HelloWorldFunction",
@@ -94,6 +123,24 @@ describe("enableTracing", () => {
     expect(iamRole.Policies).toBeUndefined();
     expect(lambda.properties.Environment).toMatchObject({
       Variables: { DD_TRACE_ENABLED: true },
+    });
+  });
+
+  it("only dd tracing enabled with manual xray tracing configured", () => {
+    const tracingMode = TracingMode.DD_TRACE;
+    const lambda = mockLambdaFunctionWithEnvironment();
+
+    const resources: Record<string, any> = mockResources();
+    const iamRole: IamRoleProperties = resources.HelloWorldFunctionRole.Properties;
+    enableTracing(tracingMode, [lambda], resources);
+
+    expect(lambda.properties.TracingConfig).toEqual({ Mode: "Active" });
+    expect(iamRole.Policies).toBeUndefined();
+    expect(lambda.properties.Environment).toMatchObject({
+      Variables: {
+        DD_TRACE_ENABLED: true,
+        DD_MERGE_XRAY_TRACES: true,
+      },
     });
   });
 
