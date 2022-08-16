@@ -57,7 +57,7 @@ Resources:
           - Ref: AWS::NoValue
       Description: Processes a CloudFormation template to install Datadog Lambda layers for Python and Node.js Lambda functions.
       Handler: src/index.handler
-      Runtime: nodejs12.x
+      Runtime: nodejs16.x
       CodeUri:
         Bucket: !Ref MacroFunctionZipsBucket
         Key:
