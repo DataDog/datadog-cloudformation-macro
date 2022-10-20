@@ -3,7 +3,7 @@ name: build_serverless
 on:
   push:
     branches:
-      - "main"
+      - "master"
   pull_request:
 
 jobs:
