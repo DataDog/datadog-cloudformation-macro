@@ -125,6 +125,7 @@ export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[
       const envVariables = environment.Variables ?? {};
       if (!envVariables.hasOwnProperty(DD_TRACE_ENABLED)) {
         envVariables[DD_TRACE_ENABLED] = true;
+        log.debug(`${lambda.properties.FunctionName} skipped as DD_TRACE_ENABLED was defined on a function level`);
       }
       envVariables[DD_MERGE_XRAY_TRACES] = tracingMode === TracingMode.HYBRID;
 

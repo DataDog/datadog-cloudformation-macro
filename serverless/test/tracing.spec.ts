@@ -20,6 +20,30 @@ function mockLambdaFunction() {
   } as LambdaFunction;
 }
 
+function mockLambdaFunctionWithPreDefinedTraceSetting() {
+  return {
+    properties: {
+      Handler: "app.handler",
+      Runtime: "nodejs16.x",
+      Role: { "Fn::GetAtt": ["HelloWorldFunctionRole", "Arn"] },
+      Code: {
+        S3Bucket: "s3-bucket",
+        S3Key: "stack-name/key",
+      },
+      Environment: {
+        Variables: {
+          DD_TRACE_ENABLED: false,
+        },
+      },
+    },    
+    key: "HelloWorldFunction",
+    runtimeType: RuntimeType.NODE,
+    runtime: "nodejs16.x",
+    architecture: "x86_64",
+    architectureType: ArchitectureType.x86_64,
+  } as LambdaFunction;
+}
+
 function mockResources() {
   return {
     HelloWorldFunctionRole: {
@@ -93,6 +117,25 @@ describe("enableTracing", () => {
     expect(lambda.properties.TracingConfig).toBeUndefined();
     expect(iamRole.Policies).toBeUndefined();
     expect(lambda.properties.Environment).toMatchObject({
+      Variables: { DD_TRACE_ENABLED: true },
+    });
+  });
+
+  it("dd tracing enabled but should not override a funciton with a predefined trace setting", () => {
+    const tracingMode = TracingMode.DD_TRACE;
+    const lambdaWithFunctionLevelTraceSetting = mockLambdaFunctionWithPreDefinedTraceSetting();    
+    const lambdaWithOutTraceSetting = mockLambdaFunction();
+    const resources: Record<string, any> = mockResources();
+    const iamRole: IamRoleProperties = resources.HelloWorldFunctionRole.Properties;
+    enableTracing(tracingMode, [lambdaWithFunctionLevelTraceSetting,lambdaWithOutTraceSetting], resources);
+
+    expect(lambdaWithFunctionLevelTraceSetting.properties.TracingConfig).toBeUndefined();
+    expect(lambdaWithOutTraceSetting.properties.TracingConfig).toBeUndefined();
+    expect(iamRole.Policies).toBeUndefined();
+    expect(lambdaWithFunctionLevelTraceSetting.properties.Environment).toMatchObject({
+      Variables: { DD_TRACE_ENABLED: false },
+    });
+    expect(lambdaWithOutTraceSetting.properties.Environment).toMatchObject({
       Variables: { DD_TRACE_ENABLED: true },
     });
   });
