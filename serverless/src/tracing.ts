@@ -123,7 +123,7 @@ export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[
     lambdas.forEach((lambda) => {
       const environment = lambda.properties.Environment ?? {};
       const envVariables = environment.Variables ?? {};
-      if (!envVariables.hasOwnProperty(DD_TRACE_ENABLED)) {
+      if (!(DD_TRACE_ENABLED in envVariables))  {                  
         envVariables[DD_TRACE_ENABLED] = true;
         log.debug(`${lambda.properties.FunctionName} skipped as DD_TRACE_ENABLED was defined on a function level`);
       }
