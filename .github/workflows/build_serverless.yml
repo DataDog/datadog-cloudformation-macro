@@ -1,6 +1,10 @@
 name: build_serverless
 
-on: push
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
 
 jobs:
   check-formatting:
