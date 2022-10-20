@@ -35,7 +35,7 @@ function mockLambdaFunctionWithPreDefinedTraceSetting() {
           DD_TRACE_ENABLED: false,
         },
       },
-    },    
+    },
     key: "HelloWorldFunction",
     runtimeType: RuntimeType.NODE,
     runtime: "nodejs16.x",
@@ -123,11 +123,11 @@ describe("enableTracing", () => {
 
   it("dd tracing enabled but should not override a funciton with a predefined trace setting", () => {
     const tracingMode = TracingMode.DD_TRACE;
-    const lambdaWithFunctionLevelTraceSetting = mockLambdaFunctionWithPreDefinedTraceSetting();    
+    const lambdaWithFunctionLevelTraceSetting = mockLambdaFunctionWithPreDefinedTraceSetting();
     const lambdaWithOutTraceSetting = mockLambdaFunction();
     const resources: Record<string, any> = mockResources();
     const iamRole: IamRoleProperties = resources.HelloWorldFunctionRole.Properties;
-    enableTracing(tracingMode, [lambdaWithFunctionLevelTraceSetting,lambdaWithOutTraceSetting], resources);
+    enableTracing(tracingMode, [lambdaWithFunctionLevelTraceSetting, lambdaWithOutTraceSetting], resources);
 
     expect(lambdaWithFunctionLevelTraceSetting.properties.TracingConfig).toBeUndefined();
     expect(lambdaWithOutTraceSetting.properties.TracingConfig).toBeUndefined();
