@@ -30,7 +30,7 @@ if [ "$AWS_ACCOUNT" = "464622532012" ] ; then
 fi
 
 # Default test bucket used in ./tools/create_test_stack.sh
-BUCKET="datadog-cloudformation-template-staging"
+BUCKET="datadog-cloudformation-template-sandbox-staging"
 
 # Run script in this process. This gives us TEMPLATE_URL and MACRO_SOURCE_URL env vars
 . release.sh $BUCKET $CURRENT_VERSION

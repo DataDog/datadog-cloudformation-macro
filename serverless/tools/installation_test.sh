@@ -23,7 +23,7 @@ if [ "$AWS_ACCOUNT" = "464622532012" ] ; then
 fi
 
 # Run script in this process. This gives us TEMPLATE_URL and MACRO_SOURCE_URL env vars
-. release.sh datadog-cloudformation-template-staging $CURRENT_VERSION
+. release.sh datadog-cloudformation-template-sandbox-staging $CURRENT_VERSION
 
 function param {
     KEY=$1
