@@ -1,3 +1,4 @@
+import { getGitTagsFromParam } from "./git";
 import { LambdaFunction, runtimeLookup, RuntimeType } from "./layer";
 import log from "loglevel";
 
@@ -53,6 +54,9 @@ export interface Configuration {
   // When set, if a forwarder is provided, the macro will use this value to parse the tags and set the key:value pairs to all lambdas
   // but will not override existing tags/"DD_TAGS" environment variables on individual lambdas or those set in Globals.
   tags?: string;
+  // Optionally set by customer using `sam deploy --parameter-overrides DDGitData="$(git rev-parse HEAD),$(git config --get remote.origin.url)"`
+  // The customer template takes in the DDGitData override param and passes that to this macro's gitData param
+  gitData?: string;
   captureLambdaPayload: boolean;
 }
 
@@ -233,6 +237,16 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
       }
       if (config.tags !== undefined && envVariables[tagsEnvVar] === undefined) {
         envVariables[tagsEnvVar] = config.tags;
+      }
+      if (config.gitData !== undefined) {
+        const { gitCommitShaTag, gitRepoUrlTag } = getGitTagsFromParam(config.gitData);
+        const gitTagString = `${gitCommitShaTag},${gitRepoUrlTag}`;
+
+        if (envVariables[tagsEnvVar] !== undefined) {
+          envVariables[tagsEnvVar] = `${envVariables[tagsEnvVar]},${gitTagString}`;
+        } else {
+          envVariables[tagsEnvVar] = gitTagString;
+        }
       }
     }
 
