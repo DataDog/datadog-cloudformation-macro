@@ -42,7 +42,7 @@ aws cloudformation update-stack \
 
 ## Usage with AWS SAM
 
-To deploy your serverless application with SAM, add the Datadog Serverless CloudFormation macro under the `Transform` section in your `template.yml` file, after the required SAM transform:
+To deploy your serverless application with SAM, add the Datadog Serverless CloudFormation macro under the `Transform` section in your `template.yml` file, after the required SAM transform
 
 ```yaml
 Transform:
@@ -57,7 +57,20 @@ Transform:
       env: "<ENV>" # Optional
       version: "<VERSION>" # Optional
       tags: "<TAGS>" # Optional
+      # Pass the DDGitData param of this template to the Datadog macro here to enable Source Code integration tagging
+      gitData: !Ref DDGitData
       # For additional parameters, see the Configuration section
+
+Parameters:
+  DDGitData:
+    Type: String
+    Default: ""
+    Description: "The output of $(git rev-parse HEAD),$(git config --get remote.origin.url). Used for Datadog Source Code Integration tagging"
+```
+
+To set the DDGitData parameter for Datadog's Source Code Integration, use SAM's `--parameter-overrides` option:
+```bash
+sam deploy --parameter-overrides  DDGitData="$(git rev-parse HEAD),$(git config --get remote.origin.url)"
 ```
 
 Note: If you did not modify the provided `template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerless`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
