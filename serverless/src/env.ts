@@ -54,6 +54,18 @@ export interface Configuration {
   // but will not override existing tags/"DD_TAGS" environment variables on individual lambdas or those set in Globals.
   tags?: string;
   captureLambdaPayload: boolean;
+  // Cold Start Tracing is enabled by default
+  enableColdStartTracing?: boolean;
+  // minimum duration to trace a module load span
+  minColdStartTraceDuration?: string;
+  // User specified list of libraries for Cold Start Tracing to ignore
+  coldStartTraceSkipLibs?: string;
+  // Enable profiling
+  enableProfiling?: boolean;
+  // Whether to encode the tracing context in the lambda authorizer's reponse data. Default true
+  encodeAuthorizerContext?: boolean;
+  // Whether to parse and use the encoded tracing context from lambda authorizers. Default true
+  decodeAuthorizerContext?: boolean;
 }
 
 // Same interface as Configuration above, except all parameters are optional, since user does
@@ -75,6 +87,12 @@ const serviceEnvVar = "DD_SERVICE";
 const envEnvVar = "DD_ENV";
 const versionEnvVar = "DD_VERSION";
 const tagsEnvVar = "DD_TAGS";
+const ddColdStartTracingEnabledEnvVar = "DD_COLD_START_TRACING";
+const ddMinColdStartDurationEnvVar = "DD_MIN_COLD_START_DURATION";
+const ddColdStartTracingSkipLibsEnvVar = "DD_COLD_START_TRACE_SKIP_LIB";
+const ddProfilingEnabledEnvVar = "DD_PROFILING_ENABLED";
+const ddEncodeAuthorizerContextEnvVar = "DD_ENCODE_AUTHORIZER_CONTEXT";
+const ddDecodeAuthorizerContextEnvVar = "DD_DECODE_AUTHORIZER_CONTEXT";
 
 export const defaultConfiguration: Configuration = {
   addLayers: true,
@@ -235,7 +253,24 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
         envVariables[tagsEnvVar] = config.tags;
       }
     }
-
+    if (config.enableColdStartTracing !== undefined && envVariables[ddColdStartTracingEnabledEnvVar] === undefined) {
+      envVariables[ddColdStartTracingEnabledEnvVar] = config.enableColdStartTracing;
+    }
+    if (config.minColdStartTraceDuration !== undefined && envVariables[ddMinColdStartDurationEnvVar] === undefined) {
+      envVariables[ddMinColdStartDurationEnvVar] = config.minColdStartTraceDuration;
+    }
+    if (config.coldStartTraceSkipLibs !== undefined && envVariables[ddColdStartTracingSkipLibsEnvVar] === undefined) {
+      envVariables[ddColdStartTracingSkipLibsEnvVar] = config.coldStartTraceSkipLibs;
+    }
+    if (config.enableProfiling !== undefined && envVariables[ddProfilingEnabledEnvVar] === undefined) {
+      envVariables[ddProfilingEnabledEnvVar] = config.enableProfiling;
+    }
+    if (config.encodeAuthorizerContext !== undefined && envVariables[ddEncodeAuthorizerContextEnvVar] === undefined) {
+      envVariables[ddEncodeAuthorizerContextEnvVar] = config.encodeAuthorizerContext;
+    }
+    if (config.decodeAuthorizerContext !== undefined && envVariables[ddDecodeAuthorizerContextEnvVar] === undefined) {
+      envVariables[ddDecodeAuthorizerContextEnvVar] = config.decodeAuthorizerContext;
+    }
     environment.Variables = envVariables;
     lambda.properties.Environment = environment;
   });

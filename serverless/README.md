@@ -90,6 +90,12 @@ To further configure your plugin, use the following custom parameters:
 |
 | `logLevel`              | Sets the log level. Set to `DEBUG` for extended logging.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `captureLambdaPayload`  | Automatically tags the function execution span with request and response payloads, so they can be displayed in the APM application.                                                                                                                                                                                                                                                                                                                                                                 |
+| `enableColdStartTracing`      | Set to `false` to disable Cold Start Tracing. Used in NodeJS and Python. Defaults to `true`. |
+| `coldStartTraceMinDuration`   | Sets the minimum duration (in milliseconds) for a module load event to be traced via Cold Start Tracing. Number. Defaults to `3`. |
+| `coldStartTraceSkipLibs`      | optionally skip creating Cold Start Spans for a comma-separated list of libraries. Useful to limit depth or skip known libraries. Default depends on runtime. |
+| `enableProfiling`             | Enable the Datadog Continuous Profiler with `true`. Supported in Beta for NodeJS and Python. Defaults to `false`. |
+| `encodeAuthorizerContext`     | When set to `true` for Lambda authorizers, the tracing context will be encoded into the response for propagation. Supported for NodeJS and Python. Defaults to `true`. |
+| `decodeAuthorizerContext`     | When set to `true` for Lambdas that are authorized via Lambda authorizers, it will parse and use the encoded tracing context (if found). Supported for NodeJS and Python. Defaults to `true`.                         |
 
 ## How it works
 
