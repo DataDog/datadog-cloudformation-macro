@@ -66,6 +66,10 @@ export interface Configuration {
   encodeAuthorizerContext?: boolean;
   // Whether to parse and use the encoded tracing context from lambda authorizers. Default true
   decodeAuthorizerContext?: boolean;
+  // Determine when to submit spans before a timeout occurs.
+  // When the remaining time in a Lambda invocation is less than `apmFlushDeadline`, the tracer will
+  // attempt to submit the current active spans and all finished spans.
+  apmFlushDeadline?: string;
 }
 
 // Same interface as Configuration above, except all parameters are optional, since user does
@@ -93,6 +97,7 @@ const ddColdStartTracingSkipLibsEnvVar = "DD_COLD_START_TRACE_SKIP_LIB";
 const ddProfilingEnabledEnvVar = "DD_PROFILING_ENABLED";
 const ddEncodeAuthorizerContextEnvVar = "DD_ENCODE_AUTHORIZER_CONTEXT";
 const ddDecodeAuthorizerContextEnvVar = "DD_DECODE_AUTHORIZER_CONTEXT";
+const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS";
 
 export const defaultConfiguration: Configuration = {
   addLayers: true,
@@ -270,6 +275,9 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     }
     if (config.decodeAuthorizerContext !== undefined && envVariables[ddDecodeAuthorizerContextEnvVar] === undefined) {
       envVariables[ddDecodeAuthorizerContextEnvVar] = config.decodeAuthorizerContext;
+    }
+    if (config.apmFlushDeadline !== undefined && envVariables[ddApmFlushDeadlineMillisecondsEnvVar] === undefined) {
+      envVariables[ddApmFlushDeadlineMillisecondsEnvVar] = config.apmFlushDeadline;
     }
     environment.Variables = envVariables;
     lambda.properties.Environment = environment;

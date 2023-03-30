@@ -76,6 +76,7 @@ describe("setEnvConfiguration", () => {
       enableProfiling: true,
       encodeAuthorizerContext: true,
       decodeAuthorizerContext: true,
+      apmFlushDeadline: "20",
       extensionLayerVersion: 13,
       service: "my-service",
       env: "test",
@@ -87,6 +88,7 @@ describe("setEnvConfiguration", () => {
     expect(lambda.properties.Environment).toEqual({
       Variables: {
         DD_API_KEY: "1234",
+        DD_APM_FLUSH_DEADLINE_MILLISECONDS: "20",
         DD_FLUSH_TO_LOG: true,
         DD_KMS_API_KEY: "5678",
         DD_LOG_LEVEL: "debug",
@@ -140,6 +142,7 @@ describe("setEnvConfiguration", () => {
       enableProfiling: true,
       encodeAuthorizerContext: true,
       decodeAuthorizerContext: true,
+      apmFlushDeadline: "20",
       service: "my-service",
       env: "test",
       version: "1",
@@ -150,6 +153,7 @@ describe("setEnvConfiguration", () => {
     expect(lambda.properties.Environment).toEqual({
       Variables: {
         DD_API_KEY: "1234",
+        DD_APM_FLUSH_DEADLINE_MILLISECONDS: "20",
         DD_FLUSH_TO_LOG: true,
         DD_KMS_API_KEY: "5678",
         DD_LOG_LEVEL: "debug",
@@ -186,6 +190,7 @@ describe("setEnvConfiguration", () => {
       DD_PROFILING_ENABLED: true,
       DD_ENCODE_AUTHORIZER_CONTEXT: true,
       DD_DECODE_AUTHORIZER_CONTEXT: true,
+      DD_APM_FLUSH_DEADLINE_MILLISECONDS: "20",
     };
     const lambda: LambdaFunction = {
       properties: {
@@ -219,6 +224,7 @@ describe("setEnvConfiguration", () => {
       enableProfiling: false,
       encodeAuthorizerContext: false,
       decodeAuthorizerContext: false,
+      apmFlushDeadline: "30",
       extensionLayerVersion: 13,
       service: "config-service",
       env: "config-test",
