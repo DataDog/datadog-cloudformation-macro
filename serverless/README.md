@@ -68,7 +68,7 @@ Parameters:
     Description: "The output of $(git rev-parse HEAD),$(git config --get remote.origin.url). Used for Datadog Source Code Integration tagging"
 ```
 
-To set the DDGitData parameter for Datadog's Source Code Integration, use SAM's `--parameter-overrides` option:
+To set the `DDGitData` parameter for Datadog's Source Code Integration, use SAM's `--parameter-overrides` option:
 ```bash
 sam deploy --parameter-overrides  DDGitData="$(git rev-parse HEAD),$(git config --get remote.origin.url)"
 ```
