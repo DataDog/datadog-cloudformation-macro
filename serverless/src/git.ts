@@ -17,16 +17,7 @@ export const filterSensitiveInfoFromRepository = (repositoryUrl: string | undefi
   }
 };
 
-// Removes sensitive info from the given git remote url and normalizes the url prefix.
-// "git@github.com:" and "https://github.com/" prefixes will be normalized into "github.com/"
-export const filterAndFormatGithubRemote = (rawRemote: string | undefined): string | undefined => {
-  rawRemote = filterSensitiveInfoFromRepository(rawRemote);
-  if (!rawRemote) {
-    return rawRemote;
-  }
-  rawRemote = rawRemote.replace(/git@github\.com:|https:\/\/github\.com\//, "github.com/");
 
-  return rawRemote;
 /**
  * Removes sensitive information from the given git remote
  * URL and normalizes the URL prefix.
@@ -36,6 +27,23 @@ export const filterAndFormatGithubRemote = (rawRemote: string | undefined): stri
  * filterAndFormatGithubRemote("git@github.com")
  * filterAndFormatGithubRemote("https://github.com")
  * 
- * @param rawRemote git remote URL.
- * @returns 
+ * @param rawRemote git remote URL
+ * @returns normalized URL prefix
  */
+export const filterAndFormatGithubRemote = (rawRemote: string | undefined): string | undefined => {
+  rawRemote = filterSensitiveInfoFromRepository(rawRemote);
+  if (!rawRemote) {
+    return rawRemote;
+  }
+  rawRemote = rawRemote.replace(/git@github\.com:|https:\/\/github\.com\//, "github.com/");
+
+  return rawRemote;
+}
+
+export const getGitTagsFromParam = (gitDataParam: string) => {
+  const [commitSha, rawGitConfigUrlOutput] = gitDataParam.split(",", 2);
+  const sanitizedRemote = filterAndFormatGithubRemote(rawGitConfigUrlOutput);
+  const gitCommitShaTag = `git.commit.sha:${commitSha}`;
+  const gitRepoUrlTag = `git.repository_url:${sanitizedRemote}`;
+  return { gitCommitShaTag, gitRepoUrlTag };
+};
