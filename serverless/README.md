@@ -62,6 +62,28 @@ Transform:
 
 Note: If you did not modify the provided `template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerless`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
 
+Note: If you want to specify some of the configuration only once, you may modify `template.yml` and add the environment variables you want to configure for that region. Think of this as a way to control additional default values. The example below sets `DD_API_KEY_SECRET_ARN` and `DD_ENV`, which the macro will treat as default values:
+
+```yaml
+Resources:
+  MacroFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: MacroFunctionZip
+    Properties:
+      FunctionName:
+        Fn::If:
+          - SetFunctionName
+          - Ref: FunctionName
+          - Ref: AWS::NoValue
+      Description: Processes a CloudFormation template to install Datadog Lambda layers for Python and Node.js Lambda functions.
+      Handler: src/index.handler
+      ...
+      Environment:
+        Variables:
+          DD_API_KEY_SECRET_ARN: "arn:aws:secretsmanager:us-west-2:123456789012:secret:DdApiKeySecret-e1v5Yn7TvIPc-d1Qc4E"
+          DD_ENV: "dev"
+```
+
 ## Configuration
 
 To further configure your plugin, use the following custom parameters:

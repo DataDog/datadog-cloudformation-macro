@@ -79,6 +79,7 @@ export const handler = async (event: InputEvent, _: any) => {
       };
     }
 
+    //
     const lambdas = findLambdas(resources, event.templateParameterValues);
     log.debug(`Lambda resources found: ${JSON.stringify(lambdas)}`);
 

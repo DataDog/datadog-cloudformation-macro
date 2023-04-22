@@ -1,4 +1,4 @@
-import { defaultConfiguration } from "../src/env";
+import { defaultConfiguration, getConfigFromEnvVars } from "../src/env";
 import { RuntimeType, LambdaFunction } from "../src/layer";
 import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "../src/tags";
 
@@ -42,6 +42,34 @@ describe("addDDTags", () => {
     addDDTags([lambda], defaultConfiguration);
 
     expect(lambda.properties.Tags).toEqual([]);
+  });
+
+  describe("with env vars set", () => {
+    const CURRENT_ENV = process.env;
+
+    beforeEach(() => {
+      jest.resetModules() // Clear the cache
+      process.env = { ...CURRENT_ENV }; // Make a copy we can modify
+    });
+
+    afterEach(() => {
+      process.env = CURRENT_ENV; // Restore environment
+    });
+
+    it("does add tags from the environment", () => {
+      process.env['DD_TAGS'] = 'strongest_avenger:hulk'
+      const config = {
+        ...getConfigFromEnvVars(),
+        service: "my-service",
+      };
+      const lambda = mockLambdaFunction([]);
+      addDDTags([lambda], config);
+
+      expect(lambda.properties.Tags).toEqual([
+        { Key: "service", Value: "my-service" },
+        { Key: "strongest_avenger", Value: "hulk" },
+      ]);
+    });
   });
 
   it("creates tags property if needed", () => {
