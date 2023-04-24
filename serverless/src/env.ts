@@ -119,26 +119,66 @@ export function getConfigFromEnvVars(): Configuration {
     ...defaultConfiguration,
   };
 
-  apiKeyEnvVar in process.env ? (config.apiKey = process.env[apiKeyEnvVar]) : null;
-  apiKeySecretArnEnvVar in process.env ? (config.apiKeySecretArn = process.env[apiKeySecretArnEnvVar]) : null;
-  apiKeyKMSEnvVar in process.env ? (config.apiKMSKey = process.env[apiKeyKMSEnvVar]) : null;
-  siteURLEnvVar in process.env ? (config.site = process.env[siteURLEnvVar] || defaultConfiguration.site) : null;
-  logLevelEnvVar in process.env ? (config.logLevel = process.env[logLevelEnvVar]) : null;
-  logForwardingEnvVar in process.env ? (config.flushMetricsToLogs = process.env[logForwardingEnvVar] === "true") : null;
-  enhancedMetricsEnvVar in process.env ? (config.enableEnhancedMetrics = process.env[enhancedMetricsEnvVar] === "true") : null;
-  enableDDLogsEnvVar in process.env ? (config.enableDDLogs = process.env[enableDDLogsEnvVar] === "true") : null;
-  captureLambdaPayloadEnvVar in process.env ? (config.captureLambdaPayload = process.env[captureLambdaPayloadEnvVar] === "true") : null;
-  serviceEnvVar in process.env ? (config.service = process.env[serviceEnvVar]) : null;
-  envEnvVar in process.env ? (config.env = process.env[envEnvVar]) : null;
-  versionEnvVar in process.env ? (config.version = process.env[versionEnvVar]) : null;
-  tagsEnvVar in process.env ? (config.tags = process.env[tagsEnvVar]) : null;
-  ddColdStartTracingEnabledEnvVar in process.env ? (config.enableColdStartTracing = process.env[ddColdStartTracingEnabledEnvVar] === "true") : null;
-  ddMinColdStartDurationEnvVar in process.env ? (config.minColdStartTraceDuration = process.env[ddMinColdStartDurationEnvVar]) : null;
-  ddColdStartTracingSkipLibsEnvVar in process.env ? (config.coldStartTraceSkipLibs = process.env[ddColdStartTracingSkipLibsEnvVar]) : null;
-  ddProfilingEnabledEnvVar in process.env ? (config.enableProfiling = process.env[ddProfilingEnabledEnvVar] === "true") : null;
-  ddEncodeAuthorizerContextEnvVar in process.env ? (config.encodeAuthorizerContext = process.env[ddEncodeAuthorizerContextEnvVar] === "true") : null;
-  ddDecodeAuthorizerContextEnvVar in process.env ? (config.decodeAuthorizerContext = process.env[ddDecodeAuthorizerContextEnvVar] === "true") : null;
-  ddApmFlushDeadlineMillisecondsEnvVar in process.env ? (config.apmFlushDeadline = process.env[ddApmFlushDeadlineMillisecondsEnvVar]) : null;
+  if (apiKeyEnvVar in process.env) {
+    config.apiKey = process.env[apiKeyEnvVar];
+  }
+  if (apiKeySecretArnEnvVar in process.env) {
+    config.apiKeySecretArn = process.env[apiKeySecretArnEnvVar];
+  }
+  if (apiKeyKMSEnvVar in process.env) {
+    config.apiKMSKey = process.env[apiKeyKMSEnvVar];
+  }
+  if (siteURLEnvVar in process.env && process.env[siteURLEnvVar] !== undefined) {
+    config.site = process.env[siteURLEnvVar];
+  }
+  if (logLevelEnvVar in process.env) {
+    config.logLevel = process.env[logLevelEnvVar];
+  }
+  if (logForwardingEnvVar in process.env) {
+    config.flushMetricsToLogs = process.env[logForwardingEnvVar] === "true";
+  }
+  if (enhancedMetricsEnvVar in process.env) {
+    config.enableEnhancedMetrics = process.env[enhancedMetricsEnvVar] === "true";
+  }
+  if (enableDDLogsEnvVar in process.env) {
+    config.enableDDLogs = process.env[enableDDLogsEnvVar] === "true";
+  }
+  if (captureLambdaPayloadEnvVar in process.env) {
+    config.captureLambdaPayload = process.env[captureLambdaPayloadEnvVar] === "true";
+  }
+  if (serviceEnvVar in process.env) {
+    config.service = process.env[serviceEnvVar];
+  }
+  if (envEnvVar in process.env) {
+    config.env = process.env[envEnvVar];
+  }
+  if (versionEnvVar in process.env) {
+    config.version = process.env[versionEnvVar];
+  }
+  if (tagsEnvVar in process.env) {
+    config.tags = process.env[tagsEnvVar];
+  }
+  if (ddColdStartTracingEnabledEnvVar in process.env) {
+    config.enableColdStartTracing = process.env[ddColdStartTracingEnabledEnvVar] === "true";
+  }
+  if (ddMinColdStartDurationEnvVar in process.env) {
+    config.minColdStartTraceDuration = process.env[ddMinColdStartDurationEnvVar];
+  }
+  if (ddColdStartTracingSkipLibsEnvVar in process.env) {
+    config.coldStartTraceSkipLibs = process.env[ddColdStartTracingSkipLibsEnvVar];
+  }
+  if (ddProfilingEnabledEnvVar in process.env) {
+    config.enableProfiling = process.env[ddProfilingEnabledEnvVar] === "true";
+  }
+  if (ddEncodeAuthorizerContextEnvVar in process.env) {
+    config.encodeAuthorizerContext = process.env[ddEncodeAuthorizerContextEnvVar] === "true";
+  }
+  if (ddDecodeAuthorizerContextEnvVar in process.env) {
+    config.decodeAuthorizerContext = process.env[ddDecodeAuthorizerContextEnvVar] === "true";
+  }
+  if (ddApmFlushDeadlineMillisecondsEnvVar in process.env) {
+    config.apmFlushDeadline = process.env[ddApmFlushDeadlineMillisecondsEnvVar];
+  }
 
   return config;
 }
