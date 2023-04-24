@@ -48,7 +48,7 @@ describe("addDDTags", () => {
     const CURRENT_ENV = process.env;
 
     beforeEach(() => {
-      jest.resetModules() // Clear the cache
+      jest.resetModules(); // Clear the cache
       process.env = { ...CURRENT_ENV }; // Make a copy we can modify
     });
 
@@ -57,7 +57,7 @@ describe("addDDTags", () => {
     });
 
     it("does add tags from the environment", () => {
-      process.env['DD_TAGS'] = 'strongest_avenger:hulk'
+      process.env["DD_TAGS"] = "strongest_avenger:hulk";
       const config = {
         ...getConfigFromEnvVars(),
         service: "my-service",

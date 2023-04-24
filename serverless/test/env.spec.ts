@@ -47,7 +47,7 @@ describe("getConfig", () => {
     const CURRENT_ENV = process.env;
 
     beforeEach(() => {
-      jest.resetModules() // Clear the cache
+      jest.resetModules(); // Clear the cache
       process.env = { ...CURRENT_ENV }; // Make a copy we can modify
     });
 
@@ -56,8 +56,9 @@ describe("getConfig", () => {
     });
 
     it("gets default values overwritten by environment variables", () => {
-      process.env['DD_API_KEY_SECRET_ARN'] = 'arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234'
-      process.env['DD_FLUSH_TO_LOG'] = 'false'
+      process.env["DD_API_KEY_SECRET_ARN"] =
+        "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
+      process.env["DD_FLUSH_TO_LOG"] = "false";
       const config = getConfigFromEnvVars();
       expect(config).toEqual({
         addLayers: true,
@@ -69,15 +70,16 @@ describe("getConfig", () => {
         enableDDLogs: true,
         enableEnhancedMetrics: true,
         captureLambdaPayload: false,
-        apiKeySecretArn: 'arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234',
+        apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
       });
     });
 
     it("gets a mixed a configuration when some values are present", () => {
-      process.env['DD_API_KEY_SECRET_ARN'] = 'arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234'
-      process.env['DD_FLUSH_TO_LOG'] = 'false'
-      process.env['DD_ENHANCED_METRICS'] = 'false'
-      process.env['DD_CAPTURE_LAMBDA_PAYLOAD'] = 'true'
+      process.env["DD_API_KEY_SECRET_ARN"] =
+        "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
+      process.env["DD_FLUSH_TO_LOG"] = "false";
+      process.env["DD_ENHANCED_METRICS"] = "false";
+      process.env["DD_CAPTURE_LAMBDA_PAYLOAD"] = "true";
       const params = {
         site: "my-site",
         enableXrayTracing: false,
@@ -94,10 +96,9 @@ describe("getConfig", () => {
         enableDDLogs: true,
         enableEnhancedMetrics: true,
         captureLambdaPayload: false,
-        apiKeySecretArn: 'arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234',
+        apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
       });
     });
-
   });
 });
 
