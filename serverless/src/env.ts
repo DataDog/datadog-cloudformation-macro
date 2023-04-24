@@ -129,7 +129,8 @@ export function getConfigFromEnvVars(): Configuration {
     config.apiKMSKey = process.env[apiKeyKMSEnvVar];
   }
   if (siteURLEnvVar in process.env && process.env[siteURLEnvVar] !== undefined) {
-    config.site = process.env[siteURLEnvVar];
+    // Fall back to default site for type safety
+    config.site = process.env[siteURLEnvVar] ?? defaultConfiguration.site;
   }
   if (logLevelEnvVar in process.env) {
     config.logLevel = process.env[logLevelEnvVar];
