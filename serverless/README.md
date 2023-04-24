@@ -62,7 +62,7 @@ Transform:
 
 Note: If you did not modify the provided `template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerless`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
 
-Note: If you want to specify some of the configuration only once, you may modify `template.yml` and add the environment variables you want to configure for that region. Think of this as a way to control additional default values. The example below sets `DD_API_KEY_SECRET_ARN` and `DD_ENV`, which the macro will treat as default values:
+Note: If you want to specify some of the configuration only once, you can modify `template.yml` and add the environment variables you want to configure for that region. This is a way to control additional default values. The example below sets `DD_API_KEY_SECRET_ARN` and `DD_ENV`, which the macro will treats as default values:
 
 ```yaml
 Resources:
