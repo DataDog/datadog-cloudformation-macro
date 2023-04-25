@@ -4,7 +4,7 @@ Transform: AWS::Serverless-2016-10-31
 Mappings:
   Constants:
     DatadogServerlessMacro:
-      Version: 0.5.4
+      Version: 0.6.4
 
 Parameters:
   FunctionName:
