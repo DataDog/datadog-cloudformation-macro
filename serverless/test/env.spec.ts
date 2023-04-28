@@ -1,4 +1,5 @@
 import {
+  getConfigFromEnvVars,
   getConfigFromCfnMappings,
   getConfigFromCfnParams,
   defaultConfiguration,
@@ -41,6 +42,64 @@ describe("getConfig", () => {
       captureLambdaPayload: false,
     });
   });
+
+  describe("with env vars set", () => {
+    const CURRENT_ENV = process.env;
+
+    beforeEach(() => {
+      jest.resetModules(); // Clear the cache
+      process.env = { ...CURRENT_ENV }; // Make a copy we can modify
+    });
+
+    afterEach(() => {
+      process.env = CURRENT_ENV; // Restore environment
+    });
+
+    it("gets default values overwritten by environment variables", () => {
+      process.env["DD_API_KEY_SECRET_ARN"] =
+        "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
+      process.env["DD_FLUSH_TO_LOG"] = "false";
+      const config = getConfigFromEnvVars();
+      expect(config).toEqual({
+        addLayers: true,
+        flushMetricsToLogs: false,
+        logLevel: undefined,
+        site: "datadoghq.com",
+        enableXrayTracing: false,
+        enableDDTracing: true,
+        enableDDLogs: true,
+        enableEnhancedMetrics: true,
+        captureLambdaPayload: false,
+        apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
+      });
+    });
+
+    it("gets a mixed a configuration when some values are present", () => {
+      process.env["DD_API_KEY_SECRET_ARN"] =
+        "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
+      process.env["DD_FLUSH_TO_LOG"] = "false";
+      process.env["DD_ENHANCED_METRICS"] = "false";
+      process.env["DD_CAPTURE_LAMBDA_PAYLOAD"] = "true";
+      const params = {
+        site: "my-site",
+        enableXrayTracing: false,
+        enableEnhancedMetrics: true,
+        captureLambdaPayload: false,
+      };
+      const config = getConfigFromCfnParams(params);
+      expect(config).toEqual({
+        addLayers: true,
+        flushMetricsToLogs: false,
+        site: "my-site",
+        enableXrayTracing: false,
+        enableDDTracing: true,
+        enableDDLogs: true,
+        enableEnhancedMetrics: true,
+        captureLambdaPayload: false,
+        apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
+      });
+    });
+  });
 });
 
 describe("setEnvConfiguration", () => {
@@ -70,6 +129,13 @@ describe("setEnvConfiguration", () => {
       enableDDLogs: true,
       enableEnhancedMetrics: true,
       captureLambdaPayload: true,
+      enableColdStartTracing: true,
+      minColdStartTraceDuration: "80",
+      coldStartTraceSkipLibs: "lib1,lib2",
+      enableProfiling: true,
+      encodeAuthorizerContext: true,
+      decodeAuthorizerContext: true,
+      apmFlushDeadline: "20",
       extensionLayerVersion: 13,
       service: "my-service",
       env: "test",
@@ -81,6 +147,7 @@ describe("setEnvConfiguration", () => {
     expect(lambda.properties.Environment).toEqual({
       Variables: {
         DD_API_KEY: "1234",
+        DD_APM_FLUSH_DEADLINE_MILLISECONDS: "20",
         DD_FLUSH_TO_LOG: true,
         DD_KMS_API_KEY: "5678",
         DD_LOG_LEVEL: "debug",
@@ -92,6 +159,12 @@ describe("setEnvConfiguration", () => {
         DD_SERVICE: "my-service",
         DD_VERSION: "1",
         DD_TAGS: "team:avengers,project:marvel",
+        DD_COLD_START_TRACING: true,
+        DD_MIN_COLD_START_DURATION: "80",
+        DD_COLD_START_TRACE_SKIP_LIB: "lib1,lib2",
+        DD_PROFILING_ENABLED: true,
+        DD_ENCODE_AUTHORIZER_CONTEXT: true,
+        DD_DECODE_AUTHORIZER_CONTEXT: true,
       },
     });
   });
@@ -122,6 +195,13 @@ describe("setEnvConfiguration", () => {
       enableDDLogs: true,
       enableEnhancedMetrics: true,
       captureLambdaPayload: true,
+      enableColdStartTracing: true,
+      minColdStartTraceDuration: "80",
+      coldStartTraceSkipLibs: "lib1,lib2",
+      enableProfiling: true,
+      encodeAuthorizerContext: true,
+      decodeAuthorizerContext: true,
+      apmFlushDeadline: "20",
       service: "my-service",
       env: "test",
       version: "1",
@@ -132,6 +212,7 @@ describe("setEnvConfiguration", () => {
     expect(lambda.properties.Environment).toEqual({
       Variables: {
         DD_API_KEY: "1234",
+        DD_APM_FLUSH_DEADLINE_MILLISECONDS: "20",
         DD_FLUSH_TO_LOG: true,
         DD_KMS_API_KEY: "5678",
         DD_LOG_LEVEL: "debug",
@@ -139,6 +220,12 @@ describe("setEnvConfiguration", () => {
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: true,
+        DD_COLD_START_TRACING: true,
+        DD_MIN_COLD_START_DURATION: "80",
+        DD_COLD_START_TRACE_SKIP_LIB: "lib1,lib2",
+        DD_PROFILING_ENABLED: true,
+        DD_ENCODE_AUTHORIZER_CONTEXT: true,
+        DD_DECODE_AUTHORIZER_CONTEXT: true,
       },
     });
   });
@@ -156,6 +243,13 @@ describe("setEnvConfiguration", () => {
       DD_SERVICE: "my-service",
       DD_VERSION: "1",
       DD_TAGS: "team:avengers,project:marvel",
+      DD_COLD_START_TRACING: true,
+      DD_MIN_COLD_START_DURATION: "80",
+      DD_COLD_START_TRACE_SKIP_LIB: "lib1,lib2",
+      DD_PROFILING_ENABLED: true,
+      DD_ENCODE_AUTHORIZER_CONTEXT: true,
+      DD_DECODE_AUTHORIZER_CONTEXT: true,
+      DD_APM_FLUSH_DEADLINE_MILLISECONDS: "20",
     };
     const lambda: LambdaFunction = {
       properties: {
@@ -183,6 +277,13 @@ describe("setEnvConfiguration", () => {
       enableDDLogs: true,
       enableEnhancedMetrics: false,
       captureLambdaPayload: false,
+      enableColdStartTracing: false,
+      minColdStartTraceDuration: "100",
+      coldStartTraceSkipLibs: "lib3,lib4",
+      enableProfiling: false,
+      encodeAuthorizerContext: false,
+      decodeAuthorizerContext: false,
+      apmFlushDeadline: "30",
       extensionLayerVersion: 13,
       service: "config-service",
       env: "config-test",

@@ -58,6 +58,22 @@ export interface Configuration {
   // The customer template takes in the DDGitData override param and passes that to this macro's gitData param
   gitData?: string;
   captureLambdaPayload: boolean;
+  // Cold Start Tracing is enabled by default
+  enableColdStartTracing?: boolean;
+  // minimum duration to trace a module load span
+  minColdStartTraceDuration?: string;
+  // User specified list of libraries for Cold Start Tracing to ignore
+  coldStartTraceSkipLibs?: string;
+  // Enable profiling
+  enableProfiling?: boolean;
+  // Whether to encode the tracing context in the lambda authorizer's reponse data. Default true
+  encodeAuthorizerContext?: boolean;
+  // Whether to parse and use the encoded tracing context from lambda authorizers. Default true
+  decodeAuthorizerContext?: boolean;
+  // Determine when to submit spans before a timeout occurs.
+  // When the remaining time in a Lambda invocation is less than `apmFlushDeadline`, the tracer will
+  // attempt to submit the current active spans and all finished spans.
+  apmFlushDeadline?: string;
 }
 
 // Same interface as Configuration above, except all parameters are optional, since user does
@@ -79,6 +95,13 @@ const serviceEnvVar = "DD_SERVICE";
 const envEnvVar = "DD_ENV";
 const versionEnvVar = "DD_VERSION";
 const tagsEnvVar = "DD_TAGS";
+const ddColdStartTracingEnabledEnvVar = "DD_COLD_START_TRACING";
+const ddMinColdStartDurationEnvVar = "DD_MIN_COLD_START_DURATION";
+const ddColdStartTracingSkipLibsEnvVar = "DD_COLD_START_TRACE_SKIP_LIB";
+const ddProfilingEnabledEnvVar = "DD_PROFILING_ENABLED";
+const ddEncodeAuthorizerContextEnvVar = "DD_ENCODE_AUTHORIZER_CONTEXT";
+const ddDecodeAuthorizerContextEnvVar = "DD_DECODE_AUTHORIZER_CONTEXT";
+const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS";
 
 export const defaultConfiguration: Configuration = {
   addLayers: true,
@@ -93,6 +116,79 @@ export const defaultConfiguration: Configuration = {
 };
 
 /**
+ * Returns the default configuration with any values overwritten by environment variables.
+ */
+export function getConfigFromEnvVars(): Configuration {
+  const config: Configuration = {
+    ...defaultConfiguration,
+  };
+
+  if (apiKeyEnvVar in process.env) {
+    config.apiKey = process.env[apiKeyEnvVar];
+  }
+  if (apiKeySecretArnEnvVar in process.env) {
+    config.apiKeySecretArn = process.env[apiKeySecretArnEnvVar];
+  }
+  if (apiKeyKMSEnvVar in process.env) {
+    config.apiKMSKey = process.env[apiKeyKMSEnvVar];
+  }
+  if (siteURLEnvVar in process.env && process.env[siteURLEnvVar] !== undefined) {
+    // Fall back to default site for type safety
+    config.site = process.env[siteURLEnvVar] ?? defaultConfiguration.site;
+  }
+  if (logLevelEnvVar in process.env) {
+    config.logLevel = process.env[logLevelEnvVar];
+  }
+  if (logForwardingEnvVar in process.env) {
+    config.flushMetricsToLogs = process.env[logForwardingEnvVar] === "true";
+  }
+  if (enhancedMetricsEnvVar in process.env) {
+    config.enableEnhancedMetrics = process.env[enhancedMetricsEnvVar] === "true";
+  }
+  if (enableDDLogsEnvVar in process.env) {
+    config.enableDDLogs = process.env[enableDDLogsEnvVar] === "true";
+  }
+  if (captureLambdaPayloadEnvVar in process.env) {
+    config.captureLambdaPayload = process.env[captureLambdaPayloadEnvVar] === "true";
+  }
+  if (serviceEnvVar in process.env) {
+    config.service = process.env[serviceEnvVar];
+  }
+  if (envEnvVar in process.env) {
+    config.env = process.env[envEnvVar];
+  }
+  if (versionEnvVar in process.env) {
+    config.version = process.env[versionEnvVar];
+  }
+  if (tagsEnvVar in process.env) {
+    config.tags = process.env[tagsEnvVar];
+  }
+  if (ddColdStartTracingEnabledEnvVar in process.env) {
+    config.enableColdStartTracing = process.env[ddColdStartTracingEnabledEnvVar] === "true";
+  }
+  if (ddMinColdStartDurationEnvVar in process.env) {
+    config.minColdStartTraceDuration = process.env[ddMinColdStartDurationEnvVar];
+  }
+  if (ddColdStartTracingSkipLibsEnvVar in process.env) {
+    config.coldStartTraceSkipLibs = process.env[ddColdStartTracingSkipLibsEnvVar];
+  }
+  if (ddProfilingEnabledEnvVar in process.env) {
+    config.enableProfiling = process.env[ddProfilingEnabledEnvVar] === "true";
+  }
+  if (ddEncodeAuthorizerContextEnvVar in process.env) {
+    config.encodeAuthorizerContext = process.env[ddEncodeAuthorizerContextEnvVar] === "true";
+  }
+  if (ddDecodeAuthorizerContextEnvVar in process.env) {
+    config.decodeAuthorizerContext = process.env[ddDecodeAuthorizerContextEnvVar] === "true";
+  }
+  if (ddApmFlushDeadlineMillisecondsEnvVar in process.env) {
+    config.apmFlushDeadline = process.env[ddApmFlushDeadlineMillisecondsEnvVar];
+  }
+
+  return config;
+}
+
+/**
  * Parses the Mappings section for Datadog config parameters.
  * Assumes that the parameters live under the Mappings section in this format:
  *
@@ -105,7 +201,7 @@ export const defaultConfiguration: Configuration = {
 export function getConfigFromCfnMappings(mappings: any): Configuration {
   if (mappings === undefined || mappings[DATADOG] === undefined) {
     log.debug("No Datadog mappings found in the CloudFormation template, using the default config");
-    return defaultConfiguration;
+    return getConfigFromEnvVars();
   }
   return getConfigFromCfnParams(mappings[DATADOG][PARAMETERS]);
 }
@@ -126,7 +222,7 @@ export function getConfigFromCfnParams(params: CfnParams) {
     datadogConfig = {};
   }
   return {
-    ...defaultConfiguration,
+    ...getConfigFromEnvVars(),
     ...datadogConfig,
   };
 }
@@ -249,7 +345,27 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
         }
       }
     }
-
+    if (config.enableColdStartTracing !== undefined && envVariables[ddColdStartTracingEnabledEnvVar] === undefined) {
+      envVariables[ddColdStartTracingEnabledEnvVar] = config.enableColdStartTracing;
+    }
+    if (config.minColdStartTraceDuration !== undefined && envVariables[ddMinColdStartDurationEnvVar] === undefined) {
+      envVariables[ddMinColdStartDurationEnvVar] = config.minColdStartTraceDuration;
+    }
+    if (config.coldStartTraceSkipLibs !== undefined && envVariables[ddColdStartTracingSkipLibsEnvVar] === undefined) {
+      envVariables[ddColdStartTracingSkipLibsEnvVar] = config.coldStartTraceSkipLibs;
+    }
+    if (config.enableProfiling !== undefined && envVariables[ddProfilingEnabledEnvVar] === undefined) {
+      envVariables[ddProfilingEnabledEnvVar] = config.enableProfiling;
+    }
+    if (config.encodeAuthorizerContext !== undefined && envVariables[ddEncodeAuthorizerContextEnvVar] === undefined) {
+      envVariables[ddEncodeAuthorizerContextEnvVar] = config.encodeAuthorizerContext;
+    }
+    if (config.decodeAuthorizerContext !== undefined && envVariables[ddDecodeAuthorizerContextEnvVar] === undefined) {
+      envVariables[ddDecodeAuthorizerContextEnvVar] = config.decodeAuthorizerContext;
+    }
+    if (config.apmFlushDeadline !== undefined && envVariables[ddApmFlushDeadlineMillisecondsEnvVar] === undefined) {
+      envVariables[ddApmFlushDeadlineMillisecondsEnvVar] = config.apmFlushDeadline;
+    }
     environment.Variables = envVariables;
     lambda.properties.Environment = environment;
   });

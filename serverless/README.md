@@ -75,6 +75,28 @@ sam deploy --parameter-overrides  DDGitData="$(git rev-parse HEAD),$(git config 
 
 Note: If you did not modify the provided `template.yml` file when you installed the macro, then the name of the macro defined in your account will be `DatadogServerless`. If you have modified the original template, make sure the name of the transform you add here matches the `Name` property of the `AWS::CloudFormation::Macro` resource.
 
+Note: If you want to specify some of the configuration only once, you can modify `template.yml` and add the environment variables you want to configure for that region. This is a way to control additional default values. The example below sets `DD_API_KEY_SECRET_ARN` and `DD_ENV`, which the macro will treats as default values:
+
+```yaml
+Resources:
+  MacroFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: MacroFunctionZip
+    Properties:
+      FunctionName:
+        Fn::If:
+          - SetFunctionName
+          - Ref: FunctionName
+          - Ref: AWS::NoValue
+      Description: Processes a CloudFormation template to install Datadog Lambda layers for Python and Node.js Lambda functions.
+      Handler: src/index.handler
+      ...
+      Environment:
+        Variables:
+          DD_API_KEY_SECRET_ARN: "arn:aws:secretsmanager:us-west-2:123456789012:secret:DdApiKeySecret-e1v5Yn7TvIPc-d1Qc4E"
+          DD_ENV: "dev"
+```
+
 ## Configuration
 
 To further configure your plugin, use the following custom parameters:
@@ -99,10 +121,16 @@ To further configure your plugin, use the following custom parameters:
 | `service`               | When set along with the `extensionLayerVersion`, the macro adds a `DD_SERVICE` environment variable to all lambda functions with the provided value. When set along with the `forwarderArn`, the macro adds a `service` tag to all Lambda functions with the provided value.                                                                                                                                                                                                                |
 | `env`                   | When set along with the `extensionLayerVersion`, the macro adds a `DD_ENV` environment variable to all lambda functions with the provided value. When set along with the `forwarderArn`, the macro adds an `env` tag to all Lambda functions with the provided value.                                                                                                                                                                                                                        |
 | `version`               | When set along with the `extensionLayerVersion`, the macro adds a `DD_VERSION` environment variable to all lambda functions with the provided value. When set along with the `forwarderArn`, the macro adds a `version` tag to all Lambda functions with the provided value.                                                                                                                                                                                                             |
-| `tags`                  | A comma separated list of key:value pairs as a single string. When set along with `extensionLayerVersion`, a `DD_TAGS` environment variable is added on all Lambda functions with the provided value.  When set along with `forwarderArn`, the macro parses the string and sets each key:value pair as a tag on all Lambda functions.
-|
-| `logLevel`              | Sets the log level. Set to `DEBUG` for extended logging.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `tags`                  | A comma separated list of key:value pairs as a single string. When set along with `extensionLayerVersion`, a `DD_TAGS` environment variable is added on all Lambda functions with the provided value.  When set along with `forwarderArn`, the macro parses the string and sets each key:value pair as a tag on all Lambda functions. |
+| `logLevel`              | Sets the log level. Set to `DEBUG` for extended logging. |
 | `captureLambdaPayload`  | Automatically tags the function execution span with request and response payloads, so they can be displayed in the APM application.                                                                                                                                                                                                                                                                                                                                                                 |
+| `enableColdStartTracing`      | Set to `false` to disable Cold Start Tracing. Used in NodeJS and Python. Defaults to `true`. |
+| `coldStartTraceMinDuration`   | Sets the minimum duration (in milliseconds) for a module load event to be traced via Cold Start Tracing. Number. Defaults to `3`. |
+| `coldStartTraceSkipLibs`      | optionally skip creating Cold Start Spans for a comma-separated list of libraries. Useful to limit depth or skip known libraries. Default depends on runtime. |
+| `enableProfiling`             | Enable the Datadog Continuous Profiler with `true`. Supported in Beta for NodeJS and Python. Defaults to `false`. |
+| `encodeAuthorizerContext`     | When set to `true` for Lambda authorizers, the tracing context will be encoded into the response for propagation. Supported for NodeJS and Python. Defaults to `true`. |
+| `decodeAuthorizerContext`     | When set to `true` for Lambdas that are authorized via Lambda authorizers, it will parse and use the encoded tracing context (if found). Supported for NodeJS and Python. Defaults to `true`.                         |
+| `apmFlushDeadline` | Used to determine when to submit spans before a timeout occurs, in milliseconds. When the remaining time in an AWS Lambda invocation is less than the value set, the tracer attempts to submit the current active spans and all finished spans. Supported for NodeJS and Python. Defaults to `100` milliseconds. |
 
 ## How it works
 

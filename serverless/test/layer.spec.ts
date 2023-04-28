@@ -58,6 +58,7 @@ describe("findLambdas", () => {
       Python37Function: mockFunctionResource("python3.7", ["x86_64"]),
       Python38Function: mockFunctionResource("python3.8", ["x86_64"]),
       Python39Function: mockFunctionResource("python3.9", ["x86_64"]),
+      Python310Function: mockFunctionResource("python3.10", ["x86_64"]),
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
@@ -73,6 +74,7 @@ describe("findLambdas", () => {
       mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python38Function", "python3.8", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Python310Function", "python3.10", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
@@ -185,7 +187,7 @@ describe("applyLayers", () => {
   });
 
   it("applies the python and extension lambda layers for arm", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "python3.9", RuntimeType.PYTHON, "arm64", ArchitectureType.ARM64);
+    const lambda = mockLambdaFunction("FunctionKey", "python3.10", RuntimeType.PYTHON, "arm64", ArchitectureType.ARM64);
     const region = "us-east-1";
     const pythonLayerVersion = 25;
     const extensionLayerVersion = 6;
@@ -193,7 +195,7 @@ describe("applyLayers", () => {
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python39-ARM:${pythonLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python310-ARM:${pythonLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
     ]);
   });
