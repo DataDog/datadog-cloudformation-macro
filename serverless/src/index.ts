@@ -11,6 +11,8 @@ import log from "loglevel";
 const SUCCESS = "success";
 const FAILURE = "failure";
 
+export const CFN_IF_FUNCTION_STRING = "Fn::If";
+
 export type Parameters = { [key: string]: any };
 
 export interface Resources {
@@ -24,6 +26,10 @@ interface CfnTemplate {
   Mappings?: any;
   Resources: Resources;
 }
+
+export type LambdaLayersProperty =
+  | string[]
+  | { [CFN_IF_FUNCTION_STRING]: [string, LambdaLayersProperty, LambdaLayersProperty] };
 
 export interface InputEvent {
   region: string;
@@ -42,7 +48,7 @@ export interface FunctionProperties {
   Code: any;
   Environment?: { Variables?: { [key: string]: string | boolean } };
   Tags?: { Key: string; Value: string }[];
-  Layers?: string[];
+  Layers?: LambdaLayersProperty;
   TracingConfig?: { [key: string]: string };
   FunctionName?: string;
   Architectures?: [string];

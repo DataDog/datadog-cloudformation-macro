@@ -1,4 +1,4 @@
-import { FunctionProperties, Resources, Parameters } from "./index";
+import { FunctionProperties, Resources, Parameters, LambdaLayersProperty, CFN_IF_FUNCTION_STRING } from "./index";
 import log from "loglevel";
 
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
@@ -187,13 +187,45 @@ export function applyLayers(
 }
 
 function addLayer(layerArn: string, lambda: LambdaFunction) {
-  if (layerArn !== undefined) {
-    const currentLayers = lambda.properties.Layers ?? [];
-    if (!currentLayers.includes(layerArn)) {
-      currentLayers.push(layerArn);
-    }
-    lambda.properties.Layers = currentLayers;
+  if (layerArn === undefined) {
+    return;
   }
+
+  const currentLayers = lambda.properties.Layers ?? [];
+  const newLayers = getNewLayers(layerArn, currentLayers);
+  lambda.properties.Layers = newLayers;
+}
+
+// Return the layers arr or object with layerArn added
+export function getNewLayers(layerArn: string, currentLayers: LambdaLayersProperty): LambdaLayersProperty {
+  if (Array.isArray(currentLayers)) {
+    if (currentLayers.includes(layerArn)) {
+      // Don't change layers if the layerArn is already present
+      return currentLayers;
+    }
+    return [...currentLayers, layerArn];
+  }
+
+  // CFN Fn::If conditional values are arrays with three items:
+  // 1. condition, 2. output if condition is true, 3. output if false
+  const conditionalValues = currentLayers[CFN_IF_FUNCTION_STRING];
+
+  // If this is not an if statement, log a warning and do not add layer
+  if (conditionalValues === undefined) {
+    console.warn("Unrecognized object in Layers definition. Cannot " + `add layer ${layerArn}`);
+    return currentLayers;
+  }
+
+  if (conditionalValues.length !== 3) {
+    console.warn("Conditional in Layers definition does not have 3 items. Cannot " + `add layer ${layerArn}`);
+    return currentLayers;
+  }
+  const [conditionalName, layersIfTrue, layersIfFalse] = conditionalValues;
+
+  const newLayersIfTrue = getNewLayers(layerArn, layersIfTrue);
+  const newLayersIfFalse = getNewLayers(layerArn, layersIfFalse);
+
+  return { [CFN_IF_FUNCTION_STRING]: [conditionalName, newLayersIfTrue, newLayersIfFalse] };
 }
 
 export function getLambdaLibraryLayerArn(region: string, version: number, runtime: string, architecture: string) {
