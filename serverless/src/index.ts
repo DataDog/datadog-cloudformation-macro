@@ -27,8 +27,11 @@ interface CfnTemplate {
   Resources: Resources;
 }
 
+// Array of string ARNs in normal case. Can also include
+// CFN conditional objects represented as e.g.:
+// {"Fn::If": ["isProd", ["prod-layer-arn"], ["stg-layer-arn"]]}
 export type LambdaLayersProperty =
-  | string[]
+  | (string | LambdaLayersProperty)[]
   | { [CFN_IF_FUNCTION_STRING]: [string, LambdaLayersProperty, LambdaLayersProperty] };
 
 export interface InputEvent {
