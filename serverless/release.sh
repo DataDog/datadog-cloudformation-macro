@@ -103,9 +103,12 @@ if [ "$PROD_RELEASE" = true ] ; then
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
     aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/latest.yml \
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+    echo "Version ${VERSION} has been released"
+    echo "Update release notes with included PRs: https://github.com/DataDog/datadog-cloudformation-macro/releases/tag/serverless-macro-${VERSION}"
 else
     aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml
     aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
+    echo "Dev version ${VERSION} has been released"
 fi
 
 # echo "Done uploading the template, and here is the CloudFormation quick launch URL"
