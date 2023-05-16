@@ -9,6 +9,7 @@ import {
   getLambdaLibraryLayerArn,
   getExtensionLayerArn,
   ArchitectureType,
+  getNewLayers,
 } from "../src/layer";
 
 function mockFunctionResource(runtime: string | { Ref: string }, architectures?: string[]) {
@@ -198,6 +199,46 @@ describe("applyLayers", () => {
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python310-ARM:${pythonLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
     ]);
+  });
+});
+
+describe("getNewLayers", () => {
+  it("returns current layers if layerArn only one present", () => {
+    expect(getNewLayers("abcd", ["abcd"])).toEqual(["abcd"]);
+  });
+
+  it("returns current layers if layerArn present with others", () => {
+    expect(getNewLayers("abcd", ["abcd", "efgh"])).toEqual(["abcd", "efgh"]);
+    expect(getNewLayers("abcd", ["abcd", "efgh", "ijkl"])).toEqual(["abcd", "efgh", "ijkl"]);
+  });
+
+  it("adds layer if no layers exist", () => {
+    expect(getNewLayers("abcd", [])).toEqual(["abcd"]);
+  });
+
+  it("adds layer alongside existing others", () => {
+    expect(getNewLayers("abcd", ["efgh"])).toEqual(["efgh", "abcd"]);
+    expect(getNewLayers("abcd", ["efgh", "ijkl"])).toEqual(["efgh", "ijkl", "abcd"]);
+  });
+
+  it("adds layer to both CFN conditional outputs", () => {
+    expect(getNewLayers("abcd", { ["Fn::If"]: ["isProd", ["efgh"], ["ijkl"]] })).toEqual({
+      ["Fn::If"]: ["isProd", ["efgh", "abcd"], ["ijkl", "abcd"]],
+    });
+  });
+
+  it("adds layer to nested CFN conditional outputs", () => {
+    expect(
+      getNewLayers("abcd", {
+        ["Fn::If"]: ["isProd", { ["Fn::If"]: ["isUSRegion", ["us-efgh"], ["eu-ijkl"]] }, ["stg-ijkl"]],
+      }),
+    ).toEqual({
+      ["Fn::If"]: [
+        "isProd",
+        { ["Fn::If"]: ["isUSRegion", ["us-efgh", "abcd"], ["eu-ijkl", "abcd"]] },
+        ["stg-ijkl", "abcd"],
+      ],
+    });
   });
 });
 
