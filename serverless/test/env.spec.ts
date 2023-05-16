@@ -103,7 +103,87 @@ describe("getConfig", () => {
 });
 
 describe("setEnvConfiguration", () => {
-  it("sets env vars (with extension)", () => {
+  it("sets env vars with simple config and extension", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        Handler: "app.handler",
+        Runtime: "python2.7",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.PYTHON,
+      runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    const config = {
+      addLayers: false,
+      apiKey: "1234",
+      extensionLayerVersion: 13,
+      service: "my-service",
+      env: "test",
+      version: "1",
+      tags: "team:avengers,project:marvel",
+    };
+    setEnvConfiguration({ ...defaultConfiguration, ...config }, [lambda]);
+
+    expect(lambda.properties.Environment).toEqual({
+      Variables: {
+        DD_API_KEY: "1234",
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: true,
+        DD_SITE: "datadoghq.com",
+        DD_ENV: "test",
+        DD_SERVICE: "my-service",
+        DD_VERSION: "1",
+        DD_TAGS: "team:avengers,project:marvel",
+        DD_SERVERLESS_LOGS_ENABLED: true,
+      },
+    });
+  });
+
+  it("sets env vars with simple config without extension", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        Handler: "app.handler",
+        Runtime: "python2.7",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.PYTHON,
+      runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    const config = {
+      addLayers: false,
+      apiKey: "1234",
+      service: "my-service",
+      env: "test",
+      version: "1",
+      tags: "team:avengers,project:marvel",
+    };
+    setEnvConfiguration({ ...defaultConfiguration, ...config }, [lambda]);
+
+    expect(lambda.properties.Environment).toEqual({
+      Variables: {
+        DD_API_KEY: "1234",
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: true,
+        DD_SITE: "datadoghq.com",
+        DD_ENV: "test",
+        DD_SERVICE: "my-service",
+        DD_TAGS: "team:avengers,project:marvel",
+        DD_SERVERLESS_LOGS_ENABLED: true,
+      },
+    });
+  });
+
+  it("sets env vars with complicated config and extension)", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
@@ -169,7 +249,7 @@ describe("setEnvConfiguration", () => {
     });
   });
 
-  it("sets env vars (without extension)", () => {
+  it("sets env vars with complicated config without extension", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
@@ -218,7 +298,9 @@ describe("setEnvConfiguration", () => {
         DD_LOG_LEVEL: "debug",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_ENV: "test",
         DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_SERVICE: "my-service",
         DD_CAPTURE_LAMBDA_PAYLOAD: true,
         DD_COLD_START_TRACING: true,
         DD_MIN_COLD_START_DURATION: "80",
@@ -226,6 +308,7 @@ describe("setEnvConfiguration", () => {
         DD_PROFILING_ENABLED: true,
         DD_ENCODE_AUTHORIZER_CONTEXT: true,
         DD_DECODE_AUTHORIZER_CONTEXT: true,
+        DD_TAGS: "team:avengers,project:marvel",
       },
     });
   });
