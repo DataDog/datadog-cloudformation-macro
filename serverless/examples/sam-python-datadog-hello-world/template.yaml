@@ -7,8 +7,8 @@ Transform:
       apiKey: "xxxxxxxxxx"
       pythonLayerVersion: 72
       stackName: !Ref "AWS::StackName"
-      tags: "tagkey:updatevalue,team:serverless"      
-      env: production
+      tags: "tagkey:updatevalue,team:serverless,third:tag"      
+      env: !Ref "StageName"
 
 Parameters:
   StageName:

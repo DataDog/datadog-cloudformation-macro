@@ -2,7 +2,7 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "sam-python-datadog-hello-world-2"
+stack_name = "sam-python-datadog-hello-world"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-f277m9gswkk1"
 s3_prefix = "sam-python-datadog-hello-world"
 region = "sa-east-1"
