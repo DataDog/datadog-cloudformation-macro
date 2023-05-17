@@ -321,30 +321,33 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
       envVariables[captureLambdaPayloadEnvVar] = config.captureLambdaPayload;
     }
 
-    if (config.extensionLayerVersion) {
-      if (config.service !== undefined && envVariables[serviceEnvVar] === undefined) {
-        envVariables[serviceEnvVar] = config.service;
-      }
-      if (config.env !== undefined && envVariables[envEnvVar] === undefined) {
-        envVariables[envEnvVar] = config.env;
-      }
-      if (config.version !== undefined && envVariables[versionEnvVar] === undefined) {
-        envVariables[versionEnvVar] = config.version;
-      }
-      if (config.tags !== undefined && envVariables[tagsEnvVar] === undefined) {
-        envVariables[tagsEnvVar] = config.tags;
-      }
-      if (config.gitData !== undefined) {
-        const { gitCommitShaTag, gitRepoUrlTag } = getGitTagsFromParam(config.gitData);
-        const gitTagString = `${gitCommitShaTag},${gitRepoUrlTag}`;
+    if (config.service !== undefined && envVariables[serviceEnvVar] === undefined) {
+      envVariables[serviceEnvVar] = config.service;
+    }
 
-        if (envVariables[tagsEnvVar] !== undefined) {
-          envVariables[tagsEnvVar] = `${envVariables[tagsEnvVar]},${gitTagString}`;
-        } else {
-          envVariables[tagsEnvVar] = gitTagString;
-        }
+    if (config.env !== undefined && envVariables[envEnvVar] === undefined) {
+      envVariables[envEnvVar] = config.env;
+    }
+
+    if (config.extensionLayerVersion && config.version !== undefined && envVariables[versionEnvVar] === undefined) {
+      envVariables[versionEnvVar] = config.version;
+    }
+
+    if (config.tags !== undefined && envVariables[tagsEnvVar] === undefined) {
+      envVariables[tagsEnvVar] = config.tags;
+    }
+
+    if (config.gitData !== undefined) {
+      const { gitCommitShaTag, gitRepoUrlTag } = getGitTagsFromParam(config.gitData);
+      const gitTagString = `${gitCommitShaTag},${gitRepoUrlTag}`;
+
+      if (envVariables[tagsEnvVar] !== undefined) {
+        envVariables[tagsEnvVar] = `${envVariables[tagsEnvVar]},${gitTagString}`;
+      } else {
+        envVariables[tagsEnvVar] = gitTagString;
       }
     }
+
     if (config.enableColdStartTracing !== undefined && envVariables[ddColdStartTracingEnabledEnvVar] === undefined) {
       envVariables[ddColdStartTracingEnabledEnvVar] = config.enableColdStartTracing;
     }
