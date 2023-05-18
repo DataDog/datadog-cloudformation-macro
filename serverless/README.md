@@ -18,7 +18,18 @@ The macro automatically configures ingestion of metrics, traces, and logs from y
 
 ## Installation
 
-To make the macro available for use in your AWS account, deploy a CloudFormation stack with a Datadog-provided template. This deployment includes a CloudFormation macro resource and a Lambda function that is invoked when the macro is run. Deploying this stack enables you to use the macro on other CloudFormation stacks deployed in the same account. For more details about defining a macro in your account, see the [CloudFormation documentation page][3].
+To make the Datadog Serverless Macro available for use in your AWS account, deploy a CloudFormation stack with a Datadog-provided template. This deployment includes a CloudFormation macro resource and a Lambda function that is invoked when the macro is run. Deploying this stack enables you to use the macro on other CloudFormation stacks deployed in the same account. For more details about defining a macro in your account, see the [CloudFormation documentation page][3].
+
+**Note:** The Datadog Serverless Macro needs to be created once in each region containing stacks to transform
+
+### Option 1: AWS Console
+
+[![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=sa-east-1#/stacks/quickCreate?stackName=datadog-serverless-macro&templateURL=https://datadog-cloudformation-template.s3.amazonaws.com/aws/serverless-macro/latest.yml)
+
+Create the Datadog Serverless Macro stack in your AWS account using the `Create Stack` template link above.
+
+
+### Option 2: AWS CLI
 
 If you are installing for the first time, deploy with:
 
@@ -28,17 +39,6 @@ aws cloudformation create-stack \
   --template-url https://datadog-cloudformation-template.s3.amazonaws.com/aws/serverless-macro/latest.yml \
   --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
 ```
-
-If you are updating the macro after a new release, use the `update-stack` method instead with the same parameters. Alternatively, you may also specify a version of the macro from the latest [releases](https://github.com/DataDog/datadog-cloudformation-macro/releases) by replacing `latest.yml` with the release version, e.g. `0.1.2.yml`:
-
-```bash
-aws cloudformation update-stack \
-  --stack-name datadog-serverless-macro \
-  --template-url https://datadog-cloudformation-template.s3.amazonaws.com/aws/serverless-macro/latest.yml \
-  --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
-```
-
-**Note:** You only need to deploy the macro once for a given region in your AWS account, and it can be used for all CloudFormation stacks deployed in that same region.
 
 ## Usage with AWS SAM
 
@@ -96,6 +96,18 @@ Resources:
           DD_API_KEY_SECRET_ARN: "arn:aws:secretsmanager:us-west-2:123456789012:secret:DdApiKeySecret-e1v5Yn7TvIPc-d1Qc4E"
           DD_ENV: "dev"
 ```
+
+## Updating
+If you are updating the macro after a new release, use the `update-stack` method:
+
+```bash
+aws cloudformation update-stack \
+  --stack-name datadog-serverless-macro \
+  --template-url https://datadog-cloudformation-template.s3.amazonaws.com/aws/serverless-macro/latest.yml \
+  --capabilities CAPABILITY_AUTO_EXPAND CAPABILITY_IAM
+```
+
+You may also specify a version of the macro from the latest [releases](https://github.com/DataDog/datadog-cloudformation-macro/releases) by replacing `latest.yml` with the release version, e.g. `0.1.2.yml`.
 
 ## Configuration
 
