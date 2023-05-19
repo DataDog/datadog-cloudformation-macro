@@ -20,7 +20,7 @@ The macro automatically configures ingestion of metrics, traces, and logs from y
 
 To make the Datadog Serverless Macro available for use in your AWS account, deploy a CloudFormation stack with a Datadog-provided template. This deployment includes a CloudFormation macro resource and a Lambda function that is invoked when the macro is run. Deploying this stack enables you to use the macro on other CloudFormation stacks deployed in the same account. For more details about defining a macro in your account, see the [CloudFormation documentation page][3].
 
-**Note:** The Datadog Serverless Macro needs to be created once in each region containing stacks to transform
+**Note:** The Datadog serverless macro needs to be created once in each region that contains stacks you wish to transform.
 
 ### Option 1: AWS Console
 
