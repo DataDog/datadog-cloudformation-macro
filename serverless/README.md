@@ -26,7 +26,7 @@ To make the Datadog serverless macro available for use in your AWS account, depl
 
 [![Launch Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=sa-east-1#/stacks/quickCreate?stackName=datadog-serverless-macro&templateURL=https://datadog-cloudformation-template.s3.amazonaws.com/aws/serverless-macro/latest.yml)
 
-Create the Datadog Serverless Macro stack in your AWS account using the `Launch Stack` template link above.
+Create the Datadog serverless macro stack in your AWS account using the `Launch Stack` template link above.
 
 
 ### Option 2: AWS CLI
