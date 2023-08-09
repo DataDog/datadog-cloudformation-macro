@@ -117,7 +117,7 @@ Resources:
     Properties:
       Description: Copies Datadog CloudFormation macro zip to the destination S3 bucket
       Handler: index.handler
-      Runtime: python3.7
+      Runtime: python3.11
       Timeout: 300
       InlineCode: |
         import json
