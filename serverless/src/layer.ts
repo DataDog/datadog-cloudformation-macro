@@ -48,6 +48,7 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.8": RuntimeType.PYTHON,
   "python3.9": RuntimeType.PYTHON,
   "python3.10": RuntimeType.PYTHON,
+  "python3.11": RuntimeType.PYTHON,
 };
 
 function runtimeToLayerName(runtime: string, architecture: string): string {
@@ -65,12 +66,14 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     "python3.8": "Datadog-Python38",
     "python3.9": "Datadog-Python39",
     "python3.10": "Datadog-Python310",
+    "python3.11": "Datadog-Python311",
   };
 
   const pythonArmLookup: { [key: string]: string } = {
     "python3.8": "Datadog-Python38-ARM",
     "python3.9": "Datadog-Python39-ARM",
     "python3.10": "Datadog-Python310-ARM",
+    "python3.11": "Datadog-Python311-ARM",
   };
 
   if (runtimeLookup[runtime] === RuntimeType.NODE) {
