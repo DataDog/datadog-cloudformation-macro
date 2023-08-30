@@ -247,13 +247,24 @@ export function getExtensionLayerArn(region: string, version: number, architectu
   const layerName = architectureToExtensionLayerName[architecture];
 
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
-
+  // ensure the extension layer is defined
+   if (layerName === undefined) {
+        errors.push(getMissingRuntimeLayerErrorMsg(architecture));
+        return;
+   }
   // if this is a GovCloud region, use the GovCloud lambda layer
   if (isGovCloud) {
     log.debug("GovCloud region detected, using GovCloud Lambda layer");
     return `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:${layerName}:${version}`;
   }
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
+}
+
+export function getMissingRuntimeLayerErrorMsg(architecture: string) {
+  return (
+    `Unable to provide an extension layer for the architecture: ${architecture}` +
+    `Please ensure that a supported architecture is being provided.`
+  );
 }
 
 export function getMissingLayerVersionErrorMsg(functionKey: string, formalRuntime: string, paramRuntime: string) {
