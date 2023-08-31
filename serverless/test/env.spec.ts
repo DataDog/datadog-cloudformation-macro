@@ -561,7 +561,7 @@ describe("validateParameters", () => {
     const errors = validateParameters(params);
     expect(
       errors.includes(
-        "Warning: Invalid site URL. Must be either datadoghq.com, datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com, or ddog-gov.com.",
+        "Warning: Invalid site URL. Must be either datadoghq.com, datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com, ap1.datadoghq.com, or ddog-gov.com.",
       ),
     ).toBe(true);
   });
@@ -624,6 +624,25 @@ describe("validateParameters", () => {
 
     const errors = validateParameters(params);
     expect(errors.includes("`apiKey` and `apiKMSKey` should not be set at the same time.")).toBe(true);
+  });
+
+  it("works with ap1", () => {
+    const params = {
+      addLayers: true,
+      apiKey: "1234",
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "ap1.datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+    };
+
+    const errors = validateParameters(params);
+    console.log({ errors });
+    expect(errors.length).toEqual(0);
   });
 });
 
