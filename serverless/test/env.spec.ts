@@ -630,7 +630,6 @@ describe("validateParameters", () => {
     const params = {
       addLayers: true,
       apiKey: "1234",
-      apiKMSKey: "5678",
       flushMetricsToLogs: true,
       logLevel: "info",
       site: "ap1.datadoghq.com",
@@ -642,6 +641,7 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
+    console.log({ errors });
     expect(errors.length).toEqual(0);
   });
 });
