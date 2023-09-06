@@ -183,8 +183,8 @@ export function applyLayers(
     if (extensionLayerVersion !== undefined) {
       log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
       // ensure the extension layer is defined
-      if (architectureToExtensionLayerName[architecture] === undefined) {
-        errors.push(getMissingRuntimeLayerErrorMsg(architecture));
+      if (architectureToExtensionLayerName[lamda.architecture] === undefined) {
+        errors.push(getMissingRuntimeLayerErrorMsg(lamba.architecture));
         return;
       }
       lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion, lambda.architecture);
@@ -263,7 +263,7 @@ export function getExtensionLayerArn(region: string, version: number, architectu
 
 export function getMissingRuntimeLayerErrorMsg(architecture: string) {
   return (
-    `Unable to provide an extension layer for the architecture: ${architecture}` +
+    `Unable to provide an extension layer for the architecture: ${architecture} ` +
     `Please ensure that a supported architecture is being provided.`
   );
 }
