@@ -183,8 +183,8 @@ export function applyLayers(
     if (extensionLayerVersion !== undefined) {
       log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
       // ensure the extension layer is defined
-      if (architectureToExtensionLayerName[lamda.architecture] === undefined) {
-        errors.push(getMissingRuntimeLayerErrorMsg(lamba.architecture));
+      if (architectureToExtensionLayerName[lambda.architecture] === undefined) {
+        errors.push(getMissingRuntimeLayerErrorMsg(lambda.architecture));
         return;
       }
       lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion, lambda.architecture);
