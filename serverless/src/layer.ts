@@ -42,6 +42,7 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "nodejs14.x": RuntimeType.NODE,
   "nodejs16.x": RuntimeType.NODE,
   "nodejs18.x": RuntimeType.NODE,
+  "nodejs20.x": RuntimeType.NODE,
   "python2.7": RuntimeType.PYTHON,
   "python3.6": RuntimeType.PYTHON,
   "python3.7": RuntimeType.PYTHON,
@@ -57,6 +58,7 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     "nodejs14.x": "Datadog-Node14-x",
     "nodejs16.x": "Datadog-Node16-x",
     "nodejs18.x": "Datadog-Node18-x",
+    "nodejs20.x": "Datadog-Node20-x",
   };
 
   const pythonLookup: { [key: string]: string } = {
