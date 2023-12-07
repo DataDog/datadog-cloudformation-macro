@@ -83,7 +83,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     go get github.com/github/hub
     ./tools/build_zip.sh "${VERSION}"
 
-    hub release create -a .macro/serverless-macro-${VERSION}.zip -m "serverless-macro-${VERSION}" serverless-macro-${VERSION}
+    gh release create serverless-macro${VERSION} .macro/serverless-macro-${VERSION}.zip --generate-notes
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
 else
