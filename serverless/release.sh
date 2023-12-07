@@ -51,10 +51,10 @@ if [ "$PROD_RELEASE" = true ] ; then
         exit 1
     fi
 
-    # Make sure we are on master
+    # Make sure we are on main
     BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    if [ $BRANCH != "master" ]; then
-        echo "Not on master, aborting"
+    if [ $BRANCH != "main" ]; then
+        echo "Not on main, aborting"
         exit 1
     fi
 
@@ -66,7 +66,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     fi
 
     # Get the latest code
-    git pull origin master
+    git pull origin main 
 
     # Bump version number
     echo "Bumping the current version number to the desired"
@@ -76,14 +76,14 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Commit version number changes to git
     git add src/ template.yml README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
-    git push origin master
+    git push origin main
 
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
     go get github.com/github/hub
     ./tools/build_zip.sh "${VERSION}"
 
-    hub release create -a .macro/serverless-macro-${VERSION}.zip -m "serverless-macro-${VERSION}" serverless-macro-${VERSION}
+    gh release create serverless-macro${VERSION} .macro/serverless-macro-${VERSION}.zip --generate-notes
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
 else

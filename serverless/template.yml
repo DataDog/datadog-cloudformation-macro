@@ -4,7 +4,7 @@ Transform: AWS::Serverless-2016-10-31
 Mappings:
   Constants:
     DatadogServerlessMacro:
-      Version: 0.7.2
+      Version: 0.9.0
 
 Parameters:
   FunctionName:
@@ -56,6 +56,7 @@ Resources:
           - Ref: FunctionName
           - Ref: AWS::NoValue
       Description: Processes a CloudFormation template to install Datadog Lambda layers for Python and Node.js Lambda functions.
+      Timeout: 10
       Handler: src/index.handler
       Runtime: nodejs16.x
       CodeUri:
@@ -117,7 +118,7 @@ Resources:
     Properties:
       Description: Copies Datadog CloudFormation macro zip to the destination S3 bucket
       Handler: index.handler
-      Runtime: python3.7
+      Runtime: python3.11
       Timeout: 300
       InlineCode: |
         import json
