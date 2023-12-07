@@ -62,6 +62,10 @@ describe("findLambdas", () => {
       Python310Function: mockFunctionResource("python3.10", ["x86_64"]),
       Python311Function: mockFunctionResource("python3.11", ["x86_64"]),
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
+      Java11Function: mockFunctionResource("java11", ["x86_64"]),
+      Java17Function: mockFunctionResource("java17", ["x86_64"]),
+      Java21Function: mockFunctionResource("java21", ["x86_64"]),
+      Dotnet6Function: mockFunctionResource("dotnet6", ["x86_64"]),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
     const lambdas = findLambdas(resources, { ValueRef: "nodejs14.x" });
@@ -78,6 +82,10 @@ describe("findLambdas", () => {
       mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python310Function", "python3.10", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python311Function", "python3.11", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Java11Function", "java11", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Java17Function", "java17", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Java21Function", "java21", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Dotnet6Function", "dotnet6", RuntimeType.DOTNET, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
@@ -199,6 +207,34 @@ describe("applyLayers", () => {
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python311-ARM:${pythonLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
+    ]);
+  });
+
+  it("applies the java and extension lambda layers", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "java21", RuntimeType.JAVA, "x86_64");
+    const region = "us-east-1";
+    const javaLayerVersion = 8;
+    const extensionLayerVersion = 49;
+    const errors = applyLayers(region, [lambda], undefined, javaLayerVersion, extensionLayerVersion);
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:dd-trace-java:${javaLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
+    ]);
+  });
+
+  it("applies the dotnet and extension lambda layers for arm", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "dotnet6", RuntimeType.DOTNET, "arm64", ArchitectureType.ARM64);
+    const region = "us-east-1";
+    const dotnetLayerVersion = 6;
+    const extensionLayerVersion = 6;
+    const errors = applyLayers(region, [lambda], undefined, dotnetLayerVersion, extensionLayerVersion);
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:dd-trace-dotnet-ARM:${dotnetLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
     ]);
   });

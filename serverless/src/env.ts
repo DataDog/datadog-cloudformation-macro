@@ -102,6 +102,9 @@ const ddProfilingEnabledEnvVar = "DD_PROFILING_ENABLED";
 const ddEncodeAuthorizerContextEnvVar = "DD_ENCODE_AUTHORIZER_CONTEXT";
 const ddDecodeAuthorizerContextEnvVar = "DD_DECODE_AUTHORIZER_CONTEXT";
 const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS";
+const lambdaExecWrapperEnvVar = "AWS_LAMBDA_EXEC_WRAPPER";
+
+const AWS_LAMBDA_EXEC_WRAPPER = "/opt/datadog_wrapper";
 
 export const defaultConfiguration: Configuration = {
   addLayers: true,
@@ -291,6 +294,10 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
         );
       }
       envVariables[apiKeySecretArnEnvVar] = config.apiKeySecretArn;
+    }
+
+    if (config.extensionLayerVersion && [RuntimeType.JAVA, RuntimeType.DOTNET].includes(runtimeLookup[lambda.runtime])) {
+      envVariables[lambdaExecWrapperEnvVar] = AWS_LAMBDA_EXEC_WRAPPER;
     }
 
     if (config.apiKMSKey !== undefined && envVariables[apiKeyKMSEnvVar] === undefined) {

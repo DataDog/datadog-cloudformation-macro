@@ -8,6 +8,8 @@ export const DD_GOV_ACCOUNT_ID = "002406178527";
 export enum RuntimeType {
   NODE,
   PYTHON,
+  JAVA,
+  DOTNET,
   UNSUPPORTED,
 }
 
@@ -49,9 +51,13 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.9": RuntimeType.PYTHON,
   "python3.10": RuntimeType.PYTHON,
   "python3.11": RuntimeType.PYTHON,
+  "dotnet6": RuntimeType.DOTNET,
+  "java11": RuntimeType.JAVA,
+  "java17": RuntimeType.JAVA,
+  "java21": RuntimeType.JAVA,
 };
 
-function runtimeToLayerName(runtime: string, architecture: string): string {
+function runtimeToLayerName(runtime: string, architecture: string): string | undefined {
   const nodeLookup: { [key: string]: string } = {
     "nodejs12.x": "Datadog-Node12-x",
     "nodejs14.x": "Datadog-Node14-x",
@@ -75,16 +81,32 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     "python3.10": "Datadog-Python310-ARM",
     "python3.11": "Datadog-Python311-ARM",
   };
+ 
 
   if (runtimeLookup[runtime] === RuntimeType.NODE) {
     return nodeLookup[runtime];
   }
 
-  if (runtimeLookup[runtime] === RuntimeType.PYTHON && architectureLookup[architecture] === ArchitectureType.ARM64) {
-    return pythonArmLookup[runtime];
+  if (runtimeLookup[runtime] === RuntimeType.PYTHON) {
+    if (architectureLookup[architecture] === ArchitectureType.ARM64) {
+      return pythonArmLookup[runtime];
+    } else {
+      return pythonLookup[runtime];
+    }
   }
 
-  return pythonLookup[runtime];
+  if (runtimeLookup[runtime] === RuntimeType.JAVA) {
+    return "dd-trace-java"
+  }
+
+  if (runtimeLookup[runtime] === RuntimeType.DOTNET) {
+    if (architectureLookup[architecture] === ArchitectureType.ARM64) {
+      return "dd-trace-dotnet-ARM"
+    } else {
+      return "dd-trace-dotnet"
+    }
+  }
+
 }
 
 /**

@@ -542,6 +542,88 @@ describe("setEnvConfiguration", () => {
       `\`apiKeySecretArn\` is not supported for Node runtimes (${lambda.properties.FunctionName}) when using Synchronous Metrics. Use either \`apiKey\` or \`apiKmsKey\`.`,
     );
   });
+
+  it("sets java vars with simple config and extension", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        Handler: "com.lambda_handler.Handler",
+        Runtime: "java21",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.JAVA,
+      runtime: "java21",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    const config = {
+      apiKey: "1234",
+      extensionLayerVersion: 13,
+      service: "my-service",
+      env: "test",
+      version: "1",
+      tags: "team:avengers,project:marvel",
+    };
+    setEnvConfiguration({ ...defaultConfiguration, ...config }, [lambda]);
+
+    expect(lambda.properties.Environment).toEqual({
+      Variables: {
+        DD_API_KEY: "1234",
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: true,
+        DD_SITE: "datadoghq.com",
+        DD_ENV: "test",
+        DD_SERVICE: "my-service",
+        DD_VERSION: "1",
+        DD_TAGS: "team:avengers,project:marvel",
+        DD_SERVERLESS_LOGS_ENABLED: true,
+        AWS_LAMBDA_EXEC_WRAPPER: "/opt/datadog_wrapper",
+      },
+    });
+  });
+
+  it("sets dotnet vars with simple config and extension", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        Handler: "Lambda::Lambda.Function::Handler",
+        Runtime: "dotnet6",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.DOTNET,
+      runtime: "dotnet6",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    const config = {
+      apiKey: "1234",
+      extensionLayerVersion: 13,
+      service: "my-service",
+      env: "test",
+      version: "1",
+      tags: "team:avengers,project:marvel",
+    };
+    setEnvConfiguration({ ...defaultConfiguration, ...config }, [lambda]);
+
+    expect(lambda.properties.Environment).toEqual({
+      Variables: {
+        DD_API_KEY: "1234",
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: true,
+        DD_SITE: "datadoghq.com",
+        DD_ENV: "test",
+        DD_SERVICE: "my-service",
+        DD_VERSION: "1",
+        DD_TAGS: "team:avengers,project:marvel",
+        DD_SERVERLESS_LOGS_ENABLED: true,
+        AWS_LAMBDA_EXEC_WRAPPER: "/opt/datadog_wrapper",
+      },
+    });
+  })
 });
 
 describe("validateParameters", () => {
