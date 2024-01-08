@@ -53,16 +53,13 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.12": RuntimeType.PYTHON,
 };
 
-function runtimeToLayerName(runtime: string, architecture: string): string {
-  const nodeLookup: { [key: string]: string } = {
+export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
+  [ArchitectureType.x86_64]: {
     "nodejs12.x": "Datadog-Node12-x",
     "nodejs14.x": "Datadog-Node14-x",
     "nodejs16.x": "Datadog-Node16-x",
     "nodejs18.x": "Datadog-Node18-x",
     "nodejs20.x": "Datadog-Node20-x",
-  };
-
-  const pythonLookup: { [key: string]: string } = {
     "python2.7": "Datadog-Python27",
     "python3.6": "Datadog-Python36",
     "python3.7": "Datadog-Python37",
@@ -71,25 +68,19 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     "python3.10": "Datadog-Python310",
     "python3.11": "Datadog-Python311",
     "python3.12": "Datadog-Python312",
-  };
-
-  const pythonArmLookup: { [key: string]: string } = {
+  },
+  [ArchitectureType.ARM64]: {
+    "nodejs12.x": "Datadog-Node12-x",
+    "nodejs14.x": "Datadog-Node14-x",
+    "nodejs16.x": "Datadog-Node16-x",
+    "nodejs18.x": "Datadog-Node18-x",
+    "nodejs20.x": "Datadog-Node20-x",
     "python3.8": "Datadog-Python38-ARM",
     "python3.9": "Datadog-Python39-ARM",
     "python3.10": "Datadog-Python310-ARM",
     "python3.11": "Datadog-Python311-ARM",
     "python3.12": "Datadog-Python312-ARM",
-  };
-
-  if (runtimeLookup[runtime] === RuntimeType.NODE) {
-    return nodeLookup[runtime];
   }
-
-  if (runtimeLookup[runtime] === RuntimeType.PYTHON && architectureLookup[architecture] === ArchitectureType.ARM64) {
-    return pythonArmLookup[runtime];
-  }
-
-  return pythonLookup[runtime];
 }
 
 /**
@@ -237,7 +228,7 @@ export function getNewLayers(layerArn: string, currentLayers: LambdaLayersProper
 }
 
 export function getLambdaLibraryLayerArn(region: string, version: number, runtime: string, architecture: string) {
-  const layerName = runtimeToLayerName(runtime, architecture);
+  const layerName = layerNameLookup[architectureLookup[architecture]][runtime];
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
   // if this is a GovCloud region, use the GovCloud lambda layer
