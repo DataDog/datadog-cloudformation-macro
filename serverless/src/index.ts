@@ -103,6 +103,8 @@ export const handler = async (event: InputEvent, _: any) => {
         lambdas,
         config.pythonLayerVersion,
         config.nodeLayerVersion,
+        config.dotnetLayerVersion,
+        config.javaLayerVersion,
         config.extensionLayerVersion,
       );
       if (errors.length > 0) {

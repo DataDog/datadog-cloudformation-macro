@@ -9,6 +9,10 @@ export interface Configuration {
   pythonLayerVersion?: number;
   // Node.js Lambda layer version
   nodeLayerVersion?: number;
+  // .Net Lambda Layer version
+  dotnetLayerVersion?: number;
+  // Java Lambda Layer version
+  javaLayerVersion?: number;
   // Datadog Lambda Extension layer version
   extensionLayerVersion?: number;
   // Datadog API Key, only necessary when using metrics without log forwarding
