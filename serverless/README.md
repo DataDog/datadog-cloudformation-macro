@@ -12,7 +12,7 @@ Datadog recommends the Serverless CloudFormation macro for customers using AWS S
 
 The macro automatically configures ingestion of metrics, traces, and logs from your serverless applications by:
 
-- Installing and configuring the Datadog Lambda Library and Lambda Extension for your [Python][1] and [Node.js][2] Lambda functions.
+- Installing and configuring the Datadog Lambda Library and Lambda Extension for your [Python][1], [Node.js][2], [.NET][9], and [Java][10] Lambda functions.
 - Enabling the collection of enhanced Lambda metrics and custom metrics from your Lambda functions.
 - Managing subscriptions from the Datadog Forwarder to your Lambda function log groups, if desired.
 
@@ -50,7 +50,7 @@ Transform:
     Parameters:
       stackName: !Ref "AWS::StackName"
       apiKey: "<DATADOG_API_KEY>"
-      pythonLayerVersion: "<LAYER_VERSION>" # Use nodeLayerVersion for Node.js
+      pythonLayerVersion: "<LAYER_VERSION>" # Use appropriate parameter for other runtimes
       extensionLayerVersion: "<LAYER_VERSION>"
       service: "<SERVICE>" # Optional
       env: "<ENV>" # Optional
@@ -88,7 +88,7 @@ Resources:
           - SetFunctionName
           - Ref: FunctionName
           - Ref: AWS::NoValue
-      Description: Processes a CloudFormation template to install Datadog Lambda layers for Python and Node.js Lambda functions.
+      Description: Processes a CloudFormation template to install Datadog Lambda layers for Lambda functions.
       Handler: src/index.handler
       ...
       Environment:
@@ -149,7 +149,7 @@ To further configure your plugin, use the following custom parameters:
 
 ## How it works
 
-This macro modifies your CloudFormation template to install the Datadog Lambda Library by attaching the Lambda Layers for [Node.js][2] and [Python][1] to your functions. It redirects to a replacement handler that initializes the Lambda Library without any required code changes.
+This macro modifies your CloudFormation template to install the Datadog Lambda Library by attaching the Lambda Layers for [Node.js][2], [Python][1], [.NET][9], and [Java][10] to your functions. It redirects to a replacement handler that initializes the Lambda Library without any required code changes.
 
 ## Troubleshooting
 
