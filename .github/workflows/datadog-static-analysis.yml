@@ -13,8 +13,7 @@ jobs:
       with:
         dd_api_key: ${{ secrets.DD_API_KEY }}
         dd_app_key: ${{ secrets.DD_APP_KEY }}
-        dd_service: my-python-app
+        dd_service: datadog-cloudformation-macro
         dd_site: datadoghq.com
         dd_env: ci
         cpu_count: 2
-          
