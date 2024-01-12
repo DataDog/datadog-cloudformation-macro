@@ -12,7 +12,7 @@ Datadog recommends the Serverless CloudFormation macro for customers using AWS S
 
 The macro automatically configures ingestion of metrics, traces, and logs from your serverless applications by:
 
-- Installing and configuring the Datadog Lambda Library and Lambda Extension for your [Python][1] and [Node.js][2] Lambda functions.
+- Installing and configuring the Datadog Lambda Library and Lambda Extension for your [Python][1], [Node.js][2], [.NET][9], and [Java][10] Lambda functions.
 - Enabling the collection of enhanced Lambda metrics and custom metrics from your Lambda functions.
 - Managing subscriptions from the Datadog Forwarder to your Lambda function log groups, if desired.
 
@@ -50,7 +50,7 @@ Transform:
     Parameters:
       stackName: !Ref "AWS::StackName"
       apiKey: "<DATADOG_API_KEY>"
-      pythonLayerVersion: "<LAYER_VERSION>" # Use nodeLayerVersion for Node.js
+      pythonLayerVersion: "<LAYER_VERSION>" # Use appropriate parameter for other runtimes
       extensionLayerVersion: "<LAYER_VERSION>"
       service: "<SERVICE>" # Optional
       env: "<ENV>" # Optional
@@ -88,7 +88,7 @@ Resources:
           - SetFunctionName
           - Ref: FunctionName
           - Ref: AWS::NoValue
-      Description: Processes a CloudFormation template to install Datadog Lambda layers for Python and Node.js Lambda functions.
+      Description: Processes a CloudFormation template to install Datadog Lambda layers for Lambda functions.
       Handler: src/index.handler
       ...
       Environment:
@@ -119,6 +119,8 @@ To further configure your plugin, use the following custom parameters:
 | `addLayers`                 | Whether to add the Lambda Layers or expect the user to bring their own. Defaults to true. When true, the Lambda Library version variables are also required. When false, you must include the Datadog Lambda library in your functions' deployment packages.                                                                                                                                                                                                                                        |
 | `pythonLayerVersion`        | Version of the Python Lambda layer to install, such as "21". Required if you are deploying at least one Lambda function written in Python and `addLayers` is true. Find the latest version number from [https://github.com/DataDog/datadog-lambda-python/releases][5].                                                                                                                                                                                                                              |
 | `nodeLayerVersion`          | Version of the Node.js Lambda layer to install, such as "29". Required if you are deploying at least one Lambda function written in Node.js and `addLayers` is true. Find the latest version number from [https://github.com/DataDog/datadog-lambda-js/releases][6].                                                                                                                                                                                                                                |
+| `dotnetLayerVersion`        | Version of the .NET Lambda layer to install, such as "14". Required if you are deploying at least one Lambda function written in .NET and `addLayers` is true. Find the latest version number from [https://github.com/DataDog/dd-trace-dotnet-aws-lambda-layer/releases][9].
+| `javaLayerVersion`        | Version of the Java Lambda layer to install, such as "12". Required if you are deploying at least one Lambda function written in Java and `addLayers` is true. Find the latest version number from [https://github.com/DataDog/datadog-lambda-java/releases][10].
 | `extensionLayerVersion`     | Version of the Datadog Lambda Extension layer to install, such as "5". When `extensionLayerVersion` is set, `apiKey` (or if encrypted, `apiKMSKey` or `apiKeySecretArn`) needs to be set as well. While using `extensionLayerVersion` do not set `forwarderArn`. Learn more about the Lambda extension [here][8].                                                                                                                                                                                   |
 | `forwarderArn`              | When set, the plugin will automatically subscribe the functions' log groups to the Datadog Forwarder. Alternatively, you can define the log subscription using the [AWS::Logs::SubscriptionFilter][7] resource. **Note**: The 'FunctionName' property must be defined for functions that are deployed for the first time because the macro needs the function name to create the log groups and subscription filters. 'FunctionName' must NOT contain any CloudFormation functions, such as `!Sub`. |
 | `stackName`                 | The name of the CloudFormation stack being deployed. Only required when a `forwarderArn` is provided and Lambda functions are dynamically named (when the `FunctionName` property isn't provided for a Lambda). For more information on how to add this parameter for SAM and CDK, see the examples below.                                                                                                                                                                                          |
@@ -147,7 +149,7 @@ To further configure your plugin, use the following custom parameters:
 
 ## How it works
 
-This macro modifies your CloudFormation template to install the Datadog Lambda Library by attaching the Lambda Layers for [Node.js][2] and [Python][1] to your functions. It redirects to a replacement handler that initializes the Lambda Library without any required code changes.
+This macro modifies your CloudFormation template to install the Datadog Lambda Library by attaching the Lambda Layers for [Node.js][2], [Python][1], [.NET][9], and [Java][10] to your functions. It redirects to a replacement handler that initializes the Lambda Library without any required code changes.
 
 ## Troubleshooting
 
@@ -216,3 +218,5 @@ For product feedback and questions, join the `#serverless` channel in the [Datad
 [6]: https://github.com/DataDog/datadog-lambda-js/releases
 [7]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-logs-subscriptionfilter.html
 [8]: https://docs.datadoghq.com/serverless/datadog_lambda_library/extension/
+[9]: https://github.com/DataDog/dd-trace-dotnet-aws-lambda-layer/releases
+[10]: https://github.com/DataDog/datadog-lambda-java/releases

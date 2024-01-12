@@ -6,6 +6,8 @@ export const DD_ACCOUNT_ID = "464622532012";
 export const DD_GOV_ACCOUNT_ID = "002406178527";
 
 export enum RuntimeType {
+  DOTNET,
+  JAVA,
   NODE,
   PYTHON,
   UNSUPPORTED,
@@ -38,6 +40,12 @@ const architectureToExtensionLayerName: { [key: string]: string } = {
 };
 
 export const runtimeLookup: { [key: string]: RuntimeType } = {
+  dotnet6: RuntimeType.DOTNET,
+  java11: RuntimeType.JAVA,
+  java17: RuntimeType.JAVA,
+  java21: RuntimeType.JAVA,
+  java8: RuntimeType.JAVA,
+  "java8.al2": RuntimeType.JAVA,
   "nodejs12.x": RuntimeType.NODE,
   "nodejs14.x": RuntimeType.NODE,
   "nodejs16.x": RuntimeType.NODE,
@@ -53,16 +61,19 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.12": RuntimeType.PYTHON,
 };
 
-function runtimeToLayerName(runtime: string, architecture: string): string {
-  const nodeLookup: { [key: string]: string } = {
+export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
+  [ArchitectureType.x86_64]: {
+    dotnet6: "dd-trace-dotnet",
+    java11: "dd-trace-java",
+    java17: "dd-trace-java",
+    java21: "dd-trace-java",
+    java8: "dd-trace-java",
+    "java8.al2": "dd-trace-java",
     "nodejs12.x": "Datadog-Node12-x",
     "nodejs14.x": "Datadog-Node14-x",
     "nodejs16.x": "Datadog-Node16-x",
     "nodejs18.x": "Datadog-Node18-x",
     "nodejs20.x": "Datadog-Node20-x",
-  };
-
-  const pythonLookup: { [key: string]: string } = {
     "python2.7": "Datadog-Python27",
     "python3.6": "Datadog-Python36",
     "python3.7": "Datadog-Python37",
@@ -71,26 +82,26 @@ function runtimeToLayerName(runtime: string, architecture: string): string {
     "python3.10": "Datadog-Python310",
     "python3.11": "Datadog-Python311",
     "python3.12": "Datadog-Python312",
-  };
-
-  const pythonArmLookup: { [key: string]: string } = {
+  },
+  [ArchitectureType.ARM64]: {
+    dotnet6: "dd-trace-dotnet-ARM",
+    java11: "dd-trace-java",
+    java17: "dd-trace-java",
+    java21: "dd-trace-java",
+    java8: "dd-trace-java",
+    "java8.al2": "dd-trace-java",
+    "nodejs12.x": "Datadog-Node12-x",
+    "nodejs14.x": "Datadog-Node14-x",
+    "nodejs16.x": "Datadog-Node16-x",
+    "nodejs18.x": "Datadog-Node18-x",
+    "nodejs20.x": "Datadog-Node20-x",
     "python3.8": "Datadog-Python38-ARM",
     "python3.9": "Datadog-Python39-ARM",
     "python3.10": "Datadog-Python310-ARM",
     "python3.11": "Datadog-Python311-ARM",
     "python3.12": "Datadog-Python312-ARM",
-  };
-
-  if (runtimeLookup[runtime] === RuntimeType.NODE) {
-    return nodeLookup[runtime];
-  }
-
-  if (runtimeLookup[runtime] === RuntimeType.PYTHON && architectureLookup[architecture] === ArchitectureType.ARM64) {
-    return pythonArmLookup[runtime];
-  }
-
-  return pythonLookup[runtime];
-}
+  },
+};
 
 /**
  * Parse through the Resources section of the provided CloudFormation template to find all lambda
@@ -151,6 +162,8 @@ export function applyLayers(
   lambdas: LambdaFunction[],
   pythonLayerVersion?: number,
   nodeLayerVersion?: number,
+  dotnetLayerVersion?: number,
+  javaLayerVersion?: number,
   extensionLayerVersion?: number,
 ) {
   const errors: string[] = [];
@@ -182,6 +195,28 @@ export function applyLayers(
 
       log.debug(`Setting Node Lambda layer for ${lambda.key}`);
       lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, nodeLayerVersion, lambda.runtime, lambda.architecture);
+      addLayer(lambdaLibraryLayerArn, lambda);
+    }
+
+    if (lambda.runtimeType === RuntimeType.DOTNET) {
+      if (dotnetLayerVersion === undefined) {
+        errors.push(getMissingLayerVersionErrorMsg(lambda.key, ".Net", "dotnet"));
+        return;
+      }
+
+      log.debug(`Setting .NET Lambda layer for ${lambda.key}`);
+      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, dotnetLayerVersion, lambda.runtime, lambda.architecture);
+      addLayer(lambdaLibraryLayerArn, lambda);
+    }
+
+    if (lambda.runtimeType === RuntimeType.JAVA) {
+      if (javaLayerVersion === undefined) {
+        errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Java", "java"));
+        return;
+      }
+
+      log.debug(`Setting Java Lambda layer for ${lambda.key}`);
+      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, javaLayerVersion, lambda.runtime, lambda.architecture);
       addLayer(lambdaLibraryLayerArn, lambda);
     }
 
@@ -237,7 +272,7 @@ export function getNewLayers(layerArn: string, currentLayers: LambdaLayersProper
 }
 
 export function getLambdaLibraryLayerArn(region: string, version: number, runtime: string, architecture: string) {
-  const layerName = runtimeToLayerName(runtime, architecture);
+  const layerName = layerNameLookup[architectureLookup[architecture]][runtime];
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
   // if this is a GovCloud region, use the GovCloud lambda layer

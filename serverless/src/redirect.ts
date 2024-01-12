@@ -1,5 +1,7 @@
 import { LambdaFunction, RuntimeType } from "./layer";
 
+export const AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR = "AWS_LAMBDA_EXEC_WRAPPER";
+export const AWS_LAMBDA_EXEC_WRAPPER = "/opt/datadog_wrapper";
 export const DD_HANDLER_ENV_VAR = "DD_LAMBDA_HANDLER";
 export const PYTHON_HANDLER = "datadog_lambda.handler.handler";
 export const JS_HANDLER_WITH_LAYERS = "/opt/nodejs/node_modules/datadog-lambda-js/handler.handler";
@@ -13,6 +15,11 @@ export const JS_HANDLER = "node_modules/datadog-lambda-js/dist/handler.handler";
  */
 export function redirectHandlers(lambdas: LambdaFunction[], addLayers: boolean) {
   lambdas.forEach((lambda) => {
+    if (lambda.runtimeType == RuntimeType.DOTNET || lambda.runtimeType == RuntimeType.JAVA) {
+      setEnvDatadogWrapper(lambda);
+      return;
+    }
+
     setEnvDatadogHandler(lambda);
     const handler = getDDHandler(lambda.runtimeType, addLayers);
     if (handler === undefined) {
@@ -40,6 +47,16 @@ function setEnvDatadogHandler(lambda: LambdaFunction) {
 
   const originalHandler = lambda.properties.Handler;
   environmentVariables[DD_HANDLER_ENV_VAR] = originalHandler;
+
+  environment.Variables = environmentVariables;
+  lambda.properties.Environment = environment;
+}
+
+function setEnvDatadogWrapper(lambda: LambdaFunction) {
+  const environment = lambda.properties.Environment ?? {};
+  const environmentVariables = environment.Variables ?? {};
+
+  environmentVariables[AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR] = AWS_LAMBDA_EXEC_WRAPPER;
 
   environment.Variables = environmentVariables;
   lambda.properties.Environment = environment;
