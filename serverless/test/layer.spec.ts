@@ -12,7 +12,7 @@ import {
   getNewLayers,
 } from "../src/layer";
 
-function mockFunctionResource(runtime: string | { Ref: string }, architectures?: string[]) {
+function mockFunctionResource(runtime: string | { Ref: string }, architectures?: string[], packageType?: string) {
   return {
     Type: "AWS::Lambda::Function",
     Properties: {
@@ -20,6 +20,7 @@ function mockFunctionResource(runtime: string | { Ref: string }, architectures?:
       Role: "role-arn",
       Runtime: runtime,
       Architectures: architectures,
+      ...(packageType && { PackageType: packageType }), // set PackageType property if available
     },
   };
 }
@@ -98,6 +99,17 @@ describe("findLambdas", () => {
       mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
       }),
+    ]);
+  });
+
+  it("skips lambdas that are image based", () => {
+    const resources = {
+      Python39Function: mockFunctionResource("python3.9", ["x86_64"]),
+      Python39ImageFunction: mockFunctionResource("python3.9", ["x86_64"], "Image"),
+    };
+    const lambdas = findLambdas(resources, {});
+    expect(lambdas).toEqual([
+      mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
     ]);
   });
 });
