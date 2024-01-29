@@ -120,6 +120,12 @@ export function findLambdas(resources: Resources, templateParameterValues: Param
       }
 
       const properties: FunctionProperties = resource.Properties;
+
+      if (properties.PackageType == "Image") {
+        log.debug(`Resource ${key} is an image based Lambda function, skipping...`);
+        return;
+      }
+
       const runtime = useOrRef(properties.Runtime, templateParameterValues);
       const architecture = useOrRef(properties.Architectures?.[0], templateParameterValues) ?? "x86_64";
 

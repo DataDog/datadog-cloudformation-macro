@@ -55,6 +55,7 @@ export interface FunctionProperties {
   TracingConfig?: { [key: string]: string };
   FunctionName?: string;
   Architectures?: [string];
+  PackageType?: string;
 }
 
 export const handler = async (event: InputEvent, _: any) => {
