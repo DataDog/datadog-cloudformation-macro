@@ -41,6 +41,7 @@ const architectureToExtensionLayerName: { [key: string]: string } = {
 
 export const runtimeLookup: { [key: string]: RuntimeType } = {
   dotnet6: RuntimeType.DOTNET,
+  dotnet8: RuntimeType.DOTNET,
   java11: RuntimeType.JAVA,
   java17: RuntimeType.JAVA,
   java21: RuntimeType.JAVA,
@@ -64,6 +65,7 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
 export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
   [ArchitectureType.x86_64]: {
     dotnet6: "dd-trace-dotnet",
+    dotnet8: "dd-trace-dotnet",
     java11: "dd-trace-java",
     java17: "dd-trace-java",
     java21: "dd-trace-java",
@@ -85,6 +87,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
   },
   [ArchitectureType.ARM64]: {
     dotnet6: "dd-trace-dotnet-ARM",
+    dotnet8: "dd-trace-dotnet-ARM",
     java11: "dd-trace-java",
     java17: "dd-trace-java",
     java21: "dd-trace-java",
