@@ -52,6 +52,7 @@ describe("findLambdas", () => {
   it("finds lambdas and correctly assigns runtime types", () => {
     const resources = {
       Dotnet6Function: mockFunctionResource("dotnet6", ["x86_64"]),
+      Dotnet8Function: mockFunctionResource("dotnet8", ["x86_64"]),
       Java11Function: mockFunctionResource("java11", ["x86_64"]),
       Java17Function: mockFunctionResource("java17", ["x86_64"]),
       Java21Function: mockFunctionResource("java21", ["x86_64"]),
@@ -77,6 +78,7 @@ describe("findLambdas", () => {
 
     expect(lambdas).toEqual([
       mockLambdaFunction("Dotnet6Function", "dotnet6", RuntimeType.DOTNET, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Dotnet8Function", "dotnet8", RuntimeType.DOTNET, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java11Function", "java11", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java17Function", "java17", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java21Function", "java21", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
@@ -264,7 +266,7 @@ describe("applyLayers", () => {
   });
 
   it("applies the dotnet and extension lambda layers", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "dotnet6", RuntimeType.DOTNET, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "dotnet8", RuntimeType.DOTNET, "x86_64");
     const region = "us-east-1";
     const dotnetLayerVersion = 14;
     const extensionLayerVersion = 6;
@@ -286,7 +288,7 @@ describe("applyLayers", () => {
   });
 
   it("applies the dotnet and extension lambda layers for arm", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "dotnet6", RuntimeType.DOTNET, "arm64", ArchitectureType.ARM64);
+    const lambda = mockLambdaFunction("FunctionKey", "dotnet8", RuntimeType.DOTNET, "arm64", ArchitectureType.ARM64);
     const region = "us-east-1";
     const dotnetLayerVersion = 14;
     const extensionLayerVersion = 6;
