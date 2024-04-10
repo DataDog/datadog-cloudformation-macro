@@ -78,7 +78,7 @@ describe("findLambdas", () => {
 
     expect(lambdas).toEqual([
       mockLambdaFunction("Dotnet6Function", "dotnet6", RuntimeType.DOTNET, "x86_64", ArchitectureType.x86_64),
-      mockLambdaFunction("Dotnet6Function", "dotnet8", RuntimeType.DOTNET, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Dotnet8Function", "dotnet8", RuntimeType.DOTNET, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java11Function", "java11", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java17Function", "java17", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java21Function", "java21", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
