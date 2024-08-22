@@ -58,7 +58,7 @@ Resources:
       Description: Processes a CloudFormation template to install Datadog Lambda layers for Python and Node.js Lambda functions.
       Timeout: 10
       Handler: src/index.handler
-      Runtime: nodejs20.x
+      Runtime: nodejs18.x
       CodeUri:
         Bucket: !Ref MacroFunctionZipsBucket
         Key:
