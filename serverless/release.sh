@@ -80,7 +80,6 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
-    go get github.com/github/hub
     ./tools/build_zip.sh "${VERSION}"
 
     gh release create serverless-macro-${VERSION} .macro/serverless-macro-${VERSION}.zip --generate-notes
