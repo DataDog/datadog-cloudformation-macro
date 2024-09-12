@@ -183,22 +183,9 @@ describe("applyLayers", () => {
     const region = "us-east-1";
     const nodeLayerVersion = 25;
     const extensionLayerVersion = 6;
-    const errors = applyLayers(
-      region,
-      [lambda],
-      undefined,
-      nodeLayerVersion,
-      undefined,
-      undefined,
-    );
+    const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion, undefined, undefined);
 
-    errors.concat(
-      applyExtensionLayer(
-        region,
-        [lambda],
-        extensionLayerVersion,
-      )
-    );
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
@@ -212,22 +199,9 @@ describe("applyLayers", () => {
     const region = "us-east-1";
     const nodeLayerVersion = 25;
     const extensionLayerVersion = 6;
-    const errors = applyLayers(
-      region,
-      [lambda],
-      undefined,
-      nodeLayerVersion,
-      undefined,
-      undefined,
-    );
+    const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion, undefined, undefined);
 
-    errors.concat(
-      applyExtensionLayer(
-        region,
-        [lambda],
-        extensionLayerVersion,
-      )
-    );
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
@@ -241,22 +215,9 @@ describe("applyLayers", () => {
     const region = "us-east-1";
     const pythonLayerVersion = 25;
     const extensionLayerVersion = 6;
-    const errors = applyLayers(
-      region,
-      [lambda],
-      pythonLayerVersion,
-      undefined,
-      undefined,
-      undefined,
-    );
-    
-    errors.concat(
-      applyExtensionLayer(
-        region,
-        [lambda],
-        extensionLayerVersion,
-      )
-    );
+    const errors = applyLayers(region, [lambda], pythonLayerVersion, undefined, undefined, undefined);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
@@ -270,22 +231,9 @@ describe("applyLayers", () => {
     const region = "us-east-1";
     const pythonLayerVersion = 25;
     const extensionLayerVersion = 6;
-    const errors = applyLayers(
-      region,
-      [lambda],
-      pythonLayerVersion,
-      undefined,
-      undefined,
-      undefined,
-    );
-    
-    errors.concat(
-      applyExtensionLayer(
-        region,
-        [lambda],
-        extensionLayerVersion,
-      )
-    );
+    const errors = applyLayers(region, [lambda], pythonLayerVersion, undefined, undefined, undefined);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
@@ -299,22 +247,9 @@ describe("applyLayers", () => {
     const region = "us-east-1";
     const dotnetLayerVersion = 14;
     const extensionLayerVersion = 6;
-    const errors = applyLayers(
-      region,
-      [lambda],
-      undefined,
-      undefined,
-      dotnetLayerVersion,
-      undefined,
-    );
+    const errors = applyLayers(region, [lambda], undefined, undefined, dotnetLayerVersion, undefined);
 
-    errors.concat(
-      applyExtensionLayer(
-        region,
-        [lambda],
-        extensionLayerVersion,
-      )
-    );
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
@@ -328,22 +263,9 @@ describe("applyLayers", () => {
     const region = "us-east-1";
     const dotnetLayerVersion = 14;
     const extensionLayerVersion = 6;
-    const errors = applyLayers(
-      region,
-      [lambda],
-      undefined,
-      undefined,
-      dotnetLayerVersion,
-      undefined,
-    );
-    
-    errors.concat(
-      applyExtensionLayer(
-        region,
-        [lambda],
-        extensionLayerVersion,
-      )
-    );
+    const errors = applyLayers(region, [lambda], undefined, undefined, dotnetLayerVersion, undefined);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
@@ -357,22 +279,9 @@ describe("applyLayers", () => {
     const region = "us-east-1";
     const javaLayerVersion = 12;
     const extensionLayerVersion = 6;
-    const errors = applyLayers(
-      region,
-      [lambda],
-      undefined,
-      undefined,
-      undefined,
-      javaLayerVersion,
-    );
-    
-    errors.concat(
-      applyExtensionLayer(
-        region,
-        [lambda],
-        extensionLayerVersion,
-      )
-    );
+    const errors = applyLayers(region, [lambda], undefined, undefined, undefined, javaLayerVersion);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
@@ -386,22 +295,9 @@ describe("applyLayers", () => {
     const region = "us-east-1";
     const javaLayerVersion = 12;
     const extensionLayerVersion = 6;
-    const errors = applyLayers(
-      region,
-      [lambda],
-      undefined,
-      undefined,
-      undefined,
-      javaLayerVersion,
-    );
-    
-    errors.concat(
-      applyExtensionLayer(
-        region,
-        [lambda],
-        extensionLayerVersion,
-      )
-    );
+    const errors = applyLayers(region, [lambda], undefined, undefined, undefined, javaLayerVersion);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([

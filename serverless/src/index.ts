@@ -117,19 +117,15 @@ export const handler = async (event: InputEvent, _: any) => {
       }
     }
 
-    if(config.addExtension){
-      errors = applyExtensionLayer(
-        region,
-        lambdas,
-        config.extensionLayerVersion,
-      );
-      if(errors.length > 0){
+    if (config.addExtension) {
+      errors = applyExtensionLayer(region, lambdas, config.extensionLayerVersion);
+      if (errors.length > 0) {
         return {
           requestId: event.requestId,
           status: FAILURE,
           fragment,
-          errorMessage: errors.join("\n")
-        }
+          errorMessage: errors.join("\n"),
+        };
       }
     }
 

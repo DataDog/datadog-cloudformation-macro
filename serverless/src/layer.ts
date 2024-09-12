@@ -230,11 +230,7 @@ export function applyLayers(
   return errors;
 }
 
-export function applyExtensionLayer(
-  region: string, 
-  lambdas : LambdaFunction[],
-  extensionLayerVersion? : number,
-) {
+export function applyExtensionLayer(region: string, lambdas: LambdaFunction[], extensionLayerVersion?: number) {
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
     let lambdaExtensionLayerArn;
