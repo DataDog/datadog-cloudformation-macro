@@ -5,7 +5,7 @@ import log from "loglevel";
 export interface Configuration {
   // Whether to add the Datadog Lambda Library layers, or expect the users to bring their own
   addLayers: boolean;
-  // Whether to add the Datadog Extention Library layer
+  // Whether to add the Datadog Extension Library layer
   addExtension: boolean;
   // Python Lambda layer version
   pythonLayerVersion?: number;
