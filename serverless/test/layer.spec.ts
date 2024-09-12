@@ -3,6 +3,7 @@ import {
   LambdaFunction,
   RuntimeType,
   applyLayers,
+  applyExtensionLayer,
   DD_ACCOUNT_ID,
   DD_GOV_ACCOUNT_ID,
   getMissingLayerVersionErrorMsg,
@@ -189,7 +190,14 @@ describe("applyLayers", () => {
       nodeLayerVersion,
       undefined,
       undefined,
-      extensionLayerVersion,
+    );
+
+    errors.concat(
+      applyExtensionLayer(
+        region,
+        [lambda],
+        extensionLayerVersion,
+      )
     );
 
     expect(errors.length).toEqual(0);
@@ -211,7 +219,14 @@ describe("applyLayers", () => {
       nodeLayerVersion,
       undefined,
       undefined,
-      extensionLayerVersion,
+    );
+
+    errors.concat(
+      applyExtensionLayer(
+        region,
+        [lambda],
+        extensionLayerVersion,
+      )
     );
 
     expect(errors.length).toEqual(0);
@@ -233,7 +248,14 @@ describe("applyLayers", () => {
       undefined,
       undefined,
       undefined,
-      extensionLayerVersion,
+    );
+    
+    errors.concat(
+      applyExtensionLayer(
+        region,
+        [lambda],
+        extensionLayerVersion,
+      )
     );
 
     expect(errors.length).toEqual(0);
@@ -255,7 +277,14 @@ describe("applyLayers", () => {
       undefined,
       undefined,
       undefined,
-      extensionLayerVersion,
+    );
+    
+    errors.concat(
+      applyExtensionLayer(
+        region,
+        [lambda],
+        extensionLayerVersion,
+      )
     );
 
     expect(errors.length).toEqual(0);
@@ -277,7 +306,14 @@ describe("applyLayers", () => {
       undefined,
       dotnetLayerVersion,
       undefined,
-      extensionLayerVersion,
+    );
+
+    errors.concat(
+      applyExtensionLayer(
+        region,
+        [lambda],
+        extensionLayerVersion,
+      )
     );
 
     expect(errors.length).toEqual(0);
@@ -299,7 +335,14 @@ describe("applyLayers", () => {
       undefined,
       dotnetLayerVersion,
       undefined,
-      extensionLayerVersion,
+    );
+    
+    errors.concat(
+      applyExtensionLayer(
+        region,
+        [lambda],
+        extensionLayerVersion,
+      )
     );
 
     expect(errors.length).toEqual(0);
@@ -321,7 +364,14 @@ describe("applyLayers", () => {
       undefined,
       undefined,
       javaLayerVersion,
-      extensionLayerVersion,
+    );
+    
+    errors.concat(
+      applyExtensionLayer(
+        region,
+        [lambda],
+        extensionLayerVersion,
+      )
     );
 
     expect(errors.length).toEqual(0);
@@ -343,8 +393,16 @@ describe("applyLayers", () => {
       undefined,
       undefined,
       javaLayerVersion,
-      extensionLayerVersion,
     );
+    
+    errors.concat(
+      applyExtensionLayer(
+        region,
+        [lambda],
+        extensionLayerVersion,
+      )
+    );
+    
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
