@@ -5,6 +5,8 @@ import log from "loglevel";
 export interface Configuration {
   // Whether to add the Datadog Lambda Library layers, or expect the users to bring their own
   addLayers: boolean;
+  // Whether to add the Datadog Extention Library layer
+  addExtension: boolean;
   // Python Lambda layer version
   pythonLayerVersion?: number;
   // Node.js Lambda layer version
@@ -109,6 +111,7 @@ const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS
 
 export const defaultConfiguration: Configuration = {
   addLayers: true,
+  addExtension: true,
   flushMetricsToLogs: true,
   logLevel: undefined,
   site: "datadoghq.com",

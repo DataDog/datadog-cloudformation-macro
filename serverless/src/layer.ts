@@ -173,7 +173,6 @@ export function applyLayers(
   nodeLayerVersion?: number,
   dotnetLayerVersion?: number,
   javaLayerVersion?: number,
-  extensionLayerVersion?: number,
 ) {
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
@@ -183,7 +182,6 @@ export function applyLayers(
     }
 
     let lambdaLibraryLayerArn;
-    let lambdaExtensionLayerArn;
 
     if (lambda.runtimeType === RuntimeType.PYTHON) {
       if (pythonLayerVersion === undefined) {
@@ -228,6 +226,18 @@ export function applyLayers(
       lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, javaLayerVersion, lambda.runtime, lambda.architecture);
       addLayer(lambdaLibraryLayerArn, lambda);
     }
+  });
+  return errors;
+}
+
+export function applyExtensionLayer(
+  region: string, 
+  lambdas : LambdaFunction[],
+  extensionLayerVersion? : number,
+) {
+  const errors: string[] = [];
+  lambdas.forEach((lambda) => {
+    let lambdaExtensionLayerArn;
 
     if (extensionLayerVersion !== undefined) {
       log.debug(`Setting Lambda Extension layer for ${lambda.key}`);

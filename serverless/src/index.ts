@@ -1,5 +1,5 @@
 import { getConfigFromCfnMappings, getConfigFromCfnParams, setEnvConfiguration, validateParameters } from "./env";
-import { findLambdas, applyLayers, LambdaFunction } from "./layer";
+import { findLambdas, applyLayers, applyExtensionLayer, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError, TracingMode } from "./tracing";
 import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "./tags";
 import { redirectHandlers } from "./redirect";
@@ -106,7 +106,6 @@ export const handler = async (event: InputEvent, _: any) => {
         config.nodeLayerVersion,
         config.dotnetLayerVersion,
         config.javaLayerVersion,
-        config.extensionLayerVersion,
       );
       if (errors.length > 0) {
         return {
@@ -115,6 +114,22 @@ export const handler = async (event: InputEvent, _: any) => {
           fragment,
           errorMessage: errors.join("\n"),
         };
+      }
+    }
+
+    if(config.addExtension){
+      errors = applyExtensionLayer(
+        region,
+        lambdas,
+        config.extensionLayerVersion,
+      );
+      if(errors.length > 0){
+        return {
+          requestId: event.requestId,
+          status: FAILURE,
+          fragment,
+          errorMessage: errors.join("\n")
+        }
       }
     }
 
