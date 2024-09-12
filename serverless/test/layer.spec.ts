@@ -402,7 +402,6 @@ describe("applyLayers", () => {
         extensionLayerVersion,
       )
     );
-    
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
