@@ -173,7 +173,6 @@ export function applyLayers(
   nodeLayerVersion?: number,
   dotnetLayerVersion?: number,
   javaLayerVersion?: number,
-  extensionLayerVersion?: number,
 ) {
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
@@ -183,7 +182,6 @@ export function applyLayers(
     }
 
     let lambdaLibraryLayerArn;
-    let lambdaExtensionLayerArn;
 
     if (lambda.runtimeType === RuntimeType.PYTHON) {
       if (pythonLayerVersion === undefined) {
@@ -228,12 +226,23 @@ export function applyLayers(
       lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, javaLayerVersion, lambda.runtime, lambda.architecture);
       addLayer(lambdaLibraryLayerArn, lambda);
     }
+  });
+  return errors;
+}
 
-    if (extensionLayerVersion !== undefined) {
-      log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
-      lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion, lambda.architecture);
-      addLayer(lambdaExtensionLayerArn, lambda);
+export function applyExtensionLayer(region: string, lambdas: LambdaFunction[], extensionLayerVersion?: number) {
+  const errors: string[] = [];
+  lambdas.forEach((lambda) => {
+    let lambdaExtensionLayerArn;
+
+    if (extensionLayerVersion === undefined) {
+      errors.push(getMissingExtensionLayerVersionErrorMsg(lambda.key));
+      return;
     }
+
+    log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
+    lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion, lambda.architecture);
+    addLayer(lambdaExtensionLayerArn, lambda);
   });
   return errors;
 }
@@ -309,5 +318,12 @@ export function getMissingLayerVersionErrorMsg(functionKey: string, formalRuntim
   return (
     `Resource ${functionKey} has a ${formalRuntime} runtime, but no ${formalRuntime} Lambda Library version was provided. ` +
     `Please add the '${paramRuntime}LayerVersion' parameter for the Datadog serverless macro.`
+  );
+}
+
+export function getMissingExtensionLayerVersionErrorMsg(functionKey: string) {
+  return (
+    `Resource ${functionKey} has been configured to apply the extension laybe but no extension version was provided. ` +
+    `Please add the 'extensionLayerVersion' parameter for the Datadog serverless macro`
   );
 }

@@ -33,6 +33,7 @@ describe("getConfig", () => {
     const config = getConfigFromCfnParams(params);
     expect(config).toEqual({
       addLayers: true,
+      addExtension: true,
       flushMetricsToLogs: true,
       site: "my-site",
       enableXrayTracing: false,
@@ -62,6 +63,7 @@ describe("getConfig", () => {
       const config = getConfigFromEnvVars();
       expect(config).toEqual({
         addLayers: true,
+        addExtension: true,
         flushMetricsToLogs: false,
         logLevel: undefined,
         site: "datadoghq.com",
@@ -89,6 +91,7 @@ describe("getConfig", () => {
       const config = getConfigFromCfnParams(params);
       expect(config).toEqual({
         addLayers: true,
+        addExtension: true,
         flushMetricsToLogs: false,
         site: "my-site",
         enableXrayTracing: false,
@@ -199,6 +202,7 @@ describe("setEnvConfiguration", () => {
     };
     const config = {
       addLayers: false,
+      addExtension: false,
       apiKey: "1234",
       apiKMSKey: "5678",
       site: "datadoghq.eu",
@@ -265,6 +269,7 @@ describe("setEnvConfiguration", () => {
     };
     const config = {
       addLayers: false,
+      addExtension: false,
       apiKey: "1234",
       apiKMSKey: "5678",
       site: "datadoghq.eu",
@@ -350,6 +355,7 @@ describe("setEnvConfiguration", () => {
     };
     const config = {
       addLayers: false,
+      addExtension: false,
       apiKey: "abcd",
       apiKMSKey: "efgh",
       site: "datadoghq.com",
@@ -396,6 +402,7 @@ describe("setEnvConfiguration", () => {
     };
     const config = {
       addLayers: false,
+      addExtension: false,
       apiKey: "1234",
       apiKMSKey: "5678",
       site: "datadoghq.eu",
@@ -438,6 +445,7 @@ describe("setEnvConfiguration", () => {
     };
     const config = {
       addLayers: false,
+      addExtension: false,
       apiKey: "1234",
       apiKMSKey: "5678",
       site: "datadoghq.eu",
@@ -482,6 +490,7 @@ describe("setEnvConfiguration", () => {
     };
     const config = {
       addLayers: false,
+      addExtension: false,
       apiKeySecretArn: "some-resource:from:aws:secrets-manager:arn",
       site: "datadoghq.eu",
       logLevel: "info",
@@ -525,6 +534,7 @@ describe("setEnvConfiguration", () => {
     };
     const config = {
       addLayers: false,
+      addExtension: false,
       apiKeySecretArn: "some-resource:from:aws:secrets-manager:arn",
       site: "datadoghq.eu",
       logLevel: "info",
@@ -548,6 +558,7 @@ describe("validateParameters", () => {
   it("returns an error when given an invalid site url", () => {
     const params = {
       addLayers: true,
+      addExtension: false,
       flushMetricsToLogs: true,
       logLevel: "info",
       site: "datacathq.com",
@@ -569,6 +580,7 @@ describe("validateParameters", () => {
   it("returns an error when extensionLayerVersion and forwarderArn are set", () => {
     const params = {
       addLayers: true,
+      addExtension: false,
       flushMetricsToLogs: true,
       logLevel: "info",
       site: "datadoghq.com",
@@ -585,9 +597,31 @@ describe("validateParameters", () => {
     expect(errors.includes("`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.")).toBe(true);
   });
 
+  it("returns an error when extensionLayer is true without setting extensionLayerVersion", () => {
+    const params = {
+      addLayers: true,
+      addExtension: true,
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      forwarderArn: "test-forwarder",
+      captureLambdaPayload: false,
+    };
+
+    const errors = validateParameters(params);
+    expect(errors.includes("Please add the 'extensionLayerVersion' parameter for the Datadog serverless macro")).toBe(
+      true,
+    );
+  });
+
   it("returns an error when extensionLayerVersion is set but neither apiKey nor apiKMSKey is set", () => {
     const params = {
       addLayers: true,
+      addExtension: true,
       flushMetricsToLogs: true,
       logLevel: "info",
       site: "datadoghq.com",
@@ -610,6 +644,7 @@ describe("validateParameters", () => {
   it("returns an error when multiple api keys are set", () => {
     const params = {
       addLayers: true,
+      addExtension: false,
       apiKey: "1234",
       apiKMSKey: "5678",
       flushMetricsToLogs: true,
@@ -629,6 +664,7 @@ describe("validateParameters", () => {
   it("works with ap1", () => {
     const params = {
       addLayers: true,
+      addExtension: false,
       apiKey: "1234",
       flushMetricsToLogs: true,
       logLevel: "info",
@@ -651,6 +687,7 @@ describe("checkForMultipleApiKeys", () => {
     expect(
       checkForMultipleApiKeys({
         addLayers: false,
+        addExtension: false,
         apiKey: "1234",
         apiKMSKey: "5678",
         logLevel: "debug",
@@ -669,6 +706,7 @@ describe("checkForMultipleApiKeys", () => {
     expect(
       checkForMultipleApiKeys({
         addLayers: false,
+        addExtension: false,
         apiKey: "5678",
         apiKeySecretArn: "some-resource:from:aws:secrets-manager:arn",
         logLevel: "debug",
@@ -687,6 +725,7 @@ describe("checkForMultipleApiKeys", () => {
     expect(
       checkForMultipleApiKeys({
         addLayers: false,
+        addExtension: false,
         apiKeySecretArn: "some-resource:from:aws:secrets-manager:arn",
         apiKMSKey: "5678",
         logLevel: "debug",
@@ -705,6 +744,7 @@ describe("checkForMultipleApiKeys", () => {
     expect(
       checkForMultipleApiKeys({
         addLayers: false,
+        addExtension: false,
         apiKey: "1234",
         apiKeySecretArn: "some-resource:from:aws:secrets-manager:arn",
         apiKMSKey: "5678",
