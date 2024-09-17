@@ -269,7 +269,7 @@ describe("setEnvConfiguration", () => {
     };
     const config = {
       addLayers: false,
-      addExtension: true,
+      addExtension: false,
       apiKey: "1234",
       apiKMSKey: "5678",
       site: "datadoghq.eu",
@@ -558,7 +558,7 @@ describe("validateParameters", () => {
   it("returns an error when given an invalid site url", () => {
     const params = {
       addLayers: true,
-      addExtension: true,
+      addExtension: false,
       flushMetricsToLogs: true,
       logLevel: "info",
       site: "datacathq.com",
@@ -580,7 +580,7 @@ describe("validateParameters", () => {
   it("returns an error when extensionLayerVersion and forwarderArn are set", () => {
     const params = {
       addLayers: true,
-      addExtension: true,
+      addExtension: false,
       flushMetricsToLogs: true,
       logLevel: "info",
       site: "datadoghq.com",
@@ -595,6 +595,27 @@ describe("validateParameters", () => {
 
     const errors = validateParameters(params);
     expect(errors.includes("`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.")).toBe(true);
+  });
+
+  it("returns an error when extensionLayer is true without setting extensionLayerVersion", () => {
+    const params = {
+      addLayers: true,
+      addExtension: true,
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      forwarderArn: "test-forwarder",
+      captureLambdaPayload: false,
+    };
+
+    const errors = validateParameters(params);
+    expect(errors.includes("Please add the 'extensionLayerVersion' parameter for the Datadog serverless macro")).toBe(
+      true,
+    );
   });
 
   it("returns an error when extensionLayerVersion is set but neither apiKey nor apiKMSKey is set", () => {
@@ -623,7 +644,7 @@ describe("validateParameters", () => {
   it("returns an error when multiple api keys are set", () => {
     const params = {
       addLayers: true,
-      addExtension: true,
+      addExtension: false,
       apiKey: "1234",
       apiKMSKey: "5678",
       flushMetricsToLogs: true,
@@ -643,7 +664,7 @@ describe("validateParameters", () => {
   it("works with ap1", () => {
     const params = {
       addLayers: true,
-      addExtension: true,
+      addExtension: false,
       apiKey: "1234",
       flushMetricsToLogs: true,
       logLevel: "info",

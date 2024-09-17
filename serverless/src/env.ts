@@ -255,6 +255,11 @@ export function validateParameters(config: Configuration) {
       "Warning: Invalid site URL. Must be either datadoghq.com, datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com, ap1.datadoghq.com, or ddog-gov.com.",
     );
   }
+  if (config.addExtension === true) {
+    if (config.extensionLayerVersion === undefined) {
+      errors.push("Please add the 'extensionLayerVersion' parameter for the Datadog serverless macro");
+    }
+  }
   if (config.extensionLayerVersion !== undefined) {
     if (config.forwarderArn !== undefined) {
       errors.push("`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.");
@@ -263,6 +268,7 @@ export function validateParameters(config: Configuration) {
       errors.push("When `extensionLayerVersion` is set, `apiKey`, `apiKeySecretArn`, or `apiKmsKey` must also be set.");
     }
   }
+
   return errors;
 }
 
