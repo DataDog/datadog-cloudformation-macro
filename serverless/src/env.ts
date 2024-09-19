@@ -63,6 +63,9 @@ export interface Configuration {
   // Optionally set by customer using `sam deploy --parameter-overrides DDGitData="$(git rev-parse HEAD),$(git config --get remote.origin.url)"`
   // The customer template takes in the DDGitData override param and passes that to this macro's gitData param
   gitData?: string;
+  // When set, the list of strings will be evalutated when processing each lambda function. if the string matches that function will not be instrumented by the macro.
+  exclude?: string[];
+  // When set, the lambda's payload will be captured within the incoming trace.
   captureLambdaPayload: boolean;
   // Cold Start Tracing is enabled by default
   enableColdStartTracing?: boolean;
