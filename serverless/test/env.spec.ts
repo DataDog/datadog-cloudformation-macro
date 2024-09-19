@@ -594,7 +594,7 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
-    expect(errors.includes("`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.")).toBe(true);
+    expect(errors.includes("setting `forwarderArn` with `addExtension` and/or `extensionLayerVersion` as these parameters cannot be set at the same time.")).toBe(true);
   });
 
   it("returns an error when extensionLayer is true without setting extensionLayerVersion", () => {
@@ -613,7 +613,7 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
-    expect(errors.includes("Please add the 'extensionLayerVersion' parameter for the Datadog serverless macro")).toBe(
+    expect(errors.includes("Please add the `extensionLayerVersion` parameter when `addExtension` is set.")).toBe(
       true,
     );
   });
