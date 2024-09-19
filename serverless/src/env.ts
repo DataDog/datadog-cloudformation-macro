@@ -115,6 +115,7 @@ const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS
 export const defaultConfiguration: Configuration = {
   addLayers: true,
   addExtension: false,
+  exclude: [],
   flushMetricsToLogs: true,
   logLevel: undefined,
   site: "datadoghq.com",

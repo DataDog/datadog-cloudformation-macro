@@ -34,6 +34,7 @@ describe("getConfig", () => {
     expect(config).toEqual({
       addLayers: true,
       addExtension: false,
+      exclude: [],
       flushMetricsToLogs: true,
       site: "my-site",
       enableXrayTracing: false,
@@ -64,6 +65,7 @@ describe("getConfig", () => {
       expect(config).toEqual({
         addLayers: true,
         addExtension: false,
+        exclude: [],
         flushMetricsToLogs: false,
         logLevel: undefined,
         site: "datadoghq.com",
@@ -92,6 +94,7 @@ describe("getConfig", () => {
       expect(config).toEqual({
         addLayers: true,
         addExtension: false,
+        exclude: [],
         flushMetricsToLogs: false,
         site: "my-site",
         enableXrayTracing: false,

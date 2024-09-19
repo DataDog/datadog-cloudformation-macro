@@ -9,7 +9,6 @@ import {
   PutSubscriptionFilterRequest,
 } from "aws-sdk/clients/cloudwatchlogs";
 import { LogGroupDefinition } from "../src/forwarder";
-import exp from "constants";
 
 const LAMBDA_KEY = "HelloWorldFunction";
 const VERSION_REGEX =
