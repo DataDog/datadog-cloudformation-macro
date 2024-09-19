@@ -188,8 +188,20 @@ describe("Macro", () => {
       expect(output.errorMessage).toEqual(getMissingLayerVersionErrorMsg(LAMBDA_KEY, "Node.js", "node"));
     });
 
-    it("Adding only the extension layer", async () => {
+    it("add only the extension layer", async () => {
       const params = { addLayers: false, addExtension: true, extensionLayerVersion: 6, apiKey: "abc123" };
+      const inputEvent = mockInputEvent(params, {});
+      const output = await handler(inputEvent, {});
+      const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
+      // Mocked Lambda has the addExtension parameter to true and extensionLayerVersion to 6.
+      expect(lambdaProperties.Layers).toEqual([
+        expect.stringMatching(/arn:aws:lambda:us-east-1:.*:layer:Datadog-Extension:6/),
+      ]);
+    });
+
+    it("add only the extension layer only setting the extension layer version", async () => {
+      const params = { addLayers: false, extensionLayerVersion: 6, apiKey: "abc123" };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
