@@ -33,7 +33,7 @@ describe("getConfig", () => {
     const config = getConfigFromCfnParams(params);
     expect(config).toEqual({
       addLayers: true,
-      addExtension: true,
+      addExtension: false,
       flushMetricsToLogs: true,
       site: "my-site",
       enableXrayTracing: false,
@@ -63,7 +63,7 @@ describe("getConfig", () => {
       const config = getConfigFromEnvVars();
       expect(config).toEqual({
         addLayers: true,
-        addExtension: true,
+        addExtension: false,
         flushMetricsToLogs: false,
         logLevel: undefined,
         site: "datadoghq.com",
@@ -91,7 +91,7 @@ describe("getConfig", () => {
       const config = getConfigFromCfnParams(params);
       expect(config).toEqual({
         addLayers: true,
-        addExtension: true,
+        addExtension: false,
         flushMetricsToLogs: false,
         site: "my-site",
         enableXrayTracing: false,
@@ -621,7 +621,7 @@ describe("validateParameters", () => {
   it("returns an error when extensionLayerVersion is set but neither apiKey nor apiKMSKey is set", () => {
     const params = {
       addLayers: true,
-      addExtension: true,
+      addExtension: false,
       flushMetricsToLogs: true,
       logLevel: "info",
       site: "datadoghq.com",

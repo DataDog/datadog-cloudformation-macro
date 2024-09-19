@@ -135,7 +135,7 @@ function mockGovCloudInputEvent(params: any, mappings: any, logGroups?: LogGroup
 describe("Macro", () => {
   describe("parameters and config", () => {
     it("uses transform parameters if they are provided", async () => {
-      const transformParams = { site: "datadoghq.com", addExtension: false };
+      const transformParams = { site: "datadoghq.com" };
       const mappings = {
         Datadog: {
           Parameters: { site: "mappings-site" },
@@ -153,7 +153,7 @@ describe("Macro", () => {
     it("uses parameters under Mappings section if template parameters are not given", async () => {
       const mappings = {
         Datadog: {
-          Parameters: { site: "datadoghq.eu", addExtension: false },
+          Parameters: { site: "datadoghq.eu" },
         },
       };
       const inputEvent = mockInputEvent({}, mappings);
@@ -168,7 +168,7 @@ describe("Macro", () => {
 
   describe("lambda layers", () => {
     it("adds lambda layers by default", async () => {
-      const params = { nodeLayerVersion: 25, addExtension: false };
+      const params = { nodeLayerVersion: 25 };
       const inputEvent = mockInputEvent(params, {}); // Use default configuration
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
@@ -188,8 +188,20 @@ describe("Macro", () => {
       expect(output.errorMessage).toEqual(getMissingLayerVersionErrorMsg(LAMBDA_KEY, "Node.js", "node"));
     });
 
+    it("Adding only the extension layer", async () => {
+      const params = { addLayers: false, addExtension: true, extensionLayerVersion: 6, apiKey: "abc123" };
+      const inputEvent = mockInputEvent(params, {});
+      const output = await handler(inputEvent, {});
+      const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
+      // Mocked Lambda has the addExtension parameter to true and extensionLayerVersion to 6.
+      expect(lambdaProperties.Layers).toEqual([
+        expect.stringMatching(/arn:aws:lambda:us-east-1:.*:layer:Datadog-Extension:6/),
+      ]);
+    });
+
     it("skips adding lambda layers when addLayers is false", async () => {
-      const params = { addLayers: false, addExtension: false };
+      const params = { addLayers: false };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
@@ -198,7 +210,7 @@ describe("Macro", () => {
     });
 
     it("uses the GovCloud layer when a GovCloud region is detected", async () => {
-      const params = { nodeLayerVersion: 25, addExtension: false };
+      const params = { nodeLayerVersion: 25 };
       const inputEvent = mockGovCloudInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
@@ -211,7 +223,7 @@ describe("Macro", () => {
 
   describe("tracing", () => {
     it("skips adding tracing when enableXrayTracing is false", async () => {
-      const params = { enableXrayTracing: false, addExtension: false };
+      const params = { enableXrayTracing: false };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const iamRole: IamRoleProperties = output.fragment.Resources[`${LAMBDA_KEY}Role`].Properties;
@@ -239,7 +251,7 @@ describe("Macro", () => {
     });
 
     it("macro fails when forwarder is provided & at least one lambda has a dynamically generated name, but no stack name is given", async () => {
-      const params = { forwarderArn: "forwarder-arn", nodeLayerVersion: 25, addExtension: false };
+      const params = { forwarderArn: "forwarder-arn", nodeLayerVersion: 25 };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
 
@@ -250,7 +262,7 @@ describe("Macro", () => {
 
   describe("tags", () => {
     it("only adds macro version tag when neither 'service' nor 'env' are provided", async () => {
-      const params = { nodeLayerVersion: 25, addExtension: false };
+      const params = { nodeLayerVersion: 25 };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
@@ -259,7 +271,7 @@ describe("Macro", () => {
     });
 
     it("only adds cdk created tag when CDKMetadata is present", async () => {
-      const params = { nodeLayerVersion: 25, addExtension: false };
+      const params = { nodeLayerVersion: 25 };
       const inputEvent = mockInputEvent(params, {}, undefined, true);
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
@@ -271,7 +283,7 @@ describe("Macro", () => {
     });
 
     it("only adds SAM created tag when lambda:createdBy:SAM tag is present", async () => {
-      const params = { nodeLayerVersion: 25, addExtension: false };
+      const params = { nodeLayerVersion: 25 };
       const inputEvent = mockInputEvent(params, {}, undefined, false, true);
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
