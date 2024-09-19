@@ -90,7 +90,9 @@ export const handler = async (event: InputEvent, _: any) => {
     }
 
     // find lambdas then filter out the lamba's that are flagged to be excluded from instrumentation.
-    const lambdas = findLambdas(resources, event.templateParameterValues).filter((lambda) => !config.exclude?.includes(lambda.key));
+    const lambdas = findLambdas(resources, event.templateParameterValues).filter(
+      (lambda) => !config.exclude?.includes(lambda.key),
+    );
     log.debug(`Lambda resources found: ${JSON.stringify(lambdas)}`);
 
     log.debug("Setting environment variables for Lambda function resources");
