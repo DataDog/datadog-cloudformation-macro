@@ -33,7 +33,7 @@ describe("getConfig", () => {
     const config = getConfigFromCfnParams(params);
     expect(config).toEqual({
       addLayers: true,
-      addExtension: true,
+      addExtension: false,
       flushMetricsToLogs: true,
       site: "my-site",
       enableXrayTracing: false,
@@ -63,7 +63,7 @@ describe("getConfig", () => {
       const config = getConfigFromEnvVars();
       expect(config).toEqual({
         addLayers: true,
-        addExtension: true,
+        addExtension: false,
         flushMetricsToLogs: false,
         logLevel: undefined,
         site: "datadoghq.com",
@@ -91,7 +91,7 @@ describe("getConfig", () => {
       const config = getConfigFromCfnParams(params);
       expect(config).toEqual({
         addLayers: true,
-        addExtension: true,
+        addExtension: false,
         flushMetricsToLogs: false,
         site: "my-site",
         enableXrayTracing: false,
@@ -594,7 +594,11 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
-    expect(errors.includes("`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.")).toBe(true);
+    expect(
+      errors.includes(
+        "setting `forwarderArn` with `addExtension` and/or `extensionLayerVersion` as these parameters cannot be set at the same time.",
+      ),
+    ).toBe(true);
   });
 
   it("returns an error when extensionLayer is true without setting extensionLayerVersion", () => {
@@ -613,15 +617,13 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
-    expect(errors.includes("Please add the 'extensionLayerVersion' parameter for the Datadog serverless macro")).toBe(
-      true,
-    );
+    expect(errors.includes("Please add the `extensionLayerVersion` parameter when `addExtension` is set.")).toBe(true);
   });
 
   it("returns an error when extensionLayerVersion is set but neither apiKey nor apiKMSKey is set", () => {
     const params = {
       addLayers: true,
-      addExtension: true,
+      addExtension: false,
       flushMetricsToLogs: true,
       logLevel: "info",
       site: "datadoghq.com",

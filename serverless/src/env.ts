@@ -111,7 +111,7 @@ const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS
 
 export const defaultConfiguration: Configuration = {
   addLayers: true,
-  addExtension: true,
+  addExtension: false,
   flushMetricsToLogs: true,
   logLevel: undefined,
   site: "datadoghq.com",
@@ -257,12 +257,14 @@ export function validateParameters(config: Configuration) {
   }
   if (config.addExtension === true) {
     if (config.extensionLayerVersion === undefined) {
-      errors.push("Please add the 'extensionLayerVersion' parameter for the Datadog serverless macro");
+      errors.push("Please add the `extensionLayerVersion` parameter when `addExtension` is set.");
     }
   }
   if (config.extensionLayerVersion !== undefined) {
     if (config.forwarderArn !== undefined) {
-      errors.push("`extensionLayerVersion` and `forwarderArn` cannot be set at the same time.");
+      errors.push(
+        "setting `forwarderArn` with `addExtension` and/or `extensionLayerVersion` as these parameters cannot be set at the same time.",
+      );
     }
     if (config.apiKey === undefined && config.apiKeySecretArn === undefined && config.apiKMSKey === undefined) {
       errors.push("When `extensionLayerVersion` is set, `apiKey`, `apiKeySecretArn`, or `apiKmsKey` must also be set.");

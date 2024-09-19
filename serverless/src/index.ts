@@ -89,7 +89,6 @@ export const handler = async (event: InputEvent, _: any) => {
       };
     }
 
-    //
     const lambdas = findLambdas(resources, event.templateParameterValues);
     log.debug(`Lambda resources found: ${JSON.stringify(lambdas)}`);
 
@@ -117,7 +116,7 @@ export const handler = async (event: InputEvent, _: any) => {
       }
     }
 
-    if (config.addExtension) {
+    if (config.addExtension || config.extensionLayerVersion !== undefined) {
       errors = applyExtensionLayer(region, lambdas, config.extensionLayerVersion);
       if (errors.length > 0) {
         return {
