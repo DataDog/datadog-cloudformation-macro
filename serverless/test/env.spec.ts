@@ -594,7 +594,11 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
-    expect(errors.includes("setting `forwarderArn` with `addExtension` and/or `extensionLayerVersion` as these parameters cannot be set at the same time.")).toBe(true);
+    expect(
+      errors.includes(
+        "setting `forwarderArn` with `addExtension` and/or `extensionLayerVersion` as these parameters cannot be set at the same time.",
+      ),
+    ).toBe(true);
   });
 
   it("returns an error when extensionLayer is true without setting extensionLayerVersion", () => {
@@ -613,9 +617,7 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
-    expect(errors.includes("Please add the `extensionLayerVersion` parameter when `addExtension` is set.")).toBe(
-      true,
-    );
+    expect(errors.includes("Please add the `extensionLayerVersion` parameter when `addExtension` is set.")).toBe(true);
   });
 
   it("returns an error when extensionLayerVersion is set but neither apiKey nor apiKMSKey is set", () => {
