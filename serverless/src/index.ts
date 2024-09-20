@@ -56,6 +56,7 @@ export interface FunctionProperties {
   FunctionName?: string;
   Architectures?: [string];
   PackageType?: string;
+  Metadata?: { [key: string]: string };
 }
 
 export const handler = async (event: InputEvent, _: any) => {
