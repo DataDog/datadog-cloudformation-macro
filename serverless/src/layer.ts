@@ -10,6 +10,7 @@ export enum RuntimeType {
   JAVA,
   NODE,
   PYTHON,
+  GOLANG,
   UNSUPPORTED,
 }
 
@@ -68,6 +69,7 @@ export const agnosticRuntimes: string[] = [
 ]
 
 export const runtimeMetadataLookup: { [key: string]: RuntimeType } = {
+  "golang": RuntimeType.GOLANG
 };
 
 export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
@@ -92,6 +94,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "python3.10": "Datadog-Python310",
     "python3.11": "Datadog-Python311",
     "python3.12": "Datadog-Python312",
+    "golang": "Datadog-Extension",
   },
   [ArchitectureType.ARM64]: {
     dotnet6: "dd-trace-dotnet-ARM",
@@ -111,6 +114,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "python3.10": "Datadog-Python310-ARM",
     "python3.11": "Datadog-Python311-ARM",
     "python3.12": "Datadog-Python312-ARM",
+    "golang": "Datadog-Extension-ARM",
   },
 };
 
@@ -239,6 +243,10 @@ export function applyLayers(
       log.debug(`Setting Java Lambda layer for ${lambda.key}`);
       lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, javaLayerVersion, lambda.runtime, lambda.architecture);
       addLayer(lambdaLibraryLayerArn, lambda);
+    }
+
+    if (lambda.runtimeType === RuntimeType.GOLANG) {
+      log.log(`Not adding a tracer layer, as there is none for golang`)
     }
   });
   return errors;
