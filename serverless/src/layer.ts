@@ -62,6 +62,14 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.12": RuntimeType.PYTHON,
 };
 
+export const agnosticRuntimes: string[] = [
+  "provided.al2",
+  "provided.al2023",
+]
+
+export const runtimeMetadataLookup: { [key: string]: RuntimeType } = {
+};
+
 export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
   [ArchitectureType.x86_64]: {
     dotnet6: "dd-trace-dotnet",
@@ -131,12 +139,18 @@ export function findLambdas(resources: Resources, templateParameterValues: Param
 
       const runtime = useOrRef(properties.Runtime, templateParameterValues);
       const architecture = useOrRef(properties.Architectures?.[0], templateParameterValues) ?? "x86_64";
+      const metadataRuntime : string | undefined = useOrRef((properties.Metadata ?? {})["Runtime"], templateParameterValues);
 
       let runtimeType = RuntimeType.UNSUPPORTED;
       let architectureType = ArchitectureType.x86_64;
 
-      if (runtime !== undefined && runtime in runtimeLookup) {
-        runtimeType = runtimeLookup[runtime];
+      if (runtime !== undefined) {
+        if (runtime in runtimeLookup) {
+          runtimeType = runtimeLookup[runtime];
+        }
+        if (agnosticRuntimes.includes(runtime) && metadataRuntime !== undefined && metadataRuntime in runtimeMetadataLookup) {
+          runtimeType = runtimeMetadataLookup[metadataRuntime];
+        }
       }
       if (architecture !== undefined && architecture in architectureLookup) {
         architectureType = architectureLookup[architecture];
