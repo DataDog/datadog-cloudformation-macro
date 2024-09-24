@@ -200,7 +200,7 @@ describe("Macro", () => {
       ]);
     });
 
-    it("add only the extension layer only setting the extension layer version", async () => {
+    it("add only the extension layer by only setting the extension layer version", async () => {
       const params = { addLayers: false, extensionLayerVersion: 6, apiKey: "abc123" };
       const inputEvent = mockInputEvent(params, {});
       const output = await handler(inputEvent, {});
@@ -230,6 +230,16 @@ describe("Macro", () => {
       expect(lambdaProperties.Layers).toEqual([
         expect.stringMatching(/arn:aws-us-gov:lambda:us-gov-east-1:002406178527:layer:Datadog-Node12-x:25/),
       ]);
+    });
+
+    it("Excluding a lambda function from being instrumented", async () => {
+      const params = { exclude: [LAMBDA_KEY], nodeLayerVersion: 32, extensionLayerVersion: 32, apiKey: "testtest" };
+      const inputEvent = mockInputEvent(params, {}); // Use default configuration
+      const output = await handler(inputEvent, {});
+      const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
+
+      expect(lambdaProperties.Layers).toBeUndefined();
+      expect(lambdaProperties.Handler).toBe("app.handler");
     });
   });
 
