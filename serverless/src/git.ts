@@ -1,4 +1,4 @@
-export const filterSensitiveInfoFromRepository = (repositoryUrl: string | undefined) => {
+export const filterSensitiveInfoFromRepository = (repositoryUrl: string | undefined): string | undefined => {
   try {
     if (!repositoryUrl) {
       return repositoryUrl;
