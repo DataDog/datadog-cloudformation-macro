@@ -48,7 +48,7 @@ export enum TracingMode {
   NONE,
 }
 
-function findIamRole(resources: Resources, lambda: LambdaFunction) {
+function findIamRole(resources: Resources, lambda: LambdaFunction): IamRoleProperties | undefined {
   const role = lambda.properties.Role;
   let roleKey;
   if (typeof role !== "string") {
@@ -66,7 +66,7 @@ function findIamRole(resources: Resources, lambda: LambdaFunction) {
   }
 }
 
-export function getTracingMode(config: Configuration) {
+export function getTracingMode(config: Configuration): TracingMode {
   if (config.enableXrayTracing && config.enableDDTracing) {
     return TracingMode.HYBRID;
   } else if (config.enableDDTracing) {
@@ -77,7 +77,7 @@ export function getTracingMode(config: Configuration) {
   return TracingMode.NONE;
 }
 
-export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[], resources: Resources) {
+export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[], resources: Resources): void {
   if (tracingMode === TracingMode.XRAY || tracingMode === TracingMode.HYBRID) {
     log.debug("Enabling Xray tracing...");
     const xrayPolicies = {

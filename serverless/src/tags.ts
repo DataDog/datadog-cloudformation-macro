@@ -8,7 +8,7 @@ const MACRO_VERSION = "dd_sls_macro";
 // Following the same pattern from SAM
 const MACRO_BY = "dd_sls_macro_by";
 
-export function addDDTags(lambdas: LambdaFunction[], config: Configuration) {
+export function addDDTags(lambdas: LambdaFunction[], config: Configuration): void {
   // Add the tags for each function, unless a tag already exists.
   lambdas.forEach((lambda) => {
     const tags = lambda.properties.Tags ?? [];
@@ -41,7 +41,7 @@ export function addDDTags(lambdas: LambdaFunction[], config: Configuration) {
   });
 }
 
-export function addMacroTag(lambdas: LambdaFunction[], version: string | undefined) {
+export function addMacroTag(lambdas: LambdaFunction[], version: string | undefined): void {
   if (!version) return;
 
   lambdas.forEach((lambda) => {
@@ -52,7 +52,7 @@ export function addMacroTag(lambdas: LambdaFunction[], version: string | undefin
   });
 }
 
-export function addCDKTag(lambdas: LambdaFunction[]) {
+export function addCDKTag(lambdas: LambdaFunction[]): void {
   lambdas.forEach((lambda) => {
     const tags = lambda.properties.Tags ?? [];
     tags.push({ Key: MACRO_BY, Value: "CDK" });
@@ -61,7 +61,7 @@ export function addCDKTag(lambdas: LambdaFunction[]) {
   });
 }
 
-export function addSAMTag(lambdas: LambdaFunction[]) {
+export function addSAMTag(lambdas: LambdaFunction[]): void {
   lambdas.forEach((lambda) => {
     const tags = lambda.properties.Tags ?? [];
 
