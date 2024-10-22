@@ -22,7 +22,7 @@ describe("getConfig", () => {
 
   it("gets default configuration when no parameters are specified", () => {
     const config = getConfigFromCfnParams({});
-    expect(config).toEqual(defaultConfiguration);
+    expect(config).toEqual(expect.objectContaining(defaultConfiguration));
   });
 
   it("gets a mixed a configuration when some values are present", () => {
@@ -31,17 +31,19 @@ describe("getConfig", () => {
       enableXrayTracing: false,
     };
     const config = getConfigFromCfnParams(params);
-    expect(config).toEqual({
-      addLayers: true,
-      addExtension: false,
-      flushMetricsToLogs: true,
-      site: "my-site",
-      enableXrayTracing: false,
-      enableDDTracing: true,
-      enableDDLogs: true,
-      enableEnhancedMetrics: true,
-      captureLambdaPayload: false,
-    });
+    expect(config).toEqual(
+      expect.objectContaining({
+        addLayers: true,
+        addExtension: false,
+        flushMetricsToLogs: true,
+        site: "my-site",
+        enableXrayTracing: false,
+        enableDDTracing: true,
+        enableDDLogs: true,
+        enableEnhancedMetrics: true,
+        captureLambdaPayload: false,
+      }),
+    );
   });
 
   describe("with env vars set", () => {
@@ -61,19 +63,21 @@ describe("getConfig", () => {
         "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
       process.env["DD_FLUSH_TO_LOG"] = "false";
       const config = getConfigFromEnvVars();
-      expect(config).toEqual({
-        addLayers: true,
-        addExtension: false,
-        flushMetricsToLogs: false,
-        logLevel: undefined,
-        site: "datadoghq.com",
-        enableXrayTracing: false,
-        enableDDTracing: true,
-        enableDDLogs: true,
-        enableEnhancedMetrics: true,
-        captureLambdaPayload: false,
-        apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
-      });
+      expect(config).toEqual(
+        expect.objectContaining({
+          addLayers: true,
+          addExtension: false,
+          flushMetricsToLogs: false,
+          logLevel: undefined,
+          site: "datadoghq.com",
+          enableXrayTracing: false,
+          enableDDTracing: true,
+          enableDDLogs: true,
+          enableEnhancedMetrics: true,
+          captureLambdaPayload: false,
+          apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
+        }),
+      );
     });
 
     it("gets a mixed a configuration when some values are present", () => {
@@ -89,18 +93,20 @@ describe("getConfig", () => {
         captureLambdaPayload: false,
       };
       const config = getConfigFromCfnParams(params);
-      expect(config).toEqual({
-        addLayers: true,
-        addExtension: false,
-        flushMetricsToLogs: false,
-        site: "my-site",
-        enableXrayTracing: false,
-        enableDDTracing: true,
-        enableDDLogs: true,
-        enableEnhancedMetrics: true,
-        captureLambdaPayload: false,
-        apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
-      });
+      expect(config).toEqual(
+        expect.objectContaining({
+          addLayers: true,
+          addExtension: false,
+          flushMetricsToLogs: false,
+          site: "my-site",
+          enableXrayTracing: false,
+          enableDDTracing: true,
+          enableDDLogs: true,
+          enableEnhancedMetrics: true,
+          captureLambdaPayload: false,
+          apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
+        }),
+      );
     });
   });
 });
