@@ -117,7 +117,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
  * Also assigns a general runtime type to the output lambdas. This helps to determine which lambda
  * layers to add & which handler to redirect to later on in the macro.
  */
-export function findLambdas(resources: Resources, templateParameterValues: Parameters) {
+export function findLambdas(resources: Resources, templateParameterValues: Parameters): LambdaFunction[] {
   return Object.entries(resources)
     .map(([key, resource]) => {
       if (resource.Type !== LAMBDA_FUNCTION_RESOURCE_TYPE) {
@@ -176,7 +176,7 @@ export function applyLayers(
   nodeLayerVersion?: number,
   dotnetLayerVersion?: number,
   javaLayerVersion?: number,
-) {
+): string[] {
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
     if (lambda.runtimeType === RuntimeType.UNSUPPORTED) {
@@ -233,7 +233,11 @@ export function applyLayers(
   return errors;
 }
 
-export function applyExtensionLayer(region: string, lambdas: LambdaFunction[], extensionLayerVersion?: number) {
+export function applyExtensionLayer(
+  region: string,
+  lambdas: LambdaFunction[],
+  extensionLayerVersion?: number,
+): string[] {
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
     let lambdaExtensionLayerArn;
@@ -250,7 +254,7 @@ export function applyExtensionLayer(region: string, lambdas: LambdaFunction[], e
   return errors;
 }
 
-function addLayer(layerArn: string, lambda: LambdaFunction) {
+function addLayer(layerArn: string, lambda: LambdaFunction): void {
   if (layerArn === undefined) {
     return;
   }
@@ -292,7 +296,12 @@ export function getNewLayers(layerArn: string, currentLayers: LambdaLayersProper
   return { [CFN_IF_FUNCTION_STRING]: [conditionalName, newLayersIfTrue, newLayersIfFalse] };
 }
 
-export function getLambdaLibraryLayerArn(region: string, version: number, runtime: string, architecture: string) {
+export function getLambdaLibraryLayerArn(
+  region: string,
+  version: number,
+  runtime: string,
+  architecture: string,
+): string {
   const layerName = layerNameLookup[architectureLookup[architecture]][runtime];
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 
@@ -304,7 +313,7 @@ export function getLambdaLibraryLayerArn(region: string, version: number, runtim
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
 }
 
-export function getExtensionLayerArn(region: string, version: number, architecture: string) {
+export function getExtensionLayerArn(region: string, version: number, architecture: string): string {
   const layerName = architectureToExtensionLayerName[architecture];
 
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
@@ -317,14 +326,18 @@ export function getExtensionLayerArn(region: string, version: number, architectu
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
 }
 
-export function getMissingLayerVersionErrorMsg(functionKey: string, formalRuntime: string, paramRuntime: string) {
+export function getMissingLayerVersionErrorMsg(
+  functionKey: string,
+  formalRuntime: string,
+  paramRuntime: string,
+): string {
   return (
     `Resource ${functionKey} has a ${formalRuntime} runtime, but no ${formalRuntime} Lambda Library version was provided. ` +
     `Please add the '${paramRuntime}LayerVersion' parameter for the Datadog serverless macro.`
   );
 }
 
-export function getMissingExtensionLayerVersionErrorMsg(functionKey: string) {
+export function getMissingExtensionLayerVersionErrorMsg(functionKey: string): string {
   return (
     `Resource ${functionKey} has been configured to apply the extension laybe but no extension version was provided. ` +
     `Please add the 'extensionLayerVersion' parameter for the Datadog serverless macro`

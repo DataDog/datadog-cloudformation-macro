@@ -238,7 +238,7 @@ export function getConfigFromCfnParams(params: CfnParams) {
   };
 }
 
-export function validateParameters(config: Configuration) {
+export function validateParameters(config: Configuration): string[] {
   log.debug("Validating parameters...");
   const errors: string[] = [];
 
@@ -278,7 +278,7 @@ export function validateParameters(config: Configuration) {
   return errors;
 }
 
-export function checkForMultipleApiKeys(config: Configuration) {
+export function checkForMultipleApiKeys(config: Configuration): string | undefined {
   let multipleApiKeysMessage;
   if (config.apiKey !== undefined && config.apiKMSKey !== undefined && config.apiKeySecretArn !== undefined) {
     multipleApiKeysMessage = "`apiKey`, `apiKMSKey`, and `apiKeySecretArn`";
@@ -293,7 +293,7 @@ export function checkForMultipleApiKeys(config: Configuration) {
   return multipleApiKeysMessage;
 }
 
-export function setEnvConfiguration(config: Configuration, lambdas: LambdaFunction[]) {
+export function setEnvConfiguration(config: Configuration, lambdas: LambdaFunction[]): void {
   lambdas.forEach((lambda) => {
     const environment = lambda.properties.Environment ?? {};
     const envVariables = environment.Variables ?? {};

@@ -213,7 +213,7 @@ export const handler = async (event: InputEvent, _: any) => {
  * the 'FunctionName' property. In this case, it means at least one of the names
  * will be dynamically generated.
  */
-function lambdaHasDynamicallyGeneratedName(lambdas: LambdaFunction[]) {
+function lambdaHasDynamicallyGeneratedName(lambdas: LambdaFunction[]): LambdaFunction[] {
   const dynmicallyNamedLambdas: LambdaFunction[] = [];
   for (const lambda of lambdas) {
     if (lambda.properties.FunctionName === undefined) {
@@ -223,7 +223,7 @@ function lambdaHasDynamicallyGeneratedName(lambdas: LambdaFunction[]) {
   return dynmicallyNamedLambdas;
 }
 
-export function getMissingStackNameErrorMsg(lambdaKeys: string[]) {
+export function getMissingStackNameErrorMsg(lambdaKeys: string[]): string {
   return (
     "A forwarder ARN was provided with one or more dynamically named lambda function resources," +
     " but the stack name was not provided. Without the stack name, the dynamically generated" +
