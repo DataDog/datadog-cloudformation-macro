@@ -10,6 +10,7 @@ export enum RuntimeType {
   JAVA,
   NODE,
   PYTHON,
+  GOLANG,
   UNSUPPORTED,
 }
 
@@ -63,6 +64,15 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.12": RuntimeType.PYTHON,
 };
 
+export const agnosticRuntimes: string[] = [
+  "provided.al2",
+  "provided.al2023",
+]
+
+export const runtimeMetadataLookup: { [key: string]: RuntimeType } = {
+  "golang": RuntimeType.GOLANG
+};
+
 export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
   [ArchitectureType.x86_64]: {
     dotnet6: "dd-trace-dotnet",
@@ -86,6 +96,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "python3.10": "Datadog-Python310",
     "python3.11": "Datadog-Python311",
     "python3.12": "Datadog-Python312",
+    "golang": "Datadog-Extension",
   },
   [ArchitectureType.ARM64]: {
     dotnet6: "dd-trace-dotnet-ARM",
@@ -106,6 +117,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "python3.10": "Datadog-Python310-ARM",
     "python3.11": "Datadog-Python311-ARM",
     "python3.12": "Datadog-Python312-ARM",
+    "golang": "Datadog-Extension-ARM",
   },
 };
 
@@ -134,12 +146,18 @@ export function findLambdas(resources: Resources, templateParameterValues: Param
 
       const runtime = useOrRef(properties.Runtime, templateParameterValues);
       const architecture = useOrRef(properties.Architectures?.[0], templateParameterValues) ?? "x86_64";
+      const metadataRuntime : string | undefined = useOrRef((properties.Metadata ?? {})["Runtime"], templateParameterValues);
 
       let runtimeType = RuntimeType.UNSUPPORTED;
       let architectureType = ArchitectureType.x86_64;
 
-      if (runtime !== undefined && runtime in runtimeLookup) {
-        runtimeType = runtimeLookup[runtime];
+      if (runtime !== undefined) {
+        if (runtime in runtimeLookup) {
+          runtimeType = runtimeLookup[runtime];
+        }
+        if (agnosticRuntimes.includes(runtime) && metadataRuntime !== undefined && metadataRuntime in runtimeMetadataLookup) {
+          runtimeType = runtimeMetadataLookup[metadataRuntime];
+        }
       }
       if (architecture !== undefined && architecture in architectureLookup) {
         architectureType = architectureLookup[architecture];
@@ -228,6 +246,10 @@ export function applyLayers(
       log.debug(`Setting Java Lambda layer for ${lambda.key}`);
       lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, javaLayerVersion, lambda.runtime, lambda.architecture);
       addLayer(lambdaLibraryLayerArn, lambda);
+    }
+
+    if (lambda.runtimeType === RuntimeType.GOLANG) {
+      log.log(`Not adding a tracer layer, as there is none for golang`)
     }
   });
   return errors;
