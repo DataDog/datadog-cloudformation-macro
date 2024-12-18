@@ -1,0 +1,19 @@
+build-job:
+  stage: build
+  script:
+    - echo "Hello, build"
+
+test-job1:
+  stage: test
+  script:
+    - echo "Hello, test 1!"
+
+test-job2:
+  stage: test
+  script:
+    - echo "Hello, test 2!"
+
+deploy-prod:
+  stage: deploy
+  script:
+    - echo "Hello deploy!"
