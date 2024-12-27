@@ -11,7 +11,7 @@ import {
   getExtensionLayerArn,
   ArchitectureType,
   getNewLayers,
-} from "../src/lambda/layer";
+} from "../../src/lambda/layer";
 
 function mockFunctionResource(runtime: string | { Ref: string }, architectures?: string[], packageType?: string) {
   return {

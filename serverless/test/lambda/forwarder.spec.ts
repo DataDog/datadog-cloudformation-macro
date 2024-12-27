@@ -7,8 +7,8 @@ import {
   addCloudWatchForwarderSubscriptions,
   LogGroupDefinition,
   SUBSCRIPTION_FILTER_NAME,
-} from "../src/lambda/forwarder";
-import { LambdaFunction, RuntimeType } from "../src/lambda/layer";
+} from "../../src/lambda/forwarder";
+import { LambdaFunction, RuntimeType } from "../../src/lambda/layer";
 
 function mockCloudWatchLogs(
   logGroups: Record<

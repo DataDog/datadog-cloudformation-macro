@@ -1,6 +1,6 @@
-import { defaultConfiguration, getConfigFromEnvVars } from "../src/lambda/env";
-import { RuntimeType, LambdaFunction } from "../src/lambda/layer";
-import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "../src/lambda/tags";
+import { defaultConfiguration, getConfigFromEnvVars } from "../../src/lambda/env";
+import { RuntimeType, LambdaFunction } from "../../src/lambda/layer";
+import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "../../src/lambda/tags";
 
 function mockLambdaFunction(tags: { Key: string; Value: string }[]) {
   return {
