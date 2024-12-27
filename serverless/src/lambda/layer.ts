@@ -1,4 +1,6 @@
-import { FunctionProperties, Resources, Parameters, LambdaLayersProperty, CFN_IF_FUNCTION_STRING } from "./index";
+import { Resources, Parameters, CFN_IF_FUNCTION_STRING } from "../types";
+import { FunctionProperties } from "./types";
+import { LambdaLayersProperty } from "./types";
 import log from "loglevel";
 
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
