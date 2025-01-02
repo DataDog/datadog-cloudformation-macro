@@ -1,4 +1,4 @@
-import { Configuration } from "env";
+import { Configuration } from "./env";
 import { LambdaFunction } from "./layer";
 
 const SERVICE = "service";

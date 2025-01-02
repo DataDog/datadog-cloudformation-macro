@@ -4,8 +4,8 @@ import {
   JS_HANDLER,
   PYTHON_HANDLER,
   DD_HANDLER_ENV_VAR,
-} from "../src/redirect";
-import { LambdaFunction, RuntimeType } from "../src/layer";
+} from "../src/lambda/redirect";
+import { LambdaFunction, RuntimeType } from "../src/lambda/layer";
 
 function mockLambdaFunction(key: string, runtime: string, runtimeType: RuntimeType) {
   return {
