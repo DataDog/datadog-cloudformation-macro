@@ -1,4 +1,4 @@
-import { filterSensitiveInfoFromRepository, getGitTagsFromParam } from "../src/git";
+import { filterSensitiveInfoFromRepository, getGitTagsFromParam } from "../src/lambda/git";
 
 describe("getGitTagsFromParam", () => {
   it("produces SCI tags with username@domain", () => {

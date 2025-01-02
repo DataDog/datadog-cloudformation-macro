@@ -1,6 +1,9 @@
-import { handler, FunctionProperties, getMissingStackNameErrorMsg, InputEvent } from "../src/index";
-import { getMissingLayerVersionErrorMsg } from "../src/layer";
-import { IamRoleProperties } from "../src/tracing";
+import { handler } from "../src/index";
+import { InputEvent } from "../src/types";
+import { FunctionProperties } from "lambda/types";
+import { getMissingStackNameErrorMsg } from "../src/lambda/lambda";
+import { getMissingLayerVersionErrorMsg } from "../src/lambda/layer";
+import { IamRoleProperties } from "../src/lambda/tracing";
 import {
   DescribeLogGroupsRequest,
   DescribeLogGroupsResponse,
@@ -8,7 +11,7 @@ import {
   CreateLogGroupRequest,
   PutSubscriptionFilterRequest,
 } from "aws-sdk/clients/cloudwatchlogs";
-import { LogGroupDefinition } from "../src/forwarder";
+import { LogGroupDefinition } from "../src/lambda/forwarder";
 
 const LAMBDA_KEY = "HelloWorldFunction";
 const VERSION_REGEX =
