@@ -6,8 +6,8 @@ import {
   setEnvConfiguration,
   validateParameters,
   checkForMultipleApiKeys,
-} from "../src/lambda/env";
-import { ArchitectureType, LambdaFunction, RuntimeType } from "../src/lambda/layer";
+} from "../../src/lambda/env";
+import { ArchitectureType, LambdaFunction, RuntimeType } from "../../src/lambda/layer";
 
 describe("getConfig", () => {
   it("correctly parses parameters from Mappings", () => {
