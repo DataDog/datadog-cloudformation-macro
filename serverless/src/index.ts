@@ -1,6 +1,7 @@
 import { getConfigFromCfnMappings, getConfigFromCfnParams, validateParameters, Configuration } from "./lambda/env";
 import { instrumentLambdas } from "./lambda/lambda";
 import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "./types";
+import { instrumentStateMachines } from "./step_function/step_function";
 import log from "loglevel";
 
 export const handler = async (event: InputEvent, _: any): Promise<OutputEvent> => {
@@ -37,11 +38,8 @@ export const handler = async (event: InputEvent, _: any): Promise<OutputEvent> =
       return lambdaOutput;
     }
 
-    return {
-      requestId: event.requestId,
-      status: SUCCESS,
-      fragment,
-    };
+    const stepFunctionOutput = await instrumentStateMachines(event);
+    return stepFunctionOutput;
   } catch (error: any) {
     return {
       requestId: event.requestId,
