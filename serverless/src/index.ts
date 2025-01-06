@@ -39,15 +39,7 @@ export const handler = async (event: InputEvent, _: any): Promise<OutputEvent> =
     }
 
     const stepFunctionOutput = await instrumentStateMachines(event);
-    if (stepFunctionOutput.status === FAILURE) {
-      return stepFunctionOutput;
-    }
-
-    return {
-      requestId: event.requestId,
-      status: SUCCESS,
-      fragment,
-    };
+    return stepFunctionOutput;
   } catch (error: any) {
     return {
       requestId: event.requestId,
