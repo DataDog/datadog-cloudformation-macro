@@ -2,6 +2,7 @@ import { validateParameters as validateLambdaParameters, getConfig as getLambdaC
 import { instrumentLambdas } from "./lambda/lambda";
 import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "./types";
 import { instrumentStateMachines } from "./step_function/step_function";
+import { getConfig as getStepFunctionConfig } from "./step_function/env";
 import log from "loglevel";
 
 export const handler = async (event: InputEvent, _: any): Promise<OutputEvent> => {
@@ -27,7 +28,8 @@ export const handler = async (event: InputEvent, _: any): Promise<OutputEvent> =
       return lambdaOutput;
     }
 
-    const stepFunctionOutput = await instrumentStateMachines(event);
+    const stepFunctionConfig = getStepFunctionConfig(event);
+    const stepFunctionOutput = await instrumentStateMachines(event, stepFunctionConfig);
     return stepFunctionOutput;
   } catch (error: any) {
     return {

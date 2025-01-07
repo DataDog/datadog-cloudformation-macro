@@ -1,6 +1,7 @@
 import { setUpLogging, buildLogGroupName } from "../../src/step_function/log";
 import { Resources } from "types";
 import { StateMachine, LoggingConfiguration, LogDestination } from "../../src/step_function/types";
+import { Configuration } from "../../src/step_function/env";
 
 describe("setUpLogging", () => {
   let resources: Resources;

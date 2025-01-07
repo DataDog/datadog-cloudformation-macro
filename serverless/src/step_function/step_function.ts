@@ -2,10 +2,11 @@ import { InputEvent, OutputEvent, SUCCESS, Resources } from "../types";
 import log from "loglevel";
 import { StateMachine, StateMachineProperties } from "./types";
 import { setUpLogging } from "./log";
+import { Configuration } from "./env";
 
 const STATE_MACHINE_RESOURCE_TYPE = "AWS::StepFunctions::StateMachine";
 
-export async function instrumentStateMachines(event: InputEvent): Promise<OutputEvent> {
+export async function instrumentStateMachines(event: InputEvent, config: Configuration): Promise<OutputEvent> {
   const fragment = event.fragment;
   const resources = fragment.Resources;
 
