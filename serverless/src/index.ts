@@ -1,4 +1,4 @@
-import { getConfigFromCfnMappings, getConfigFromCfnParams, validateParameters, Configuration } from "./lambda/env";
+import { validateParameters as validateLambdaParameters, getConfig as getLambdaConfig } from "./lambda/env";
 import { instrumentLambdas } from "./lambda/lambda";
 import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "./types";
 import { instrumentStateMachines } from "./step_function/step_function";
@@ -11,19 +11,8 @@ export const handler = async (event: InputEvent, _: any): Promise<OutputEvent> =
 
     const fragment = event.fragment;
 
-    let config: Configuration;
-    // Use the parameters given for this specific transform/macro if it exists
-    const transformParams = event.params ?? {};
-    if (Object.keys(transformParams).length > 0) {
-      log.debug("Parsing config from CloudFormation transform/macro parameters");
-      config = getConfigFromCfnParams(transformParams);
-    } else {
-      // If not, check the Mappings section for Datadog config parameters as well
-      log.debug("Parsing config from CloudFormation template mappings");
-      config = getConfigFromCfnMappings(fragment.Mappings);
-    }
-
-    const errors = validateParameters(config);
+    const lambdaConfig = getLambdaConfig(event);
+    const errors = validateLambdaParameters(lambdaConfig);
     if (errors.length > 0) {
       return {
         requestId: event.requestId,
@@ -33,7 +22,7 @@ export const handler = async (event: InputEvent, _: any): Promise<OutputEvent> =
       };
     }
 
-    const lambdaOutput = await instrumentLambdas(event, config);
+    const lambdaOutput = await instrumentLambdas(event, lambdaConfig);
     if (lambdaOutput.status === FAILURE) {
       return lambdaOutput;
     }
