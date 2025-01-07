@@ -1,5 +1,6 @@
 import { getGitTagsFromParam } from "./git";
 import { LambdaFunction, runtimeLookup, RuntimeType } from "./layer";
+import { InputEvent } from "types";
 import log from "loglevel";
 
 export interface Configuration {
@@ -125,6 +126,24 @@ export const defaultConfiguration: Configuration = {
   enableEnhancedMetrics: true,
   captureLambdaPayload: false,
 };
+
+/**
+ * Returns the default configuration with any values overwritten by environment variables.
+ */
+export function getConfig(event: InputEvent): Configuration {
+  let config: Configuration;
+  // Use the parameters given for this specific transform/macro if it exists
+  const transformParams = event.params ?? {};
+  if (Object.keys(transformParams).length > 0) {
+    log.debug("Parsing config from CloudFormation transform/macro parameters");
+    config = getConfigFromCfnParams(transformParams);
+  } else {
+    // If not, check the Mappings section for Datadog config parameters as well
+    log.debug("Parsing config from CloudFormation template mappings");
+    config = getConfigFromCfnMappings(event.fragment.Mappings);
+  }
+  return config;
+}
 
 /**
  * Returns the default configuration with any values overwritten by environment variables.
