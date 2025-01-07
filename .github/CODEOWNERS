@@ -1,2 +1,2 @@
-* @DataDog/serverless
+* @DataDog/serverless-onboarding-enablement
 *.md                  @DataDog/serverless @DataDog/documentation
