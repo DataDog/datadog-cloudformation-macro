@@ -1,4 +1,4 @@
-import { defaultConfiguration, getConfigFromEnvVars } from "../../src/lambda/env";
+import { LambdaConfigLoader } from "../../src/lambda/env";
 import { RuntimeType, LambdaFunction } from "../../src/lambda/layer";
 import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "../../src/lambda/tags";
 
@@ -16,10 +16,11 @@ function mockLambdaFunction(tags: { Key: string; Value: string }[]) {
   } as LambdaFunction;
 }
 
+const configLoader = new LambdaConfigLoader();
 describe("addDDTags", () => {
   it("does not override existing tags on function", () => {
     const config = {
-      ...defaultConfiguration,
+      ...configLoader.defaultConfiguration,
       service: "my-other-service",
       env: "test",
       version: "1",
@@ -39,7 +40,7 @@ describe("addDDTags", () => {
 
   it("does not add tags if provided config doesn't have tags", () => {
     const lambda = mockLambdaFunction([]);
-    addDDTags([lambda], defaultConfiguration);
+    addDDTags([lambda], configLoader.defaultConfiguration);
 
     expect(lambda.properties.Tags).toEqual([]);
   });
@@ -59,7 +60,7 @@ describe("addDDTags", () => {
     it("does add tags from the environment", () => {
       process.env["DD_TAGS"] = "strongest_avenger:hulk";
       const config = {
-        ...getConfigFromEnvVars(),
+        ...configLoader.getConfigFromEnvVars(),
         service: "my-service",
       };
       const lambda = mockLambdaFunction([]);
@@ -74,7 +75,7 @@ describe("addDDTags", () => {
 
   it("creates tags property if needed", () => {
     const config = {
-      ...defaultConfiguration,
+      ...configLoader.defaultConfiguration,
       service: "my-service",
       env: "test",
       version: "1",
@@ -94,7 +95,7 @@ describe("addDDTags", () => {
 
   it("adds to existing tags property if needed", () => {
     const config = {
-      ...defaultConfiguration,
+      ...configLoader.defaultConfiguration,
       service: "my-service",
       version: "1",
       tags: "team:avengers",
