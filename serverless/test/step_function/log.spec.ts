@@ -1,6 +1,27 @@
-import { setUpLogging, buildLogGroupName } from "../../src/step_function/log";
+import { setUpLogging, buildLogGroupName, FN_GET_ATT, ROLE_ACTIONS } from "../../src/step_function/log";
 import { Resources } from "types";
 import { StateMachine, LoggingConfiguration, LogDestination } from "../../src/step_function/types";
+
+function getEmptyStateMachineRole() {
+  return {
+    Type: "AWS::IAM::Role",
+    Properties: {
+      AssumeRolePolicyDocument: {
+        Version: "2012-10-17",
+        Statement: [
+          {
+            Effect: "Allow",
+            Principal: {
+              Service: "states.amazonaws.com",
+            },
+            Action: "sts:AssumeRole",
+          },
+        ],
+      },
+      Policies: [],
+    },
+  };
+}
 
 describe("setUpLogging", () => {
   let resources: Resources;
@@ -61,6 +82,48 @@ describe("setUpLogging", () => {
         RetentionInDays: 7,
       },
     });
+  });
+
+  it("creates a role if not present", () => {
+    setUpLogging(resources, config, stateMachine);
+
+    expect(resources["MyStateMachineRole"]).toBeDefined();
+    const role = resources["MyStateMachineRole"];
+    expect(role.Type).toBe("AWS::IAM::Role");
+    expect(role.Properties.Policies[0].PolicyDocument.Statement[0].Action).toStrictEqual(ROLE_ACTIONS);
+    expect(stateMachine.properties.RoleArn).toStrictEqual({ FN_GET_ATT: ["MyStateMachineRole", "Arn"] });
+  });
+
+  it("adds permissions to the role if RoleArn is defined using Fn::GetAtt", () => {
+    stateMachine.properties.RoleArn = { "Fn::GetAtt": ["MyStateMachineRole", "Arn"] };
+    resources["MyStateMachineRole"] = getEmptyStateMachineRole();
+
+    setUpLogging(resources, config, stateMachine);
+
+    expect(resources["MyStateMachineRole"]).toBeDefined();
+    const role = resources["MyStateMachineRole"];
+    expect(role.Type).toBe("AWS::IAM::Role");
+    expect(role.Properties.Policies[0].PolicyDocument.Statement[0].Action).toStrictEqual(ROLE_ACTIONS);
+  });
+
+  it("adds permissions to the role if RoleArn is defined using Fn::Sub", () => {
+    stateMachine.properties.RoleArn = { "Fn::Sub": "${MyStateMachineRole.Arn}" };
+    resources["MyStateMachineRole"] = getEmptyStateMachineRole();
+
+    setUpLogging(resources, config, stateMachine);
+
+    expect(resources["MyStateMachineRole"]).toBeDefined();
+    const role = resources["MyStateMachineRole"];
+    expect(role.Type).toBe("AWS::IAM::Role");
+    expect(role.Properties.Policies[0].PolicyDocument.Statement[0].Action).toStrictEqual(ROLE_ACTIONS);
+  });
+
+  it("throws an error for unsupported RoleArn format", () => {
+    stateMachine.properties.RoleArn = { "Fn::Unsupported": "value" };
+
+    expect(() => setUpLogging(resources, config, stateMachine)).toThrow(
+      "Unsupported RoleArn format: [object Object]. Step Function Instrumentation is not supported. Please open a feature request in https://github.com/DataDog/datadog-cloudformation-macro.",
+    );
   });
 });
 
