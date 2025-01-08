@@ -1,4 +1,4 @@
-import { setUpLogging, buildLogGroupName, FN_GET_ATT, ROLE_ACTIONS } from "../../src/step_function/log";
+import { setUpLogging, buildLogGroupName, ROLE_ACTIONS, findLogGroup } from "../../src/step_function/log";
 import { Resources } from "types";
 import { StateMachine, LoggingConfiguration, LogDestination } from "../../src/step_function/types";
 
@@ -138,5 +138,86 @@ describe("buildLogGroupName", () => {
     const stateMachine = { resourceKey: "MyStateMachine" } as StateMachine;
     const logGroupName = buildLogGroupName(stateMachine, "dev");
     expect(logGroupName).toBe("/aws/vendedlogs/states/MyStateMachine-Logs-dev");
+  });
+});
+
+describe("findLogGroup", () => {
+  let resources: Resources;
+  let stateMachine: StateMachine;
+
+  beforeEach(() => {
+    resources = {};
+    stateMachine = {
+      resourceKey: "MyStateMachine",
+      properties: {
+        LoggingConfiguration: {
+          Destinations: [
+            {
+              CloudWatchLogsLogGroup: {
+                LogGroupArn: {
+                  "Fn::GetAtt": ["MyStateMachineLogGroup", "Arn"],
+                },
+              },
+            },
+          ],
+        },
+      },
+    } as StateMachine;
+  });
+
+  it("finds the log group if it exists", () => {
+    resources["MyStateMachineLogGroup"] = {
+      Type: "AWS::Logs::LogGroup",
+      Properties: {
+        LogGroupName: "/aws/vendedlogs/states/MyStateMachine-Logs-dev",
+        RetentionInDays: 7,
+      },
+    };
+
+    const logGroup = findLogGroup(resources, stateMachine);
+    expect(logGroup.Type).toBe("AWS::Logs::LogGroup");
+    expect(logGroup.Properties.LogGroupName).toBe("/aws/vendedlogs/states/MyStateMachine-Logs-dev");
+  });
+
+  it("throws an error if log config or destination is not found", () => {
+    stateMachine.properties.LoggingConfiguration = undefined;
+
+    expect(() => findLogGroup(resources, stateMachine)).toThrow(
+      "Log config or destination not found for state machine MyStateMachine",
+    );
+  });
+
+  it("throws an error if logGroupArn is a string", () => {
+    stateMachine.properties.LoggingConfiguration = {
+      Destinations: [
+        {
+          CloudWatchLogsLogGroup: {
+            LogGroupArn: "string-log-group-arn",
+          },
+        },
+      ],
+    };
+
+    expect(() => findLogGroup(resources, stateMachine)).toThrow(
+      "logGroupArn is a string: string-log-group-arn. Step Function Instrumentation is not supported. Please open a feature request in https://github.com/DataDog/datadog-cloudformation-macro.",
+    );
+  });
+
+  it("throws an error if logGroupArn is not specified using Fn::GetAtt", () => {
+    stateMachine.properties.LoggingConfiguration = {
+      Destinations: [
+        {
+          CloudWatchLogsLogGroup: {
+            LogGroupArn: {
+              "Fn::Unsupported": ["MyStateMachineLogGroup", "Arn"],
+            } as any,
+          },
+        },
+      ],
+    };
+
+    expect(() => findLogGroup(resources, stateMachine)).toThrow(
+      'logGroupArn is not specified using Fn::GetAtt in the common way: {"Fn::Unsupported":["MyStateMachineLogGroup","Arn"]}. Step Function Instrumentation is not supported. Please open a feature request in https://github.com/DataDog/datadog-cloudformation-macro.',
+    );
   });
 });
