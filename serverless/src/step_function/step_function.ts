@@ -25,7 +25,7 @@ export async function instrumentStateMachines(event: InputEvent, config: Configu
 function instrumentStateMachine(resources: Resources, config: Configuration, stateMachine: StateMachine): void {
   log.debug(`Instrumenting State Machine ${stateMachine.resourceKey}`);
 
-  setUpLogging(resources, stateMachine);
+  setUpLogging(resources, config, stateMachine);
 }
 
 export function findStateMachines(resources: Resources): StateMachine[] {

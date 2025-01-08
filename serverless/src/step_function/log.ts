@@ -1,6 +1,7 @@
 import { Resources } from "../types";
 import log from "loglevel";
 import { StateMachine } from "./types";
+import { Configuration } from "./env";
 
 /**
  * Set up logging for the given state machine:
@@ -8,7 +9,7 @@ import { StateMachine } from "./types";
  * 2. Set includeExecutionData to true
  * 3. Create a destination log group (if not set already)
  */
-export function setUpLogging(resources: Resources, stateMachine: StateMachine): void {
+export function setUpLogging(resources: Resources, config: Configuration, stateMachine: StateMachine): void {
   log.debug(`Setting up logging`);
   if (!stateMachine.properties.LoggingConfiguration) {
     stateMachine.properties.LoggingConfiguration = {};
@@ -21,7 +22,7 @@ export function setUpLogging(resources: Resources, stateMachine: StateMachine): 
 
   if (!logConfig.Destinations) {
     log.debug(`Log destination not found, creating one`);
-    const logGroupKey = createLogGroup(resources, stateMachine);
+    const logGroupKey = createLogGroup(resources, config, stateMachine);
     logConfig.Destinations = [
       {
         CloudWatchLogsLogGroup: {
@@ -36,12 +37,12 @@ export function setUpLogging(resources: Resources, stateMachine: StateMachine): 
   }
 }
 
-function createLogGroup(resources: Resources, stateMachine: StateMachine): string {
+function createLogGroup(resources: Resources, config: Configuration, stateMachine: StateMachine): string {
   const logGroupKey = `${stateMachine.resourceKey}LogGroup`;
   resources[logGroupKey] = {
     Type: "AWS::Logs::LogGroup",
     Properties: {
-      LogGroupName: buildLogGroupName(stateMachine, undefined),
+      LogGroupName: buildLogGroupName(stateMachine, config.env),
       RetentionInDays: 7,
     },
   };

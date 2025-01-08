@@ -4,6 +4,7 @@ import { StateMachine, LoggingConfiguration, LogDestination } from "../../src/st
 
 describe("setUpLogging", () => {
   let resources: Resources;
+  const config = { env: "dev" };
   let stateMachine: StateMachine;
 
   beforeEach(() => {
@@ -15,7 +16,7 @@ describe("setUpLogging", () => {
   });
 
   it("sets up log config if not present", () => {
-    setUpLogging(resources, stateMachine);
+    setUpLogging(resources, config, stateMachine);
 
     expect(stateMachine.properties.LoggingConfiguration).toBeDefined();
     const logConfig = stateMachine.properties.LoggingConfiguration as LoggingConfiguration;
@@ -39,7 +40,7 @@ describe("setUpLogging", () => {
       ],
     };
 
-    setUpLogging(resources, stateMachine);
+    setUpLogging(resources, config, stateMachine);
 
     expect(stateMachine.properties.LoggingConfiguration).toBeDefined();
     const logConfig = stateMachine.properties.LoggingConfiguration as LoggingConfiguration;
@@ -51,12 +52,12 @@ describe("setUpLogging", () => {
   });
 
   it("creates a log group if not present", () => {
-    setUpLogging(resources, stateMachine);
+    setUpLogging(resources, config, stateMachine);
 
     expect(resources["MyStateMachineLogGroup"]).toStrictEqual({
       Type: "AWS::Logs::LogGroup",
       Properties: {
-        LogGroupName: "/aws/vendedlogs/states/MyStateMachine-Logs",
+        LogGroupName: "/aws/vendedlogs/states/MyStateMachine-Logs-dev",
         RetentionInDays: 7,
       },
     });
