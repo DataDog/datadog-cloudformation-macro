@@ -1,6 +1,6 @@
 import { getGitTagsFromParam } from "./git";
 import { LambdaFunction, runtimeLookup, RuntimeType } from "./layer";
-import { InputEvent } from "types";
+import { ConfigLoader } from "../env";
 import log from "loglevel";
 
 export interface Configuration {
@@ -84,82 +84,6 @@ export interface Configuration {
   // When the remaining time in a Lambda invocation is less than `apmFlushDeadline`, the tracer will
   // attempt to submit the current active spans and all finished spans.
   apmFlushDeadline?: string;
-}
-
-abstract class ConfigLoader<TConfig> {
-  abstract readonly defaultConfiguration: TConfig;
-  /**
-   * Returns the default configuration with any values overwritten by environment variables.
-   */
-  abstract getConfigFromEnvVars(): TConfig;
-
-  /**
-   * Returns the configuration.
-   * If DatadogServerless transform params are set, then the priority order is:
-   *   1. CloudFormation Macro params
-   *   2. Environment variables
-   *   3. Default configuration
-   * Otherwise, if CloudFormation Mappings for Datadog are set, then the priority order is:
-   *   1. CloudFormation Mappings params
-   *   2. Environment variables
-   *   3. Default configuration
-   * Otherwise, the priority order is:
-   *   1. Environment variables
-   *   2. Default configuration
-   */
-  public getConfig(event: InputEvent): TConfig {
-    let config: TConfig;
-    // Use the parameters given for this specific transform/macro if it exists
-    const transformParams = event.params ?? {};
-    if (Object.keys(transformParams).length > 0) {
-      log.debug("Parsing config from CloudFormation transform/macro parameters");
-      config = this.getConfigFromCfnParams(transformParams);
-    } else {
-      // If not, check the Mappings section for Datadog config parameters as well
-      log.debug("Parsing config from CloudFormation template mappings");
-      config = this.getConfigFromCfnMappings(event.fragment.Mappings);
-    }
-    return config;
-  }
-
-  /**
-   * Parses the Mappings section for Datadog config parameters.
-   * Assumes that the parameters live under the Mappings section in this format:
-   *
-   * Mappings:
-   *  Datadog:
-   *    Parameters:
-   *      addLayers: true
-   *      ...
-   */
-  public getConfigFromCfnMappings(mappings: any): TConfig {
-    if (mappings === undefined || mappings[DATADOG] === undefined) {
-      log.debug("No Datadog mappings found in the CloudFormation template, using the default config");
-      return this.getConfigFromEnvVars();
-    }
-    return this.getConfigFromCfnParams(mappings[DATADOG][PARAMETERS]);
-  }
-
-  /**
-   * Takes a set of parameters from the CloudFormation template. This could come from either
-   * the Mappings section of the template, or directly from the Parameters under the transform/macro
-   * as the 'params' property under the original InputEvent to the handler in src/index.ts
-   *
-   * Uses these parameters as the Datadog configuration, and for values that are required in the
-   * configuration but not provided in the parameters, uses the default values from
-   * the defaultConfiguration above.
-   */
-  public getConfigFromCfnParams(params: CfnParams) {
-    let datadogConfig = params as Partial<TConfig> | undefined;
-    if (datadogConfig === undefined) {
-      log.debug("No Datadog config found, using the default config");
-      datadogConfig = {};
-    }
-    return {
-      ...this.getConfigFromEnvVars(),
-      ...datadogConfig,
-    };
-  }
 }
 
 export class LambdaConfigLoader extends ConfigLoader<Configuration> {
@@ -248,10 +172,6 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
   }
 }
 
-// Same interface as Configuration above, except all parameters are optional, since user does
-// not have to provide the values (in which case we will use the default configuration below).
-interface CfnParams extends Partial<Configuration> {}
-
 const apiKeyEnvVar = "DD_API_KEY";
 const apiKeySecretArnEnvVar = "DD_API_KEY_SECRET_ARN";
 const apiKeyKMSEnvVar = "DD_KMS_API_KEY";
@@ -260,8 +180,6 @@ const logLevelEnvVar = "DD_LOG_LEVEL";
 const logForwardingEnvVar = "DD_FLUSH_TO_LOG";
 const enhancedMetricsEnvVar = "DD_ENHANCED_METRICS";
 const enableDDLogsEnvVar = "DD_SERVERLESS_LOGS_ENABLED";
-const DATADOG = "Datadog";
-const PARAMETERS = "Parameters";
 const captureLambdaPayloadEnvVar = "DD_CAPTURE_LAMBDA_PAYLOAD";
 const serviceEnvVar = "DD_SERVICE";
 const envEnvVar = "DD_ENV";
