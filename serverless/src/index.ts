@@ -1,4 +1,4 @@
-import { validateParameters as validateLambdaParameters, getConfig as getLambdaConfig } from "./lambda/env";
+import { validateParameters as validateLambdaParameters, LambdaConfigLoader } from "./lambda/env";
 import { instrumentLambdas } from "./lambda/lambda";
 import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "./types";
 import { instrumentStateMachines } from "./step_function/step_function";
@@ -11,7 +11,7 @@ export const handler = async (event: InputEvent, _: any): Promise<OutputEvent> =
 
     const fragment = event.fragment;
 
-    const lambdaConfig = getLambdaConfig(event);
+    const lambdaConfig = new LambdaConfigLoader().getConfig(event);
     const errors = validateLambdaParameters(lambdaConfig);
     if (errors.length > 0) {
       return {
