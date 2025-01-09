@@ -1,9 +1,10 @@
 import { getGitTagsFromParam } from "./git";
 import { LambdaFunction, runtimeLookup, RuntimeType } from "./layer";
 import { ConfigLoader } from "../common/env";
+import { ConfigurationWithTags } from "../common/tags";
 import log from "loglevel";
 
-export interface Configuration {
+export interface Configuration extends ConfigurationWithTags {
   // Whether to add the Datadog Lambda Library layers, or expect the users to bring their own
   addLayers: boolean;
   // Whether to add the Datadog Extension Library layer
