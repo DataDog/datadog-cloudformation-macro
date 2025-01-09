@@ -73,12 +73,18 @@ function createLogGroup(resources: Resources, config: Configuration, stateMachin
     log.debug(`A role is already defined. Parsing its resource key from the roleArn.`);
     const roleArn = stateMachine.properties.RoleArn;
 
+    // We assume that if a role is set on the state machine, then it is defined in the same
+    // CloudFormation stack (and roleArn is likely an object that references the role),
+    // so we can add a permission policy to the role. Otherwise, if the roleArn is
+    // a hard-coded string, which likely means the role is defined outside the stack, then
+    // we will need to explore other ways to add the permission policy.
     if (typeof roleArn !== "object") {
-      throw new Error(`RoleArn is not an object. ${unsupportedCaseErrorMessage}`);
+      throw new Error(`RoleArn is not an object: ${roleArn}. ${unsupportedCaseErrorMessage}`);
     }
 
     // There are many ways a user can specify a state machine role in a CloudFormation template. For now
     // we only support the simple cases. We can support more cases as needed.
+    // For each case, extract the role key from roleArn.
     let roleKey;
     if (roleArn[FN_GET_ATT]) {
       // e.g.
@@ -129,6 +135,7 @@ function createLogGroup(resources: Resources, config: Configuration, stateMachin
   }
   role.Properties.Policies.push({
     PolicyName: `${stateMachine.resourceKey}LogPolicy`,
+    // Copied from https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html#cloudwatch-iam-policy
     PolicyDocument: {
       Version: "2012-10-17",
       Statement: [
