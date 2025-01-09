@@ -1,6 +1,6 @@
 import { validateParameters as validateLambdaParameters, LambdaConfigLoader } from "./lambda/env";
 import { instrumentLambdas } from "./lambda/lambda";
-import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "./types";
+import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "./common/types";
 import { instrumentStateMachines } from "./step_function/step_function";
 import { StepFunctionConfigLoader } from "./step_function/env";
 import log from "loglevel";

@@ -1,5 +1,5 @@
 import { setUpLogging, buildLogGroupName, ROLE_ACTIONS, findLogGroup } from "../../src/step_function/log";
-import { Resources } from "types";
+import { Resources } from "common/types";
 import { StateMachine, LoggingConfiguration, LogDestination } from "../../src/step_function/types";
 
 function getEmptyStateMachineRole() {

@@ -1,4 +1,4 @@
-import { InputEvent } from "../../src/types";
+import { InputEvent } from "../../src/common/types";
 import { StepFunctionConfigLoader } from "../../src/step_function/env";
 
 const loader = new StepFunctionConfigLoader();

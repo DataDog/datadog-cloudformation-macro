@@ -1,4 +1,4 @@
-import { Resources, LogGroup } from "../types";
+import { Resources, LogGroup } from "../common/types";
 import log from "loglevel";
 import { StateMachine } from "./types";
 import { Configuration } from "./env";

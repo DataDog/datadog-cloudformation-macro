@@ -5,7 +5,7 @@ import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "./tags";
 import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 import { CloudWatchLogs } from "aws-sdk";
-import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "../types";
+import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "../common/types";
 import log from "loglevel";
 import { version } from "../../package.json";
 
