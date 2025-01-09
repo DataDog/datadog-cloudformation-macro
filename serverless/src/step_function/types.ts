@@ -1,6 +1,8 @@
+import { TaggableResource } from "common/tags";
+
 // Parsed state machine info from CloudFormation template. For internal use.
 // Not aimed to match any CloudFormation type.
-export interface StateMachine {
+export interface StateMachine extends TaggableResource {
   properties: StateMachineProperties;
   resourceKey: string;
 }
@@ -9,6 +11,7 @@ export interface StateMachine {
 export interface StateMachineProperties {
   LoggingConfiguration?: LoggingConfiguration;
   RoleArn?: string | { [key: string]: any };
+  Tags?: { Key: string; Value: string }[];
 }
 
 // Matches AWS::StepFunctions::StateMachine LoggingConfiguration

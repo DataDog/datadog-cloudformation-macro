@@ -4,6 +4,7 @@ import { StateMachine, StateMachineProperties } from "./types";
 import { Configuration } from "./env";
 import { setUpLogging } from "./log";
 import { addForwarder } from "./forwarder";
+import { addTags } from "./tags";
 
 const STATE_MACHINE_RESOURCE_TYPE = "AWS::StepFunctions::StateMachine";
 
@@ -33,6 +34,8 @@ function instrumentStateMachine(resources: Resources, config: Configuration, sta
   } else {
     log.debug("Forwarder ARN not provided, no log group subscriptions will be added");
   }
+
+  addTags(config, stateMachine);
 }
 
 export function findStateMachines(resources: Resources): StateMachine[] {
