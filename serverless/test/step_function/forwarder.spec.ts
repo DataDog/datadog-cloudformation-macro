@@ -21,7 +21,7 @@ describe("addForwarder", () => {
 
     addForwarder(resources, config, stateMachine);
 
-    const subscriptionFilterKey = `${stateMachine.resourceKey}LogGroup${SUBSCRIPTION_FILTER_PREFIX}`;
+    const subscriptionFilterKey = stateMachine.resourceKey + SUBSCRIPTION_FILTER_PREFIX;
     expect(resources[subscriptionFilterKey]).toEqual({
       Type: "AWS::Logs::SubscriptionFilter",
       Properties: {

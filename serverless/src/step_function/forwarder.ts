@@ -4,7 +4,7 @@ import { StateMachine } from "./types";
 import { findLogGroup } from "./log";
 import log from "loglevel";
 
-export const SUBSCRIPTION_FILTER_PREFIX = "DatadogSubscriptionFilter";
+export const SUBSCRIPTION_FILTER_PREFIX = "LogGroupDatadogSubscriptionFilter";
 
 /**
  * Subscribe the forwarder to the state machine's log group.
@@ -20,6 +20,6 @@ export function addForwarder(resources: Resources, config: Configuration, stateM
       FilterPattern: "",
     },
   };
-  const subscriptionFilterKey = `${stateMachine.resourceKey}LogGroupDatadogSubscriptionFilter`;
+  const subscriptionFilterKey = stateMachine.resourceKey + "LogGroupDatadogSubscriptionFilter";
   resources[subscriptionFilterKey] = subscriptionFilter;
 }
