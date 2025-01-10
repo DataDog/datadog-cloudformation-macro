@@ -1,4 +1,4 @@
-import { InputEvent, OutputEvent, SUCCESS, Resources } from "../types";
+import { InputEvent, OutputEvent, SUCCESS, Resources } from "../common/types";
 import log from "loglevel";
 import { StateMachine, StateMachineProperties } from "./types";
 import { Configuration } from "./env";

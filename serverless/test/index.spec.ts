@@ -1,4 +1,4 @@
-import { InputEvent } from "../src/types";
+import { InputEvent } from "../src/common/types";
 import { FunctionProperties } from "../src/lambda/types";
 import { LogGroupDefinition } from "../src/lambda/forwarder";
 import { handler } from "../src/index";

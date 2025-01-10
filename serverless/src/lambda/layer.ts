@@ -1,4 +1,4 @@
-import { Resources, Parameters, CFN_IF_FUNCTION_STRING } from "../types";
+import { Resources, Parameters, CFN_IF_FUNCTION_STRING } from "../common/types";
 import { FunctionProperties } from "./types";
 import { LambdaLayersProperty } from "./types";
 import log from "loglevel";

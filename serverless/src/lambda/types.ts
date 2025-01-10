@@ -1,4 +1,4 @@
-import { CFN_IF_FUNCTION_STRING } from "types";
+import { CFN_IF_FUNCTION_STRING } from "common/types";
 
 // Array of string ARNs in normal case. Can also include
 // CFN conditional objects represented as e.g.:

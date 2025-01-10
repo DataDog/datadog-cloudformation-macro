@@ -1,6 +1,6 @@
 import { addForwarder, SUBSCRIPTION_FILTER_PREFIX } from "../../src/step_function/forwarder";
 import { findLogGroup } from "../../src/step_function/log";
-import { Resources } from "../../src/types";
+import { Resources } from "../../src/common/types";
 
 jest.mock("../../src/step_function/log");
 
