@@ -1,4 +1,4 @@
-import { Resources } from "../types";
+import { Resources, LogGroup } from "../types";
 import log from "loglevel";
 import { StateMachine } from "./types";
 import { Configuration } from "./env";
@@ -159,3 +159,35 @@ function createLogGroup(resources: Resources, config: Configuration, stateMachin
 export const buildLogGroupName = (stateMachine: StateMachine, env: string | undefined): string => {
   return `/aws/vendedlogs/states/${stateMachine.resourceKey}-Logs${env !== undefined ? "-" + env : ""}`;
 };
+
+/**
+ * Find the log group CloudFormation resource for the given state machine.
+ * We require that:
+ * 1. The log group is created in the same stack as the state machine.
+ * 2. The state machine references the log group using Fn::GetAtt, e.g.
+ *    "Fn::GetAtt": ["MyStateMachineLogGroup", "Arn"]
+ *    which is the most common way of referencing a log group.
+ * We can add support for other cases when users request it.
+ */
+export function findLogGroup(resources: Resources, stateMachine: StateMachine): LogGroup {
+  const logConfig = stateMachine.properties.LoggingConfiguration;
+
+  if (!logConfig?.Destinations) {
+    // This should never happen because we should have set up a log group if it doesn't exist.
+    throw new Error(`Log config or destination not found for state machine ${stateMachine.resourceKey}`);
+  }
+
+  const logGroupArn = logConfig.Destinations[0].CloudWatchLogsLogGroup.LogGroupArn;
+  if (typeof logGroupArn === "string") {
+    throw new Error(`logGroupArn is a string: ${logGroupArn}. ${unsupportedCaseErrorMessage}`);
+  }
+
+  if (!logGroupArn[FN_GET_ATT] || logGroupArn[FN_GET_ATT].length !== 2 || logGroupArn[FN_GET_ATT][1] !== "Arn") {
+    throw new Error(
+      `logGroupArn is not specified using Fn::GetAtt in the common way: ${JSON.stringify(logGroupArn)}. ${unsupportedCaseErrorMessage}`,
+    );
+  }
+  const logGroupKey = logGroupArn[FN_GET_ATT][0];
+  const logGroup = resources[logGroupKey];
+  return logGroup;
+}

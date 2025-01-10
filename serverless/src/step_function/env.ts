@@ -3,6 +3,8 @@ import { ConfigLoader } from "../env";
 export interface Configuration {
   // When set, it will be added to the state machine's log group name.
   env?: string;
+  // When set, the forwarder will subscribe to the state machine's log group.
+  stepFunctionForwarderArn?: string;
 }
 
 const envEnvVar = "DD_ENV";
