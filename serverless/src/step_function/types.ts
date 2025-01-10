@@ -12,6 +12,7 @@ export interface StateMachineProperties {
   LoggingConfiguration?: LoggingConfiguration;
   RoleArn?: string | { [key: string]: any };
   Tags?: { Key: string; Value: string }[];
+  DefinitionString?: string | { "Fn::Sub": (string | object)[] };
 }
 
 // Matches AWS::StepFunctions::StateMachine LoggingConfiguration
