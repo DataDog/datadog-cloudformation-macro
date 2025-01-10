@@ -1,4 +1,4 @@
-import { ConfigLoader } from "../env";
+import { ConfigLoader } from "../common/env";
 
 export interface Configuration {
   // When set, it will be added to the state machine's log group name.

@@ -1,6 +1,6 @@
 import { CloudWatchLogs } from "aws-sdk";
 import { LambdaFunction } from "./layer";
-import { Resources, LogGroup } from "../types";
+import { Resources, LogGroup } from "common/types";
 import log from "loglevel";
 
 const LOG_GROUP_TYPE = "AWS::Logs::LogGroup";

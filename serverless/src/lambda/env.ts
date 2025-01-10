@@ -1,6 +1,6 @@
 import { getGitTagsFromParam } from "./git";
 import { LambdaFunction, runtimeLookup, RuntimeType } from "./layer";
-import { ConfigLoader } from "../env";
+import { ConfigLoader } from "../common/env";
 import log from "loglevel";
 
 export interface Configuration {

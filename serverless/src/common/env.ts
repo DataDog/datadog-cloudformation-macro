@@ -1,4 +1,4 @@
-import { InputEvent } from "types";
+import { InputEvent } from "common/types";
 import log from "loglevel";
 
 const DATADOG = "Datadog";
