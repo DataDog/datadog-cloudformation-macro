@@ -33,3 +33,10 @@ export interface OutputEvent {
   fragment: CfnTemplate;
   errorMessage?: string;
 }
+
+export interface LogGroup {
+  Type: string;
+  Properties: {
+    LogGroupName: string | { [fn: string]: any };
+  };
+}

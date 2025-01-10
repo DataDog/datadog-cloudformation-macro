@@ -3,6 +3,7 @@ import log from "loglevel";
 import { StateMachine, StateMachineProperties } from "./types";
 import { Configuration } from "./env";
 import { setUpLogging } from "./log";
+import { addForwarder } from "./forwarder";
 
 const STATE_MACHINE_RESOURCE_TYPE = "AWS::StepFunctions::StateMachine";
 
@@ -26,6 +27,12 @@ function instrumentStateMachine(resources: Resources, config: Configuration, sta
   log.debug(`Instrumenting State Machine ${stateMachine.resourceKey}`);
 
   setUpLogging(resources, config, stateMachine);
+
+  if (config.stepFunctionForwarderArn !== undefined) {
+    addForwarder(resources, config, stateMachine);
+  } else {
+    log.debug("Forwarder ARN not provided, no log group subscriptions will be added");
+  }
 }
 
 export function findStateMachines(resources: Resources): StateMachine[] {

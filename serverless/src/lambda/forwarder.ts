@@ -1,6 +1,6 @@
 import { CloudWatchLogs } from "aws-sdk";
 import { LambdaFunction } from "./layer";
-import { Resources } from "../types";
+import { Resources, LogGroup } from "../types";
 import log from "loglevel";
 
 const LOG_GROUP_TYPE = "AWS::Logs::LogGroup";
@@ -14,12 +14,7 @@ export const SUBSCRIPTION_FILTER_NAME = "datadog-serverless-macro-filter";
 
 export interface LogGroupDefinition {
   key: string;
-  logGroupResource: {
-    Type: string;
-    Properties: {
-      LogGroupName: string | { [fn: string]: any };
-    };
-  };
+  logGroupResource: LogGroup;
 }
 
 interface SubscriptionResource {
