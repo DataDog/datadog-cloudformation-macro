@@ -1,7 +1,8 @@
 import { Configuration, setEnvConfiguration } from "./env";
 import { findLambdas, applyLayers, applyExtensionLayer, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError, TracingMode } from "./tracing";
-import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "./tags";
+import { addCDKTag, addSAMTag } from "./tags";
+import { addDDTags, addMacroTag } from "../common/tags";
 import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 import { CloudWatchLogs } from "aws-sdk";
@@ -101,11 +102,15 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
   // Add the optional datadog tags if forwarder is being used
   if (config.forwarderArn) {
     log.debug("Adding optional tags...");
-    addDDTags(lambdas, config);
+    for (const lam of lambdas) {
+      addDDTags(lam, config);
+    }
   }
 
   log.debug("Adding macro version tag...");
-  addMacroTag(lambdas, version);
+  for (const lam of lambdas) {
+    addMacroTag(lam, version);
+  }
 
   log.debug("Adding dd_sls_macro_by tag...");
   if (resources.CDKMetadata) {
