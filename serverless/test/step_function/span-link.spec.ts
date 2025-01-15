@@ -1,12 +1,10 @@
 import {
   mergeTracesWithDownstream,
-  StateMachineState,
-  StateMachineDefinition,
   updateDefinitionForLambdaInvocationStep,
   updateDefinitionForStepFunctionInvocationStep,
 } from "../../src/step_function/span-link";
 import { Resources } from "common/types";
-import { StateMachine } from "../../src/step_function/types";
+import { StateMachine, StateMachineState, StateMachineDefinition } from "../../src/step_function/types";
 
 describe("Step Function Span Link", () => {
   describe("mergeTracesWithDownstream", () => {
@@ -70,6 +68,17 @@ describe("Step Function Span Link", () => {
       const updatedDefinitionString = stateMachine.properties.DefinitionString as { "Fn::Sub": (string | object)[] };
       const updatedDefinition = JSON.parse(updatedDefinitionString["Fn::Sub"][0] as string);
       expect(updatedDefinition.States["HelloFunction"].Parameters["Payload.$"]).toEqual(
+        "$$['Execution', 'State', 'StateMachine']",
+      );
+    });
+
+    it("Case 4: succeeds when definition field is an object", () => {
+      stateMachine.properties.Definition = stateMachineDefinition;
+      const isTraceMergingSetUp = mergeTracesWithDownstream(resources, stateMachine);
+      expect(isTraceMergingSetUp).toBe(true);
+
+      const updatedDefinition = stateMachine.properties.Definition;
+      expect(updatedDefinition.States["HelloFunction"].Parameters!["Payload.$"]).toEqual(
         "$$['Execution', 'State', 'StateMachine']",
       );
     });

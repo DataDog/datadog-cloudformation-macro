@@ -1,50 +1,17 @@
 import { Resources } from "../common/types";
-import { StateMachine, DefinitionString } from "./types";
+import { StateMachine, StateMachineProperties, StateMachineDefinition, StateMachineState } from "./types";
 import log from "loglevel";
 
-// Lambda invocation step's Payload field
-export type LambdaStepPayload = {
-  "Execution.$"?: any;
-  Execution?: any;
-  "State.$"?: any;
-  State?: any;
-  "StateMachine.$"?: any;
-  StateMachine?: any;
-};
-
-// Step Function invocation step's Input field
-export type StateMachineStateInput = {
-  "CONTEXT.$"?: string;
-  CONTEXT?: string;
-};
-
-export interface StateMachineDefinition {
-  States: { [key: string]: StateMachineState };
-}
-
-// A state in the Step Function definition
-export interface StateMachineState {
-  Resource?: string;
-  Parameters?: {
-    FunctionName?: string;
-    // Payload field for Lambda invocation steps
-    Payload?: string | LambdaStepPayload;
-    "Payload.$"?: string;
-    // Input field for Step Function invocation steps
-    Input?: string | StateMachineStateInput;
-  };
-  Next?: string;
-  End?: boolean;
-}
-
-// Format of definitionString field in state machine properties
+// Format of definition or definitionString field in state machine properties
 // For more about Fn::Sub, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-sub.html
 enum StateMachineDefinitionFormat {
-  // a plain string
+  // definition field is an object
+  OBJECT = "OBJECT",
+  // definitionString field is a plain string
   STRING = "STRING",
-  // {"Fn::Sub": string}
+  // definitionString is {"Fn::Sub": string}
   FN_SUB_WITH_STRING = "FN_SUB_WITH_STRING",
-  // { "Fn::Sub": (string | object)[] }
+  // definitionString is { "Fn::Sub": (string | object)[] }
   FN_SUB_WITH_ARRAY = "FN_SUB_WITH_ARRAY",
 }
 
@@ -58,21 +25,12 @@ enum StateMachineDefinitionFormat {
 export function mergeTracesWithDownstream(resources: Resources, stateMachine: StateMachine): boolean {
   log.debug(`Setting up trace merging for State Machine ${stateMachine.resourceKey}`);
 
-  let definitionString = stateMachine.properties.DefinitionString;
-  if (definitionString === undefined) {
-    log.warn(
-      `State machine ${stateMachine.resourceKey} does not have a definition string. ` +
-        getUnsupportedCaseErrorMessage("Lambda or Step Function"),
-    );
-    return false;
-  }
-
   // Step 1: Parse definition object from definition string
   let definitionObj: StateMachineDefinition;
   let definitionFormat: StateMachineDefinitionFormat;
 
   try {
-    [definitionObj, definitionFormat] = parseDefinitionObjectFromDefinitionString(definitionString);
+    [definitionObj, definitionFormat] = parseDefinitionObject(stateMachine.properties);
   } catch (error) {
     log.warn(error + " " + getUnsupportedCaseErrorMessage("Lambda or Step Function"));
     return false;
@@ -98,19 +56,29 @@ export function mergeTracesWithDownstream(resources: Resources, stateMachine: St
     }
   }
 
-  // Step 3: Convert definition object back into definition string
-  definitionString = dumpDefinitionObjectAsDefinitionString(definitionObj, definitionFormat, definitionString);
+  // Step 3: Write back the definition to the state machine
+  updateDefinition(definitionObj, definitionFormat, stateMachine.properties);
 
-  // Step 4: Write back the definition string to the state machine
-  stateMachine.properties.DefinitionString = definitionString;
   return true;
 }
 
-function parseDefinitionObjectFromDefinitionString(
-  definitionString: DefinitionString,
+function parseDefinitionObject(
+  properties: StateMachineProperties,
 ): [StateMachineDefinition, StateMachineDefinitionFormat] {
+  // First check Definition field
+  if (properties.Definition) {
+    // Case 4: definition field is an object
+    return [properties.Definition as StateMachineDefinition, StateMachineDefinitionFormat.OBJECT];
+  }
+
+  // Then check DefinitionString field
   let definitionFormat: StateMachineDefinitionFormat;
   let definitionObj;
+
+  const definitionString = properties.DefinitionString;
+  if (definitionString === undefined) {
+    throw new Error("The state machine's has no Definition or DefinitionString field.");
+  }
 
   if (typeof definitionString === "string") {
     // Case 1: definitionString is a string
@@ -138,19 +106,27 @@ function parseDefinitionObjectFromDefinitionString(
   return [definitionObj, definitionFormat];
 }
 
-function dumpDefinitionObjectAsDefinitionString(
+/**
+ * Writes the updated definition object back to the state machine properties.
+ */
+function updateDefinition(
   definitionObj: StateMachineDefinition,
   definitionFormat: StateMachineDefinitionFormat,
-  originalDefinitionString: DefinitionString,
-): DefinitionString {
+  properties: StateMachineProperties,
+): void {
   switch (definitionFormat) {
     case StateMachineDefinitionFormat.STRING:
-      return JSON.stringify(definitionObj);
+      properties.DefinitionString = JSON.stringify(definitionObj);
+      break;
     case StateMachineDefinitionFormat.FN_SUB_WITH_STRING:
-      return { "Fn::Sub": JSON.stringify(definitionObj) };
+      properties.DefinitionString = { "Fn::Sub": JSON.stringify(definitionObj) };
+      break;
     case StateMachineDefinitionFormat.FN_SUB_WITH_ARRAY:
-      (originalDefinitionString as { "Fn::Sub": (string | object)[] })["Fn::Sub"][0] = JSON.stringify(definitionObj);
-      return originalDefinitionString;
+      (properties.DefinitionString as { "Fn::Sub": (string | object)[] })["Fn::Sub"][0] = JSON.stringify(definitionObj);
+      break;
+    case StateMachineDefinitionFormat.OBJECT:
+      properties.Definition = definitionObj;
+      break;
   }
 }
 
