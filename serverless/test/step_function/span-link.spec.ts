@@ -30,7 +30,16 @@ describe("Step Function Span Link", () => {
       };
     });
 
-    it('succeeds when definitionString is {"Fn::Sub": string}', () => {
+    it("Case 1: succeeds when definitionString is a string", () => {
+      stateMachine.properties.DefinitionString = JSON.stringify(stateMachineDefinition);
+      const isTraceMergingSetUp = mergeTracesWithDownstream(resources, stateMachine);
+      expect(isTraceMergingSetUp).toBe(true);
+
+      const updatedDefinition = JSON.parse(stateMachine.properties.DefinitionString);
+      expect(updatedDefinition.States["HelloFunction"].Parameters).toStrictEqual({ FunctionName: "MyLambdaFunction" });
+    });
+
+    it('Case 2: succeeds when definitionString is {"Fn::Sub": string}', () => {
       stateMachine.properties.DefinitionString = {
         "Fn::Sub": JSON.stringify(stateMachineDefinition),
       };
