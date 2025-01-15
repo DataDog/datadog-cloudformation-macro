@@ -7,7 +7,7 @@ export interface StateMachine extends TaggableResource {
   resourceKey: string;
 }
 
-export type DefinitionString = string | { "Fn::Sub": string };
+export type DefinitionString = string | { "Fn::Sub": string | (string | object)[] };
 
 // Necessary fields from AWS::StepFunctions::StateMachine's Properties field
 export interface StateMachineProperties {
