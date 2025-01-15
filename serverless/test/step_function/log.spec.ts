@@ -174,7 +174,8 @@ describe("findLogGroup", () => {
       },
     };
 
-    const logGroup = findLogGroup(resources, stateMachine);
+    const [logGroupKey, logGroup] = findLogGroup(resources, stateMachine);
+    expect(logGroupKey).toBe("MyStateMachineLogGroup");
     expect(logGroup.Type).toBe("AWS::Logs::LogGroup");
     expect(logGroup.Properties.LogGroupName).toBe("/aws/vendedlogs/states/MyStateMachine-Logs-dev");
   });

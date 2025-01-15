@@ -13,17 +13,21 @@ describe("addForwarder", () => {
     const stateMachine = {
       resourceKey: "MyStateMachine",
     } as any;
-    (findLogGroup as jest.Mock).mockReturnValue({
-      Properties: {
-        LogGroupName: "/aws/lambda/my-function",
+    (findLogGroup as jest.Mock).mockReturnValue([
+      "MyStateMachineLogGroup",
+      {
+        Properties: {
+          LogGroupName: "/aws/lambda/my-function",
+        },
       },
-    });
+    ]);
 
     addForwarder(resources, config, stateMachine);
 
     const subscriptionFilterKey = stateMachine.resourceKey + SUBSCRIPTION_FILTER_PREFIX;
     expect(resources[subscriptionFilterKey]).toEqual({
       Type: "AWS::Logs::SubscriptionFilter",
+      DependsOn: "MyStateMachineLogGroup",
       Properties: {
         LogGroupName: "/aws/lambda/my-function",
         DestinationArn: config.stepFunctionForwarderArn,
