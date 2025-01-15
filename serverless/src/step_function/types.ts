@@ -7,6 +7,8 @@ export interface StateMachine extends TaggableResource {
   resourceKey: string;
 }
 
+export type DefinitionString = string | { "Fn::Sub": string };
+
 // Necessary fields from AWS::StepFunctions::StateMachine's Properties field
 export interface StateMachineProperties {
   LoggingConfiguration?: LoggingConfiguration;
@@ -15,7 +17,7 @@ export interface StateMachineProperties {
   // This also covers the "!Sub" shorthand in CloudFormation template. "!Sub" will be
   // replaced with "Fn::Sub" by AWS CloudFormation template processing and the
   // CloudFormation Macro will get "Fn::Sub".
-  DefinitionString?: { "Fn::Sub": string };
+  DefinitionString?: DefinitionString;
 }
 
 // Matches AWS::StepFunctions::StateMachine LoggingConfiguration
