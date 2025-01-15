@@ -30,11 +30,14 @@ export interface StateMachineState {
 }
 
 // Format of definitionString field in state machine properties
+// For more about Fn::Sub, see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-sub.html
 enum StateMachineDefinitionFormat {
   // a plain string
   STRING = "STRING",
   // {"Fn::Sub": string}
   FN_SUB_WITH_STRING = "FN_SUB_WITH_STRING",
+  // { "Fn::Sub": (string | object)[] }
+  FN_SUB_WITH_ARRAY = "FN_SUB_WITH_ARRAY",
 }
 
 /**
@@ -82,7 +85,7 @@ export function mergeTracesWithDownstream(resources: Resources, stateMachine: St
   }
 
   // Step 3: Convert definition object back into definition string
-  definitionString = dumpDefinitionObjectAsDefinitionString(definitionObj, definitionFormat);
+  definitionString = dumpDefinitionObjectAsDefinitionString(definitionObj, definitionFormat, definitionString);
 
   // Step 4: Write back the definition string to the state machine
   stateMachine.properties.DefinitionString = definitionString;
@@ -100,9 +103,20 @@ function parseDefinitionObjectFromDefinitionString(
     definitionFormat = StateMachineDefinitionFormat.STRING;
     definitionObj = JSON.parse(definitionString);
   } else if (typeof definitionString === "object" && "Fn::Sub" in definitionString) {
-    // Case 2: definitionString is {"Fn::Sub": string}
-    definitionFormat = StateMachineDefinitionFormat.FN_SUB_WITH_STRING;
-    definitionObj = JSON.parse(definitionString["Fn::Sub"]);
+    if (typeof definitionString["Fn::Sub"] === "string") {
+      // Case 2: definitionString is {"Fn::Sub": string}
+      definitionFormat = StateMachineDefinitionFormat.FN_SUB_WITH_STRING;
+      definitionObj = JSON.parse(definitionString["Fn::Sub"]);
+    } else {
+      // Case 3: definitionString is {"Fn::Sub": (string | object)[]}
+      const fnSubValue = definitionString["Fn::Sub"];
+      if (typeof fnSubValue !== "object" || fnSubValue.length === 0 || typeof fnSubValue[0] !== "string") {
+        throw new Error("Unsupported format of Fn::Sub in defition string.");
+      }
+      definitionFormat = StateMachineDefinitionFormat.FN_SUB_WITH_ARRAY;
+      // index 0 should always be a string of step functions definition
+      definitionObj = JSON.parse(fnSubValue[0]);
+    }
   } else {
     throw new Error("Unsupported definition string format.");
   }
@@ -113,12 +127,16 @@ function parseDefinitionObjectFromDefinitionString(
 function dumpDefinitionObjectAsDefinitionString(
   definitionObj: StateMachineDefinition,
   definitionFormat: StateMachineDefinitionFormat,
+  originalDefinitionString: DefinitionString,
 ): DefinitionString {
   switch (definitionFormat) {
     case StateMachineDefinitionFormat.STRING:
       return JSON.stringify(definitionObj);
     case StateMachineDefinitionFormat.FN_SUB_WITH_STRING:
       return { "Fn::Sub": JSON.stringify(definitionObj) };
+    case StateMachineDefinitionFormat.FN_SUB_WITH_ARRAY:
+      (originalDefinitionString as { "Fn::Sub": (string | object)[] })["Fn::Sub"][0] = JSON.stringify(definitionObj);
+      return originalDefinitionString;
   }
 }
 
