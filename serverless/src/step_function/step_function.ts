@@ -5,6 +5,7 @@ import { Configuration } from "./env";
 import { setUpLogging } from "./log";
 import { addForwarder } from "./forwarder";
 import { addTags } from "./tags";
+import { mergeTracesWithDownstream } from "./span-link";
 
 const STATE_MACHINE_RESOURCE_TYPE = "AWS::StepFunctions::StateMachine";
 
@@ -36,6 +37,8 @@ function instrumentStateMachine(resources: Resources, config: Configuration, sta
   }
 
   addTags(config, stateMachine);
+
+  mergeTracesWithDownstream(resources, stateMachine);
 }
 
 export function findStateMachines(resources: Resources): StateMachine[] {

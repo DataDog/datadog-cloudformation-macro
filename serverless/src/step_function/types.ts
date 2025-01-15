@@ -12,6 +12,10 @@ export interface StateMachineProperties {
   LoggingConfiguration?: LoggingConfiguration;
   RoleArn?: string | { [key: string]: any };
   Tags?: { Key: string; Value: string }[];
+  // This also covers the "!Sub" shorthand in CloudFormation template. "!Sub" will be
+  // replaced with "Fn::Sub" by AWS CloudFormation template processing and the
+  // CloudFormation Macro will get "Fn::Sub".
+  DefinitionString?: { "Fn::Sub": string };
 }
 
 // Matches AWS::StepFunctions::StateMachine LoggingConfiguration
