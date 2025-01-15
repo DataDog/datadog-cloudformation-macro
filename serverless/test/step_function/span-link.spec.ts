@@ -46,7 +46,20 @@ describe("Step Function Span Link", () => {
       const isTraceMergingSetUp = mergeTracesWithDownstream(resources, stateMachine);
       expect(isTraceMergingSetUp).toBe(true);
 
-      const updatedDefinition = JSON.parse(stateMachine.properties.DefinitionString!["Fn::Sub"]);
+      const updatedDefinitionString = stateMachine.properties.DefinitionString as { "Fn::Sub": string };
+      const updatedDefinition = JSON.parse(updatedDefinitionString["Fn::Sub"]);
+      expect(updatedDefinition.States["HelloFunction"].Parameters).toStrictEqual({ FunctionName: "MyLambdaFunction" });
+    });
+
+    it('Case 3: succeeds when definitionString is {"Fn::Sub": (string | object)[]}', () => {
+      stateMachine.properties.DefinitionString = {
+        "Fn::Sub": [JSON.stringify(stateMachineDefinition), {}],
+      };
+      const isTraceMergingSetUp = mergeTracesWithDownstream(resources, stateMachine);
+      expect(isTraceMergingSetUp).toBe(true);
+
+      const updatedDefinitionString = stateMachine.properties.DefinitionString as { "Fn::Sub": (string | object)[] };
+      const updatedDefinition = JSON.parse(updatedDefinitionString["Fn::Sub"][0] as string);
       expect(updatedDefinition.States["HelloFunction"].Parameters).toStrictEqual({ FunctionName: "MyLambdaFunction" });
     });
 
