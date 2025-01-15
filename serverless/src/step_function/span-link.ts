@@ -1,5 +1,5 @@
 import { Resources } from "../common/types";
-import { StateMachine } from "./types";
+import { StateMachine, DefinitionString } from "./types";
 import log from "loglevel";
 
 // Lambda invocation step's Payload field
@@ -29,6 +29,14 @@ export interface StateMachineState {
   End?: boolean;
 }
 
+// Format of definitionString field in state machine properties
+enum StateMachineDefinitionFormat {
+  // a plain string
+  STRING = "STRING",
+  // {"Fn::Sub": string}
+  FN_SUB_WITH_STRING = "FN_SUB_WITH_STRING",
+}
+
 /**
  * Modify the defintion of Lambda and Step Function invocation steps to allow merging the current Step Function's
  * traces with its downstream Lambda or Step Functions' traces.
@@ -50,10 +58,10 @@ export function mergeTracesWithDownstream(resources: Resources, stateMachine: St
 
   // Step 1: Parse definition object from definition string
   let definitionObj: StateMachineDefinition;
+  let definitionFormat: StateMachineDefinitionFormat;
 
-  // If definitionString is an object, we require it to be {"Fn::Sub": string}
   try {
-    definitionObj = parseDefinitionObject(definitionString);
+    [definitionObj, definitionFormat] = parseDefinitionObjectFromDefinitionString(definitionString);
   } catch (error) {
     log.warn(error + " " + getUnsupportedCaseErrorMessage("Lambda or Step Function"));
     return false;
@@ -74,17 +82,44 @@ export function mergeTracesWithDownstream(resources: Resources, stateMachine: St
   }
 
   // Step 3: Convert definition object back into definition string
-  definitionString = { "Fn::Sub": JSON.stringify(definitionObj) };
+  definitionString = dumpDefinitionObjectAsDefinitionString(definitionObj, definitionFormat);
 
   // Step 4: Write back the definition string to the state machine
   stateMachine.properties.DefinitionString = definitionString;
   return true;
 }
 
-function parseDefinitionObject(definitionString: { "Fn::Sub": string }): StateMachineDefinition {
-  const unparsedDefinition = definitionString["Fn::Sub"];
-  const definitionObj: StateMachineDefinition = JSON.parse(unparsedDefinition);
-  return definitionObj;
+function parseDefinitionObjectFromDefinitionString(
+  definitionString: DefinitionString,
+): [StateMachineDefinition, StateMachineDefinitionFormat] {
+  let definitionFormat: StateMachineDefinitionFormat;
+  let definitionObj;
+
+  if (typeof definitionString === "string") {
+    // Case 1: definitionString is a string
+    definitionFormat = StateMachineDefinitionFormat.STRING;
+    definitionObj = JSON.parse(definitionString);
+  } else if (typeof definitionString === "object" && "Fn::Sub" in definitionString) {
+    // Case 2: definitionString is {"Fn::Sub": string}
+    definitionFormat = StateMachineDefinitionFormat.FN_SUB_WITH_STRING;
+    definitionObj = JSON.parse(definitionString["Fn::Sub"]);
+  } else {
+    throw new Error("Unsupported definition string format.");
+  }
+
+  return [definitionObj, definitionFormat];
+}
+
+function dumpDefinitionObjectAsDefinitionString(
+  definitionObj: StateMachineDefinition,
+  definitionFormat: StateMachineDefinitionFormat,
+): DefinitionString {
+  switch (definitionFormat) {
+    case StateMachineDefinitionFormat.STRING:
+      return JSON.stringify(definitionObj);
+    case StateMachineDefinitionFormat.FN_SUB_WITH_STRING:
+      return { "Fn::Sub": JSON.stringify(definitionObj) };
+  }
 }
 
 function isLambdaInvocationStep(resource: string | undefined): boolean {
