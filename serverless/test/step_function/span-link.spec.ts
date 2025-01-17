@@ -2,6 +2,7 @@ import {
   mergeTracesWithDownstream,
   StateMachineState,
   StateMachineDefinition,
+  updateDefinitionForLambdaInvocationStep,
 } from "../../src/step_function/span-link";
 import { Resources } from "common/types";
 import { StateMachine } from "../../src/step_function/types";
@@ -20,6 +21,9 @@ describe("Step Function Span Link", () => {
           HelloFunction: {
             Type: "Task",
             Resource: "arn:aws:states:::lambda:invoke",
+            Parameters: {
+              FunctionName: "MyLambdaFunction",
+            },
             End: true,
           } as StateMachineState,
         },
@@ -36,7 +40,9 @@ describe("Step Function Span Link", () => {
       expect(isTraceMergingSetUp).toBe(true);
 
       const updatedDefinition = JSON.parse(stateMachine.properties.DefinitionString);
-      expect(updatedDefinition.States["HelloFunction"].Parameters).toStrictEqual({ FunctionName: "MyLambdaFunction" });
+      expect(updatedDefinition.States["HelloFunction"].Parameters["Payload.$"]).toEqual(
+        "$$['Execution', 'State', 'StateMachine']",
+      );
     });
 
     it('Case 2: succeeds when definitionString is {"Fn::Sub": string}', () => {
@@ -48,7 +54,9 @@ describe("Step Function Span Link", () => {
 
       const updatedDefinitionString = stateMachine.properties.DefinitionString as { "Fn::Sub": string };
       const updatedDefinition = JSON.parse(updatedDefinitionString["Fn::Sub"]);
-      expect(updatedDefinition.States["HelloFunction"].Parameters).toStrictEqual({ FunctionName: "MyLambdaFunction" });
+      expect(updatedDefinition.States["HelloFunction"].Parameters["Payload.$"]).toEqual(
+        "$$['Execution', 'State', 'StateMachine']",
+      );
     });
 
     it('Case 3: succeeds when definitionString is {"Fn::Sub": (string | object)[]}', () => {
@@ -60,7 +68,9 @@ describe("Step Function Span Link", () => {
 
       const updatedDefinitionString = stateMachine.properties.DefinitionString as { "Fn::Sub": (string | object)[] };
       const updatedDefinition = JSON.parse(updatedDefinitionString["Fn::Sub"][0] as string);
-      expect(updatedDefinition.States["HelloFunction"].Parameters).toStrictEqual({ FunctionName: "MyLambdaFunction" });
+      expect(updatedDefinition.States["HelloFunction"].Parameters["Payload.$"]).toEqual(
+        "$$['Execution', 'State', 'StateMachine']",
+      );
     });
 
     it("fails when state machine's definition is not found", () => {
@@ -75,6 +85,70 @@ describe("Step Function Span Link", () => {
       };
       const isTraceMergingSetUp = mergeTracesWithDownstream(resources, stateMachine);
       expect(isTraceMergingSetUp).toBe(false);
+    });
+  });
+
+  describe("updateDefinitionForLambdaInvocationStep", () => {
+    const stepName = "LambdaInvokeStep";
+    let lambdaState: StateMachineState;
+
+    beforeEach(() => {
+      lambdaState = {
+        Resource: "arn:aws:states:::lambda:invoke",
+        Parameters: {
+          FunctionName: "arn:aws:lambda:us-east-1:123456789012:function:my-function",
+        },
+        End: true,
+      };
+    });
+
+    it("Case 1: Lambda step has no Payload or Payload.$", () => {
+      updateDefinitionForLambdaInvocationStep(stepName, lambdaState);
+      expect(lambdaState.Parameters!["Payload.$"]).toEqual("$$['Execution', 'State', 'StateMachine']");
+    });
+
+    it("Case 2.1: Payload object has Execution, State or StateMachine field", () => {
+      lambdaState.Parameters!.Payload = {
+        Execution: "Execution Field",
+      };
+
+      expect(() => {
+        updateDefinitionForLambdaInvocationStep(stepName, lambdaState);
+      }).toThrow("Parameters.Payload has Execution, State or StateMachine field.");
+    });
+
+    it("Case 2.2: Payload object has no Execution.$, State.$ or StateMachine.$ field", () => {
+      lambdaState.Parameters!.Payload = {};
+      updateDefinitionForLambdaInvocationStep(stepName, lambdaState);
+
+      expect(lambdaState.Parameters!.Payload).toStrictEqual({
+        "Execution.$": "$$.Execution",
+        "State.$": "$$.State",
+        "StateMachine.$": "$$.StateMachine",
+      });
+    });
+
+    it("Case 3: Payload is not an object", () => {
+      lambdaState.Parameters!.Payload = "not an object";
+
+      expect(() => {
+        updateDefinitionForLambdaInvocationStep(stepName, lambdaState);
+      }).toThrow("Parameters.Payload field is not a JSON object.");
+    });
+
+    it("Case 4.1: Lambda step has default Payload.$ field", () => {
+      lambdaState.Parameters!["Payload.$"] = "$";
+
+      updateDefinitionForLambdaInvocationStep(stepName, lambdaState);
+      expect(lambdaState.Parameters!["Payload.$"]).toEqual("States.JsonMerge($$, $, false)");
+    });
+
+    it("Case 4.2: Lambda step has custom Payload.$ field", () => {
+      lambdaState.Parameters!["Payload.$"] = "$$['execution']";
+
+      expect(() => updateDefinitionForLambdaInvocationStep(stepName, lambdaState)).toThrow(
+        "Parameters.Payload has a custom Payload.$ field.",
+      );
     });
   });
 });
