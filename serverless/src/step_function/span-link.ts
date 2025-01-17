@@ -147,9 +147,72 @@ function isLambdaInvocationStep(resource: string | undefined): boolean {
   );
 }
 
-function updateDefinitionForLambdaInvocationStep(stepName: string, state: StateMachineState): void {
-  // TODO: Replace this dummy implementation with the actual implementation
-  state.Parameters = { FunctionName: "MyLambdaFunction" };
+/**
+ * Modify the definition of a Lambda invocation step to allow merging the Step Function's traces with its downstream
+ * Lambda's traces.
+ * In case of failure, throw an error.
+ *
+ * Truth table
+ * Case | Input                                                    | Will update
+ * -----|----------------------------------------------------------|-------------
+ *   1  | No "Payload" or "Payload.$"                              | true
+ *  2.1 | "Payload" object has Execution, State or StateMachine    | false
+ *  2.2 | "Payload" object has no Execution, State or StateMachine | true
+ *   3  | "Payload" is not object                                  | false
+ *  4.1 | Has default "Payload.$", (value is "$")                  | true
+ *  4.2 | Has custom "Payload.$"                                   | false
+ */
+export function updateDefinitionForLambdaInvocationStep(stepName: string, state: StateMachineState): void {
+  log.debug(`Setting up trace merging for Lambda Invocation step ${stepName}`);
+
+  if (typeof state.Parameters !== "object") {
+    throw new Error("Parameters field is not a JSON object.");
+  }
+
+  // Case 2 & 3: Parameters has "Payload" field
+  if ("Payload" in state.Parameters) {
+    const payload = state.Parameters.Payload;
+
+    // Case 3: payload is not a JSON object
+    if (typeof payload !== "object") {
+      throw new Error("Parameters.Payload field is not a JSON object.");
+    }
+
+    // Case 2: payload is a JSON object
+
+    // Case 2.1: "Payload" object has Execution, State or StateMachine field
+    if (
+      "Execution.$" in payload ||
+      "Execution" in payload ||
+      "State.$" in payload ||
+      "State" in payload ||
+      "StateMachine.$" in payload ||
+      "StateMachine" in payload
+    ) {
+      throw new Error("Parameters.Payload has Execution, State or StateMachine field.");
+    }
+
+    // Case 2.2: "Payload" object has no Execution, State or StateMachine field
+    payload["Execution.$"] = "$$.Execution";
+    payload["State.$"] = "$$.State";
+    payload["StateMachine.$"] = "$$.StateMachine";
+    return;
+  }
+
+  // Case 4: Parameters has "Payload.$" field
+  if ("Payload.$" in state.Parameters) {
+    // Case 4.1 "Payload.$" has default value of "$"
+    if (state.Parameters["Payload.$"] === "$") {
+      state.Parameters["Payload.$"] = "States.JsonMerge($$, $, false)";
+      return;
+    }
+
+    // Case 4.2: Parameters has custom "Payload.$" field. This should be rare, so we don't support this case for now.
+    throw new Error("Parameters.Payload has a custom Payload.$ field.");
+  }
+
+  // Case 1: No "Payload" or "Payload.$"
+  state.Parameters["Payload.$"] = "$$['Execution', 'State', 'StateMachine']";
 }
 
 function getUnsupportedCaseErrorMessage(resourceType: string): string {
