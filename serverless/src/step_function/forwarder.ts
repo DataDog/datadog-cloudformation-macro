@@ -11,9 +11,10 @@ export const SUBSCRIPTION_FILTER_PREFIX = "LogGroupDatadogSubscriptionFilter";
  */
 export function addForwarder(resources: Resources, config: Configuration, stateMachine: StateMachine): void {
   log.debug(`Subscribing the forwarder to the log group...`);
-  const logGroup = findLogGroup(resources, stateMachine);
+  const [logGroupKey, logGroup] = findLogGroup(resources, stateMachine);
   const subscriptionFilter = {
     Type: "AWS::Logs::SubscriptionFilter",
+    DependsOn: logGroupKey,
     Properties: {
       LogGroupName: logGroup.Properties.LogGroupName,
       DestinationArn: config.stepFunctionForwarderArn,

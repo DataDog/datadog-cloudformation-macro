@@ -168,8 +168,9 @@ export const buildLogGroupName = (stateMachine: StateMachine, env: string | unde
  *    "Fn::GetAtt": ["MyStateMachineLogGroup", "Arn"]
  *    which is the most common way of referencing a log group.
  * We can add support for other cases when users request it.
+ * @returns [logGroupKey, logGroup]
  */
-export function findLogGroup(resources: Resources, stateMachine: StateMachine): LogGroup {
+export function findLogGroup(resources: Resources, stateMachine: StateMachine): [string, LogGroup] {
   const logConfig = stateMachine.properties.LoggingConfiguration;
 
   if (!logConfig?.Destinations) {
@@ -189,5 +190,5 @@ export function findLogGroup(resources: Resources, stateMachine: StateMachine): 
   }
   const logGroupKey = logGroupArn[FN_GET_ATT][0];
   const logGroup = resources[logGroupKey];
-  return logGroup;
+  return [logGroupKey, logGroup];
 }
