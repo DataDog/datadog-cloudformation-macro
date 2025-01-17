@@ -18,6 +18,7 @@ export interface StateMachineProperties {
   // replaced with "Fn::Sub" by AWS CloudFormation template processing and the
   // CloudFormation Macro will get "Fn::Sub".
   DefinitionString?: DefinitionString;
+  Definition?: StateMachineDefinition;
 }
 
 // Matches AWS::StepFunctions::StateMachine LoggingConfiguration
@@ -39,4 +40,39 @@ export interface CloudWatchLogsLogGroup {
     | {
         "Fn::GetAtt": string[];
       };
+}
+
+export interface StateMachineDefinition {
+  States: { [key: string]: StateMachineState };
+}
+
+// Lambda invocation step's Payload field
+export type LambdaStepPayload = {
+  "Execution.$"?: any;
+  Execution?: any;
+  "State.$"?: any;
+  State?: any;
+  "StateMachine.$"?: any;
+  StateMachine?: any;
+};
+
+// Step Function invocation step's Input field
+export type StateMachineStateInput = {
+  "CONTEXT.$"?: string;
+  CONTEXT?: string;
+};
+
+// A state in the Step Function definition
+export interface StateMachineState {
+  Resource?: string;
+  Parameters?: {
+    FunctionName?: string;
+    // Payload field for Lambda invocation steps
+    Payload?: string | LambdaStepPayload;
+    "Payload.$"?: string;
+    // Input field for Step Function invocation steps
+    Input?: string | StateMachineStateInput;
+  };
+  Next?: string;
+  End?: boolean;
 }
