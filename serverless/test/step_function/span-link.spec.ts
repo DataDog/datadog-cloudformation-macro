@@ -3,6 +3,7 @@ import {
   StateMachineState,
   StateMachineDefinition,
   updateDefinitionForLambdaInvocationStep,
+  updateDefinitionForStepFunctionInvocationStep,
 } from "../../src/step_function/span-link";
 import { Resources } from "common/types";
 import { StateMachine } from "../../src/step_function/types";
@@ -149,6 +150,66 @@ describe("Step Function Span Link", () => {
       expect(() => updateDefinitionForLambdaInvocationStep(stepName, lambdaState)).toThrow(
         "Parameters.Payload has a custom Payload.$ field.",
       );
+    });
+  });
+
+  describe("updateDefinitionForStepFunctionInvocationStep", () => {
+    const stepName = "StepFunctionInvokeStep";
+    let stateMachineState: StateMachineState;
+
+    beforeEach(() => {
+      stateMachineState = {
+        Resource: "arn:aws:states:::states:startExecution",
+        Parameters: {},
+        End: true,
+      };
+    });
+
+    it("Case 0.1: Parameters field is not an object", () => {
+      stateMachineState.Parameters = "not an object" as any;
+      expect(() => {
+        updateDefinitionForStepFunctionInvocationStep(stepName, stateMachineState);
+      }).toThrow("Parameters field is not an object.");
+    });
+
+    it("Case 0.2: Parameters field has no Input field", () => {
+      updateDefinitionForStepFunctionInvocationStep(stepName, stateMachineState);
+      expect(stateMachineState.Parameters!.Input).toStrictEqual({
+        "CONTEXT.$": "States.JsonMerge($$, $, false)",
+      });
+    });
+
+    it("Case 0.3: Parameters.Input is not an object", () => {
+      stateMachineState.Parameters!.Input = "not an object";
+      expect(() => {
+        updateDefinitionForStepFunctionInvocationStep(stepName, stateMachineState);
+      }).toThrow("Parameters.Input field is not an object.");
+    });
+
+    it("Case 1: No CONTEXT or CONTEXT.$ field", () => {
+      stateMachineState.Parameters!.Input = {};
+      updateDefinitionForStepFunctionInvocationStep(stepName, stateMachineState);
+      expect(stateMachineState.Parameters!.Input).toEqual({
+        "CONTEXT.$": "$$['Execution', 'State', 'StateMachine']",
+      });
+    });
+
+    it("Case 2: Has CONTEXT field", () => {
+      stateMachineState.Parameters!.Input = {
+        CONTEXT: "some context",
+      };
+      expect(() => {
+        updateDefinitionForStepFunctionInvocationStep(stepName, stateMachineState);
+      }).toThrow("Parameters.Input has a custom CONTEXT field.");
+    });
+
+    it("Case 2: Has CONTEXT.$ field", () => {
+      stateMachineState.Parameters!.Input = {
+        "CONTEXT.$": "some context",
+      };
+      expect(() => {
+        updateDefinitionForStepFunctionInvocationStep(stepName, stateMachineState);
+      }).toThrow("Parameters.Input has a custom CONTEXT field.");
     });
   });
 });

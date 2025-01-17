@@ -12,6 +12,12 @@ export type LambdaStepPayload = {
   StateMachine?: any;
 };
 
+// Step Function invocation step's Input field
+export type StateMachineStateInput = {
+  "CONTEXT.$"?: string;
+  CONTEXT?: string;
+};
+
 export interface StateMachineDefinition {
   States: { [key: string]: StateMachineState };
 }
@@ -24,6 +30,8 @@ export interface StateMachineState {
     // Payload field for Lambda invocation steps
     Payload?: string | LambdaStepPayload;
     "Payload.$"?: string;
+    // Input field for Step Function invocation steps
+    Input?: string | StateMachineStateInput;
   };
   Next?: string;
   End?: boolean;
@@ -80,6 +88,12 @@ export function mergeTracesWithDownstream(resources: Resources, stateMachine: St
       } catch (error) {
         log.warn(error + " " + getUnsupportedCaseErrorMessage("Lambda"));
         return false;
+      }
+    } else if (isStepFunctionInvocationStep(step?.Resource)) {
+      try {
+        updateDefinitionForStepFunctionInvocationStep(stepName, step);
+      } catch (error) {
+        log.warn(error + " " + getUnsupportedCaseErrorMessage("Step Function"));
       }
     }
   }
@@ -221,4 +235,51 @@ not be merged with downstream ${resourceType}'s traces. To manually merge these 
 https://docs.datadoghq.com/serverless/step_functions/troubleshooting/. You may also open a feature request in \
 https://github.com/DataDog/datadog-cloudformation-macro. In the feature request, please include the \
 definition of your Lambda step or Step Function invocation step.\n`;
+}
+
+function isStepFunctionInvocationStep(resource: string | undefined): boolean {
+  if (resource === undefined) {
+    return false;
+  }
+  return resource.startsWith("arn:aws:states:::states:startExecution");
+}
+
+/**
+ * Modify the definition of a Step Function invocation step to allow merging a Step Function's traces with its downstream
+ * Step Function's traces.
+ * In case of failure, throw an error.
+ *
+ * Truth table
+ * Case | Input                                                    | Expected
+ * -----|----------------------------------------------------------|---------
+ *  0.1 | Parameters field is not an object                        | false
+ *  0.2 | Parameters field has no Input field                      | true
+ *  0.3 | Parameters.Input is not an object                        | false
+ *   1  | No "CONTEXT" or "CONTEXT.$"                              | true
+ *   2  | Has "CONTEXT"                                            | false
+ */
+export function updateDefinitionForStepFunctionInvocationStep(stepName: string, state: StateMachineState): void {
+  log.debug(`Setting up trace merging for Step Function Invocation step ${stepName}`);
+  const parameters = state?.Parameters;
+  // Case 0.1: Parameters field is not an object
+  if (typeof parameters !== "object") {
+    throw new Error("Parameters field is not an object.");
+  }
+  // Case 0.2: Parameters field has no Input field
+  if (!("Input" in parameters)) {
+    parameters.Input = { "CONTEXT.$": "States.JsonMerge($$, $, false)" };
+    return;
+  }
+  // Case 0.3: Parameters.Input is not an object
+  if (typeof parameters.Input !== "object") {
+    throw new Error("Parameters.Input field is not an object.");
+  }
+  // Case 1: No "CONTEXT" or "CONTEXT.$"
+  if (!("CONTEXT" in parameters.Input) && !("CONTEXT.$" in parameters.Input)) {
+    parameters.Input["CONTEXT.$"] = "$$['Execution', 'State', 'StateMachine']";
+    return;
+  }
+  // Case 2: Has 'CONTEXT' or "CONTEXT.$" field.
+  // This should be rare, so we don't support trace merging for this case for now.
+  throw new Error("Parameters.Input has a custom CONTEXT field.");
 }
