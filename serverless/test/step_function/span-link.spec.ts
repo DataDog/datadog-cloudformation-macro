@@ -83,6 +83,49 @@ describe("Step Function Span Link", () => {
       );
     });
 
+    it('Caser 5: succeeds when definition field is { "Fn::Join": ["\n", [<lines of a JSON string>] ] }', () => {
+      const definitionJsonLines = [
+        "{",
+        '  "States": {',
+        '    "HelloFunction": {',
+        '      "Type": "Task",',
+        '      "Resource": "arn:aws:states:::lambda:invoke",',
+        '      "Parameters": {',
+        '        "FunctionName": "MyLambdaFunction"',
+        "      },",
+        '      "End": true',
+        "    }",
+        "  }",
+        "}",
+      ];
+      stateMachine.properties.DefinitionString = {
+        "Fn::Join": ["\n", definitionJsonLines],
+      };
+      const isTraceMergingSetUp = mergeTracesWithDownstream(resources, stateMachine);
+      expect(isTraceMergingSetUp).toBe(true);
+
+      const updatedDefinition = stateMachine.properties.DefinitionString as { "Fn::Join": [string, string[]] };
+      expect(updatedDefinition["Fn::Join"]).toStrictEqual([
+        "\n",
+        [
+          "{",
+          '  "States": {',
+          '    "HelloFunction": {',
+          '      "Type": "Task",',
+          '      "Resource": "arn:aws:states:::lambda:invoke",',
+          '      "Parameters": {',
+          '        "FunctionName": "MyLambdaFunction",',
+          // The added line
+          "        \"Payload.$\": \"$$['Execution', 'State', 'StateMachine']\"",
+          "      },",
+          '      "End": true',
+          "    }",
+          "  }",
+          "}",
+        ],
+      ]);
+    });
+
     it("fails when state machine's definition is not found", () => {
       // stateMachine has no DefinitionString field
       const isTraceMergingSetUp = mergeTracesWithDownstream(resources, stateMachine);
