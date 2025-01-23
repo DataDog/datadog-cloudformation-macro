@@ -13,6 +13,10 @@ enum StateMachineDefinitionFormat {
   FN_SUB_WITH_STRING = "FN_SUB_WITH_STRING",
   // definitionString is { "Fn::Sub": (string | object)[] }
   FN_SUB_WITH_ARRAY = "FN_SUB_WITH_ARRAY",
+  // definitionString is { "Fn::Join": ["\n", [<lines of a JSON string>] ] }
+  // This is what the CloudFormation Macro will get when the user uses resource type AWS::Serverless::StateMachine
+  // and use its Definition field to define the state machine.
+  FN_JOIN_WITH_LINES = "FN_JOIN_WITH_LINES",
 }
 
 /**
@@ -93,12 +97,21 @@ function parseDefinitionObject(
       // Case 3: definitionString is {"Fn::Sub": (string | object)[]}
       const fnSubValue = definitionString["Fn::Sub"];
       if (typeof fnSubValue !== "object" || fnSubValue.length === 0 || typeof fnSubValue[0] !== "string") {
-        throw new Error("Unsupported format of Fn::Sub in defition string.");
+        throw new Error("Unsupported format of Fn::Sub in definition string.");
       }
       definitionFormat = StateMachineDefinitionFormat.FN_SUB_WITH_ARRAY;
       // index 0 should always be a string of step functions definition
       definitionObj = JSON.parse(fnSubValue[0]);
     }
+  } else if (typeof definitionString === "object" && "Fn::Join" in definitionString) {
+    // Case 5: definitionString is { "Fn::Join": ["\n", [<lines of a JSON string>] ] }
+    const fnJoinValue = definitionString["Fn::Join"];
+    if (!Array.isArray(fnJoinValue) || (fnJoinValue as unknown[]).length !== 2 || fnJoinValue[0] !== "\n") {
+      throw new Error("Unsupported format of Fn::Join in definition string.");
+    }
+    definitionFormat = StateMachineDefinitionFormat.FN_JOIN_WITH_LINES;
+    const lines = fnJoinValue[1];
+    definitionObj = JSON.parse(lines.join("\n"));
   } else {
     throw new Error("Unsupported definition string format.");
   }
@@ -127,6 +140,12 @@ function updateDefinition(
     case StateMachineDefinitionFormat.OBJECT:
       properties.Definition = definitionObj;
       break;
+    case StateMachineDefinitionFormat.FN_JOIN_WITH_LINES: {
+      const definitionObjJson = JSON.stringify(definitionObj, null, 2);
+      const lines = definitionObjJson.split("\n");
+      properties.DefinitionString = { "Fn::Join": ["\n", lines] };
+      break;
+    }
   }
 }
 
