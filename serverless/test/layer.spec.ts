@@ -13,7 +13,7 @@ import {
   getNewLayers,
 } from "../src/layer";
 
-function mockFunctionResource(runtime: string | { Ref: string }, architectures?: string[], packageType?: string) {
+function mockFunctionResource(runtime: string | { Ref: string }, architectures?: string[], packageType?: string, metadata?: { [key: string]: string } ) {
   return {
     Type: "AWS::Lambda::Function",
     Properties: {
@@ -21,6 +21,7 @@ function mockFunctionResource(runtime: string | { Ref: string }, architectures?:
       Role: "role-arn",
       Runtime: runtime,
       Architectures: architectures,
+      Metadata: metadata,
       ...(packageType && { PackageType: packageType }), // set PackageType property if available
     },
   };
@@ -33,6 +34,7 @@ function mockLambdaFunction(
   architecture: string,
   architectureType: ArchitectureType = ArchitectureType.x86_64,
   runtimeProperty?: { Ref: string },
+  metadata?: { [key: string]: string },
 ) {
   return {
     properties: {
@@ -40,6 +42,7 @@ function mockLambdaFunction(
       Runtime: runtimeProperty ?? runtime,
       Role: "role-arn",
       Architectures: [architecture],
+      Metadata: metadata,
     },
     key,
     runtimeType,
@@ -74,6 +77,12 @@ describe("findLambdas", () => {
       Python311Function: mockFunctionResource("python3.11", ["x86_64"]),
       Python312Function: mockFunctionResource("python3.12", ["x86_64"]),
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
+      ProvidedFunctionWithoutMetadata2: mockFunctionResource("provided.al2", ["x86_64"]),
+      ProvidedFunctionWithoutMetadata2023: mockFunctionResource("provided.al2023", ["x86_64"]),
+      ProvidedFunctionWithInvalidMetadata: mockFunctionResource("provided.al2023", ["x86_64"], undefined, {"Runtime": "doesnotexist"}),
+      PythonFunctionWithMetadata: mockFunctionResource("python3.12", ["x86_64"], undefined, {"Runtime": "golang"}),
+      GoFunction2: mockFunctionResource("provided.al2", ["x86_64"],undefined, {"Runtime": "golang"}),
+      GoFunction2023: mockFunctionResource("provided.al2023", ["x86_64"],undefined, {"Runtime": "golang"}),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
     const lambdas = findLambdas(resources, { ValueRef: "nodejs14.x" });
@@ -101,6 +110,12 @@ describe("findLambdas", () => {
       mockLambdaFunction("Python311Function", "python3.11", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python312Function", "python3.12", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("ProvidedFunctionWithoutMetadata2", "provided.al2", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("ProvidedFunctionWithoutMetadata2023", "provided.al2023", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("ProvidedFunctionWithInvalidMetadata", "provided.al2023", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64, undefined, {"Runtime": "doesnotexist"}),
+      mockLambdaFunction("PythonFunctionWithMetadata", "python3.12", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64, undefined, {"Runtime": "golang"}),
+      mockLambdaFunction("GoFunction2", "provided.al2", RuntimeType.GOLANG, "x86_64", ArchitectureType.x86_64, undefined, {"Runtime": "golang"}),
+      mockLambdaFunction("GoFunction2023", "provided.al2023", RuntimeType.GOLANG, "x86_64", ArchitectureType.x86_64, undefined, {"Runtime": "golang"}),
       mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
       }),
@@ -304,6 +319,34 @@ describe("applyLayers", () => {
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:dd-trace-java:${javaLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
+    ]);
+  });
+
+  it("applies the golang and extension lambda layers", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "provided.al2", RuntimeType.GOLANG, "x86_64", ArchitectureType.x86_64, undefined, {"Runtime": "golang"});
+    const region = "us-east-1";
+    const extensionLayerVersion = 6;
+    const errors = applyLayers(region, [lambda], undefined, undefined, undefined, undefined);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
+    ]);
+  });
+
+  it("applies the golang and extension lambda layers for arm", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "provided.al2023", RuntimeType.GOLANG, "arm64", ArchitectureType.ARM64, undefined, {"Runtime": "golang"});
+    const region = "us-east-1";
+    const extensionLayerVersion = 6;
+    const errors = applyLayers(region, [lambda], undefined, undefined, undefined, undefined);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
     ]);
   });
