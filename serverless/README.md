@@ -223,4 +223,4 @@ For product feedback and questions, join the `#serverless` channel in the [Datad
 [9]: https://github.com/DataDog/dd-trace-dotnet-aws-lambda-layer/releases
 [10]: https://github.com/DataDog/datadog-lambda-java/releases
 
-Update to trigger gitlab pipeline
+Update to trigger gitlab pipeline!
