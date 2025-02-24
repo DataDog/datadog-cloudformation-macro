@@ -30,3 +30,5 @@ export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN
     --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" \
     --external-id $EXTERNAL_ID \
     --output text))
+
+
