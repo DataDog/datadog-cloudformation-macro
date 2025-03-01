@@ -47,13 +47,6 @@ if [ "$PROD_RELEASE" = true ] ; then
         exit 1
     fi
 
-    # Confirm to proceed
-    # read -p "About to bump the version from ${CURRENT_VERSION} to ${VERSION}, create a release serverless-macro-${VERSION} on Github and upload the template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml. Continue (y/n)?" CONT
-    # if [ "$CONT" != "y" ]; then
-    #     echo "Exiting"
-    #     exit 1
-    # fi
-
     # Get the latest code
     git pull origin main 
 
