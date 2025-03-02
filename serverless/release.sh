@@ -30,6 +30,9 @@ aws sts get-caller-identity
 echo "Validating template.yml"
 aws cloudformation validate-template --template-body file://./serverless/template.yml
 
+pwd 
+ls -la
+
 # Build and run test suite
 echo "Running unit tests and build script"
 yarn test 
