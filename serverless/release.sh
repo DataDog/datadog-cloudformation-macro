@@ -15,17 +15,6 @@ fi
 # Read the current version
 CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' ./serverless/template.yml | cut -d' ' -f2)
 
-# Read the desired version
-if [ -z "$2" ]; then
-    echo "Must specify a desired version number"
-    exit 1
-elif [[ ! $2 =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
-    echo "Must use a semantic version, e.g., 3.1.4"
-    exit 1
-else
-    VERSION=$2
-fi
-
 # Do a production release (default is staging) - useful for developers
 if [[ $# -eq 3 ]] && [[ $3 = "--prod" ]]; then
     PROD_RELEASE=true
@@ -53,7 +42,7 @@ if [ "$PROD_RELEASE" = true ] ; then
         printf "Tag found in environment: $CI_COMMIT_TAG\n"
     fi
 
-    VERSION=$(echo "${CI_COMMIT_TAG##*v}" | cut -d. -f2)
+    VERSION=$(echo "${CI_COMMIT_TAG##*v}" | cut -d'-' -f3-)
 
     if [[ ! $(./tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
         echo "Must use a version greater than the current ($CURRENT_VERSION)"
@@ -81,6 +70,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
 else
+    VERSION=$(($CURRENT_VERSION + 1))
     echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
     # Upload to s3 instead of github
     ./tools/build_zip.sh "${VERSION}"
