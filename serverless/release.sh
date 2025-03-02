@@ -45,7 +45,6 @@ echo "Running unit tests and build script"
 yarn test 
 
 if [ "$PROD_RELEASE" = true ] ; then
-
     if [ -z "$CI_COMMIT_TAG" ]; then
         printf "[Error] No CI_COMMIT_TAG found.\n"
         printf "Exiting script...\n"
@@ -58,19 +57,6 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     if [[ ! $(./tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
         echo "Must use a version greater than the current ($CURRENT_VERSION)"
-        exit 1
-    fi
-
-    read -p "About to bump the version from ${CURRENT_VERSION} to ${VERSION}, create a release serverless-macro-${VERSION} on Github and upload the template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml. Continue (y/n)?" CONT
-    if [ "$CONT" != "y" ]; then
-        echo "Exiting"
-        exit 1
-    fi
-
-    # Make sure we are on main
-    BRANCH=$(git rev-parse --abbrev-ref HEAD)
-    if [ $BRANCH != "main" ]; then
-        echo "Not on main, aborting"
         exit 1
     fi
 
