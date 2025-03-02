@@ -40,8 +40,9 @@ echo "Running unit tests and build script"
 # yarn --help
 # yarn test 
 # popd 
-apt-get install npm -y
-npm install yarn -g
+apt-get install nodejs -y
+
+corepack enable
 
 yarn --version 
 yarn test
