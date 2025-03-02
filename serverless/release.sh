@@ -35,7 +35,7 @@ ls -la
 
 # Build and run test suite
 echo "Running unit tests and build script"
-yarn ./serverless/package.json test 
+yarn --cwd ./serverless/package.json test 
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
