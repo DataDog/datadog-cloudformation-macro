@@ -15,6 +15,17 @@ fi
 # Read the current version
 CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' ./serverless/template.yml | cut -d' ' -f2)
 
+# Read the desired version
+if [ -z "$2" ]; then
+    echo "Must specify a desired version number"
+    exit 1
+elif [[ ! $2 =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
+    echo "Must use a semantic version, e.g., 3.1.4"
+    exit 1
+else
+    VERSION=$2
+fi
+
 # Do a production release (default is staging) - useful for developers
 if [[ $# -eq 3 ]] && [[ $3 = "--prod" ]]; then
     PROD_RELEASE=true
@@ -35,8 +46,24 @@ yarn test
 
 if [ "$PROD_RELEASE" = true ] ; then
 
+    if [ -z "$CI_COMMIT_TAG" ]; then
+        printf "[Error] No CI_COMMIT_TAG found.\n"
+        printf "Exiting script...\n"
+        exit 1
+    else
+        printf "Tag found in environment: $CI_COMMIT_TAG\n"
+    fi
+
+    VERSION=$(echo "${CI_COMMIT_TAG##*v}" | cut -d. -f2)
+
     if [[ ! $(./tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
         echo "Must use a version greater than the current ($CURRENT_VERSION)"
+        exit 1
+    fi
+
+    read -p "About to bump the version from ${CURRENT_VERSION} to ${VERSION}, create a release serverless-macro-${VERSION} on Github and upload the template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml. Continue (y/n)?" CONT
+    if [ "$CONT" != "y" ]; then
+        echo "Exiting"
         exit 1
     fi
 
@@ -46,13 +73,6 @@ if [ "$PROD_RELEASE" = true ] ; then
         echo "Not on main, aborting"
         exit 1
     fi
-
-    # Confirm to proceed
-    # read -p "About to bump the version from ${CURRENT_VERSION} to ${VERSION}, create a release serverless-macro-${VERSION} on Github and upload the template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml. Continue (y/n)?" CONT
-    # if [ "$CONT" != "y" ]; then
-    #     echo "Exiting"
-    #     exit 1
-    # fi
 
     # Get the latest code
     git pull origin main 
