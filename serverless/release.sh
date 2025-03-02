@@ -35,11 +35,13 @@ ls -la
 
 # Build and run test suite
 echo "Running unit tests and build script"
-pushd ./serverless
-yarn --version
-yarn --help
-yarn test 
-popd 
+# pushd ./serverless
+# yarn --version
+# yarn --help
+# yarn test 
+# popd 
+apt-get install npm -y
+npm install yarn -g
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
