@@ -31,7 +31,7 @@ aws cloudformation validate-template --template-body file://./serverless/templat
 
 # Build and run test suite
 echo "Running unit tests and build script"
-# yarn test 
+yarn test 
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
@@ -55,7 +55,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Bump version number
     echo "Bumping the current version number to the desired"
     perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" ./serverless/template.yml
-    # yarn version --no-git-tag-version --new-version "${VERSION}"
+    yarn version --no-git-tag-version --new-version "${VERSION}"
 
     # Commit version number changes to git
     git add src/ ./serverless/template.yml README.md package.json
