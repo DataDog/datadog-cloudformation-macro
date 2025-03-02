@@ -44,7 +44,7 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     VERSION=$(echo "${CI_COMMIT_TAG##*v}" | cut -d'-' -f3-)
 
-    if [[ ! $(./tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
+    if [[ ! $(./serverless/tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
         echo "Must use a version greater than the current ($CURRENT_VERSION)"
         exit 1
     fi
@@ -64,7 +64,7 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
-    ./tools/build_zip.sh "${VERSION}"
+    ./serverless/tools/build_zip.sh "${VERSION}"
 
     gh release create serverless-macro-${VERSION} .macro/serverless-macro-${VERSION}.zip --generate-notes
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
@@ -73,7 +73,7 @@ else
     VERSION=$CI_COMMIT_SHA
     echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
     # Upload to s3 instead of github
-    ./tools/build_zip.sh "${VERSION}"
+    ./serverless/tools/build_zip.sh "${VERSION}"
     aws s3 cp .macro/serverless-macro-${VERSION}.zip s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro-staging/latest.yml"
     MACRO_SOURCE_URL="s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip"
