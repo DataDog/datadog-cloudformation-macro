@@ -36,6 +36,8 @@ ls -la
 # Build and run test suite
 echo "Running unit tests and build script"
 pushd ./serverless
+yarn --version
+yarn --help
 yarn test 
 popd 
 
