@@ -2,7 +2,7 @@
 
 # Usage: ./release.sh <S3_Bucket> <Version>
 
-set -e
+# set -e
 
 # Read the S3 bucket
 if [ -z "$1" ]; then
@@ -75,7 +75,7 @@ else
     echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
     # Upload to s3 instead of github
     ./serverless/tools/build_zip.sh "${VERSION}"
-    aws s3 cp .macro/serverless-macro-${VERSION}.zip s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip
+    # aws s3 cp .macro/serverless-macro-${VERSION}.zip s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro-staging/latest.yml"
     MACRO_SOURCE_URL="s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip"
 fi
@@ -91,8 +91,8 @@ if [ "$PROD_RELEASE" = true ] ; then
     echo "Version ${VERSION} has been released"
     echo "Update release notes with included PRs: https://github.com/DataDog/datadog-cloudformation-macro/releases/tag/serverless-macro-${VERSION}"
 else
-    aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml
-    aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
+    # aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml
+    # aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
     echo "Dev version ${VERSION} has been released"
 fi
 
