@@ -70,7 +70,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
 else
-    VERSION=$(($CURRENT_VERSION + 1))
+    VERSION=$CI_COMMIT_SHA
     echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
     # Upload to s3 instead of github
     ./tools/build_zip.sh "${VERSION}"
