@@ -43,6 +43,9 @@ echo "Running unit tests and build script"
 apt-get install npm -y
 npm install yarn -g
 
+yarn --version 
+yarn test
+
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
         printf "[Error] No CI_COMMIT_TAG found.\n"
