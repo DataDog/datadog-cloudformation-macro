@@ -12,6 +12,7 @@ else
     BUCKET=$1
 fi
 
+apt install yarn 
 # Read the current version
 CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' ./serverless/template.yml | cut -d' ' -f2)
 
