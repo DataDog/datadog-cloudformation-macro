@@ -2,7 +2,7 @@
 
 # Usage: ./release.sh <S3_Bucket> <Version>
 
-# set -e
+set -e
 
 # Read the S3 bucket
 if [ -z "$1" ]; then
@@ -34,7 +34,7 @@ aws cloudformation validate-template --template-body file://template.yml
 # Build and run test suite
 echo "Running unit tests and build script"
 
-yarn add --dev @types/jest
+# yarn add --dev @types/jest
 yarn test
 
 echo "$CI_PIPELINE_SOURCE"
