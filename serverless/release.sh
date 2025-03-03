@@ -5,13 +5,14 @@
 # set -e
 
 # Read the S3 bucket
-if [ -z "$1" ]; then
-    echo "Must specify a S3 bucket to publish the template"
-    exit 1
-else
-    BUCKET=$1
-fi
+# if [ -z "$1" ]; then
+#     echo "Must specify a S3 bucket to publish the template"
+#     exit 1
+# else
+#     BUCKET=$1
+# fi
 
+BUCKET='datadog-cloudformation-template-sandbox-staging'
 cd serverless
 
 # Read the current version
