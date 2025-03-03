@@ -37,6 +37,8 @@ ls -la
 echo "Running unit tests and build script"
 yarn test
 
+echo "${$CI_PIPELINE_SOURCE}"
+
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
         printf "[Error] No CI_COMMIT_TAG found.\n"
