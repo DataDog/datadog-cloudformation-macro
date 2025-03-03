@@ -10,7 +10,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
 
 # Read the desired version
-if [ -z "$1" giv]; then
+if [ -z "$1" ]; then
     echo "Must specify a desired version number"
     exit 1
 # fix this for sandbox 
