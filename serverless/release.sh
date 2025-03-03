@@ -32,6 +32,7 @@ aws cloudformation validate-template --template-body file://./serverless/templat
 # Build and run test suite
 echo "Running unit tests and build script"
 
+yarn add --dev @types/jest
 cd serverless
 yarn test
 
