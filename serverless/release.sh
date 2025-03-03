@@ -80,7 +80,7 @@ if [ "$PROD_RELEASE" = true ] ; then
 else
     VERSION=$CI_COMMIT_SHA
     echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
-    Upload to s3 instead of github
+    # Upload to s3 instead of github
     tools/build_zip.sh "${VERSION}"
     aws s3 cp .macro/serverless-macro-${VERSION}.zip s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro-staging/latest.yml"

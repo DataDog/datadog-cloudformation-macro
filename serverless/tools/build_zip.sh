@@ -10,10 +10,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd $DIR
 
 # Read the desired version
-if [ -z "$1" ]; then
+if [ -z "$1" giv]; then
     echo "Must specify a desired version number"
     exit 1
-elif [[ ! $1 =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
+# fix this for sandbox 
+elif [[ ! $1 =~ [0-9]+\.[0-9]+\.[0-9]+ && "$PROD_RELEASE" == "true" ]]; then
     echo "Must use a semantic version, e.g., 3.1.4"
     exit 1
 else
