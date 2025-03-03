@@ -2,7 +2,7 @@
 
 # Usage: ./release.sh <S3_Bucket> <Version>
 
-set -e
+# set -e
 
 # Read the S3 bucket
 if [ -z "$1" ]; then
