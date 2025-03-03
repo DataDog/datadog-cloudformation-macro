@@ -29,12 +29,12 @@ aws sts get-caller-identity
 echo "Validating template.yml"
 aws cloudformation validate-template --template-body file://./serverless/template.yml
 
-pwd 
-ls -la
-
 # Build and run test suite
 echo "Running unit tests and build script"
+
+pushd ./serverless
 yarn test
+popd
 
 echo "$CI_PIPELINE_SOURCE"
 
@@ -60,8 +60,10 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Bump version number
     echo "Bumping the current version number to the desired"
     perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" ./serverless/template.yml
+    pushd ./serverless
     yarn version --no-git-tag-version --new-version "${VERSION}"
-
+    popd
+    
     # Commit version number changes to git
     git add src/ ./serverless/template.yml README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
