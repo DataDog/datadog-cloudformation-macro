@@ -29,7 +29,7 @@ aws sts get-caller-identity
 
 # Validate the template
 echo "Validating template.yml"
-aws cloudformation validate-template --template-body file://template.yml
+aws cloudformation validate-template --template-body file://./serverless/template.yml
 
 # Build and run test suite
 echo "Running unit tests and build script"
@@ -66,7 +66,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     
 
     # Commit version number changes to git
-    git add src/ template.yml README.md package.json
+    git add src/ ./serverless/template.yml README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
     git push origin main
 
@@ -92,13 +92,13 @@ if [ "$PROD_RELEASE" = true ] ; then
     echo "Uploading template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml"
     aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml \
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/latest.yml \
+    aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro/latest.yml \
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
     echo "Version ${VERSION} has been released"
     echo "Update release notes with included PRs: https://github.com/DataDog/datadog-cloudformation-macro/releases/tag/serverless-macro-${VERSION}"
 else
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
+    aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml
+    aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
     echo "Dev version ${VERSION} has been released"
 
 fi
