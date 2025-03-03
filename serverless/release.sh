@@ -13,18 +13,7 @@ else
 fi
 
 # Read the current version
-CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
-
-# Read the desired version
-if [ -z "$2" ]; then
-    echo "Must specify a desired version number"
-    exit 1
-elif [[ ! $2 =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
-    echo "Must use a semantic version, e.g., 3.1.4"
-    exit 1
-else
-    VERSION=$2
-fi
+CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' ./serverless/template.yml | cut -d' ' -f2)
 
 # Do a production release (default is staging) - useful for developers
 if [[ $# -eq 3 ]] && [[ $3 = "--prod" ]]; then
@@ -38,7 +27,7 @@ aws sts get-caller-identity
 
 # Validate the template
 echo "Validating template.yml"
-aws cloudformation validate-template --template-body file://template.yml
+aws cloudformation validate-template --template-body file://./serverless/template.yml
 
 # Build and run test suite
 echo "Running unit tests and build script"
@@ -58,23 +47,16 @@ if [ "$PROD_RELEASE" = true ] ; then
         exit 1
     fi
 
-    # Confirm to proceed
-    read -p "About to bump the version from ${CURRENT_VERSION} to ${VERSION}, create a release serverless-macro-${VERSION} on Github and upload the template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml. Continue (y/n)?" CONT
-    if [ "$CONT" != "y" ]; then
-        echo "Exiting"
-        exit 1
-    fi
-
     # Get the latest code
     git pull origin main 
 
     # Bump version number
     echo "Bumping the current version number to the desired"
-    perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" template.yml
+    perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" ./serverless/template.yml
     yarn version --no-git-tag-version --new-version "${VERSION}"
 
     # Commit version number changes to git
-    git add src/ template.yml README.md package.json
+    git add src/ ./serverless/template.yml README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
     git push origin main
 
@@ -98,19 +80,19 @@ fi
 echo "Uploading template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml"
 
 if [ "$PROD_RELEASE" = true ] ; then
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml \
+    aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml \
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/latest.yml \
+    aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro/latest.yml \
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
     echo "Version ${VERSION} has been released"
     echo "Update release notes with included PRs: https://github.com/DataDog/datadog-cloudformation-macro/releases/tag/serverless-macro-${VERSION}"
 else
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
+    aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml
+    aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
     echo "Dev version ${VERSION} has been released"
 fi
 
-# echo "Done uploading the template, and here is the CloudFormation quick launch URL"
-# echo "https://console.aws.amazon.com/cloudformation/home#/stacks/quickCreate?stackName=datadog-serverless-macro&templateURL=${TEMPLATE_URL}"
+echo "Done uploading the template, and here is the CloudFormation quick launch URL"
+echo "https://console.aws.amazon.com/cloudformation/home#/stacks/quickCreate?stackName=datadog-serverless-macro&templateURL=${TEMPLATE_URL}"
 
 echo "Done!"
