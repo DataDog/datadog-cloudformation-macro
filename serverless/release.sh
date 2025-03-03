@@ -106,3 +106,5 @@ if [ "$PROD_RELEASE" = true ] ; then
 # echo "https://console.aws.amazon.com/cloudformation/home#/stacks/quickCreate?stackName=datadog-serverless-macro&templateURL=${TEMPLATE_URL}"
 
 echo "Done!"
+
+
