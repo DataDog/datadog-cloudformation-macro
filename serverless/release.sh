@@ -32,9 +32,8 @@ aws cloudformation validate-template --template-body file://./serverless/templat
 # Build and run test suite
 echo "Running unit tests and build script"
 
-pushd ./serverless
+cd serverless
 yarn test
-popd
 
 echo "$CI_PIPELINE_SOURCE"
 
@@ -60,10 +59,10 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Bump version number
     echo "Bumping the current version number to the desired"
     perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" ./serverless/template.yml
-    pushd ./serverless
+
     yarn version --no-git-tag-version --new-version "${VERSION}"
-    popd
     
+
     # Commit version number changes to git
     git add src/ ./serverless/template.yml README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
@@ -78,7 +77,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
 else
     VERSION=$CI_COMMIT_SHA
-    echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
+    # echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
     # Upload to s3 instead of github
     ./serverless/tools/build_zip.sh "${VERSION}"
     # aws s3 cp .macro/serverless-macro-${VERSION}.zip s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip
@@ -87,7 +86,7 @@ else
 fi
 
 # Upload the template to the S3 bucket
-echo "Uploading template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml"
+# echo "Uploading template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml"
 
 if [ "$PROD_RELEASE" = true ] ; then
     aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml \
@@ -99,10 +98,10 @@ if [ "$PROD_RELEASE" = true ] ; then
 else
     # aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml
     # aws s3 cp ./serverless/template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
-    echo "Dev version ${VERSION} has been released"
+    # echo "Dev version ${VERSION} has been released"
 fi
 
-echo "Done uploading the template, and here is the CloudFormation quick launch URL"
-echo "https://console.aws.amazon.com/cloudformation/home#/stacks/quickCreate?stackName=datadog-serverless-macro&templateURL=${TEMPLATE_URL}"
+# echo "Done uploading the template, and here is the CloudFormation quick launch URL"
+# echo "https://console.aws.amazon.com/cloudformation/home#/stacks/quickCreate?stackName=datadog-serverless-macro&templateURL=${TEMPLATE_URL}"
 
 echo "Done!"
