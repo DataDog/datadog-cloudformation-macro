@@ -13,7 +13,8 @@ cd $DIR
 if [ -z "$1" ]; then
     echo "Must specify a desired version number"
     exit 1
-elif [[ ! $1 =~ [0-9]+\.[0-9]+\.[0-9]+ ]]; then
+
+elif [[ ! $1 =~ [0-9]+\.[0-9]+\.[0-9]+ && "$PROD_RELEASE" == "true" ]]; then
     echo "Must use a semantic version, e.g., 3.1.4"
     exit 1
 else
