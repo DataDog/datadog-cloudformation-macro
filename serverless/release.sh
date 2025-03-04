@@ -18,7 +18,7 @@ cd serverless
 CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
 
 # Do a production release (default is staging) - useful for developers
-if [[ $# -eq 3 ]] && [[ $3 = "--prod" ]]; then
+if [[ $# -eq 2 ]] && [[ $2 = "--prod" ]]; then
     PROD_RELEASE=true
 else
     PROD_RELEASE=false
