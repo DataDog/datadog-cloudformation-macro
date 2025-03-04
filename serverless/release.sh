@@ -75,7 +75,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     echo "Release serverless-macro-${PROD_VERSION} to github"
     tools/build_zip.sh "${PROD_VERSION}"
 
-    gh release create serverless-macro-${VERSION} .macro/serverless-macro-${PROD_VERSION}.zip --generate-notes
+    gh release create serverless-macro-${PROD_VERSION} .macro/serverless-macro-${PROD_VERSION}.zip --generate-notes
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${PROD_VERSION}/serverless-macro-${PROD_VERSION}.zip'"
 fi
@@ -84,7 +84,7 @@ fi
     echo "About to release non-public staging version of macro, upload serverless-macro-${SANDBOX_VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${SANDBOX_VERSION}.yml"
     # Upload to s3 instead of github
     tools/build_zip.sh "${SANDBOX_VERSION}"
-    aws s3 cp .macro/serverless-macro-${VERSION}.zip s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${SANDBOX_VERSION}.zip
+    aws s3 cp .macro/serverless-macro-${SANDBOX_VERSION}.zip s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${SANDBOX_VERSION}.zip
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro-staging/latest.yml"
     MACRO_SOURCE_URL="s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${SANDBOX_VERSION}.zip"
 # fi
