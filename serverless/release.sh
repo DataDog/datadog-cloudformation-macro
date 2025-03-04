@@ -5,12 +5,13 @@
 # set -e
 
 # Read the S3 bucket
-# if [ -z "$1" ]; then
-#     echo "Must specify a S3 bucket to publish the template"
-#     exit 1
-# else
-#     BUCKET=$1
-# fi
+if [[ -z "$1" || -z "$2" ]]; then
+    echo "Must specify both prod and sandbox S3 buckets to publish the template"
+    exit 1
+else
+    PROD_BUCKET=$1
+    SANDBOX_BUCKET=$2
+fi
 
 BUCKET='datadog-cloudformation-template-sandbox-staging'
 cd serverless
@@ -76,32 +77,32 @@ if [ "$PROD_RELEASE" = true ] ; then
     tools/build_zip.sh "${PROD_VERSION}"
 
     gh release create serverless-macro-${PROD_VERSION} .macro/serverless-macro-${PROD_VERSION}.zip --generate-notes
-    TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
+    TEMPLATE_URL="https://${PROD_BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${PROD_VERSION}/serverless-macro-${PROD_VERSION}.zip'"
 fi
 # else
     SANDBOX_VERSION=$CI_COMMIT_SHA
-    echo "About to release non-public staging version of macro, upload serverless-macro-${SANDBOX_VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${SANDBOX_VERSION}.yml"
+    echo "About to release non-public staging version of macro, upload serverless-macro-${SANDBOX_VERSION} to s3, and upload the template.yml to s3://${PROD_BUCKET}/aws/serverless-macro-staging/${SANDBOX_VERSION}.yml"
     # Upload to s3 instead of github
     tools/build_zip.sh "${SANDBOX_VERSION}"
-    aws s3 cp .macro/serverless-macro-${SANDBOX_VERSION}.zip s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${SANDBOX_VERSION}.zip
-    TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro-staging/latest.yml"
-    MACRO_SOURCE_URL="s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${SANDBOX_VERSION}.zip"
+    aws s3 cp .macro/serverless-macro-${SANDBOX_VERSION}.zip s3://${SANDBOX_BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${SANDBOX_VERSION}.zip
+    TEMPLATE_URL="https://${SANDBOX_BUCKET}.s3.amazonaws.com/aws/serverless-macro-staging/latest.yml"
+    MACRO_SOURCE_URL="s3://${SANDBOX_BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${SANDBOX_VERSION}.zip"
 # fi
 
 # Upload the template to the S3 bucket
 if [ "$PROD_RELEASE" = true ] ; then
-    echo "Uploading template.yml to s3://${BUCKET}/aws/serverless-macro/${PROD_VERSION}.yml"
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/${PROD_VERSION}.yml \
+    echo "Uploading template.yml to s3://${PROD_BUCKET}/aws/serverless-macro/${PROD_VERSION}.yml"
+    aws s3 cp template.yml s3://${PROD_BUCKET}/aws/serverless-macro/${PROD_VERSION}.yml \
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/latest.yml \
+    aws s3 cp template.yml s3://${PROD_BUCKET}/aws/serverless-macro/latest.yml \
         --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
     echo "Version ${PROD_VERSION} has been released"
     echo "Update release notes with included PRs: https://github.com/DataDog/datadog-cloudformation-macro/releases/tag/serverless-macro-${PROD_VERSION}"
 # else
 fi
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro-staging/${SANDBOX_VERSION}.yml
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro-staging/latest.yml
+    aws s3 cp template.yml s3://${SANDBOX_BUCKET}/aws/serverless-macro-staging/${SANDBOX_VERSION}.yml
+    aws s3 cp template.yml s3://${SANDBOX_BUCKET}/aws/serverless-macro-staging/latest.yml
     echo "Dev version ${SANDBOX_VERSION} has been released"
 
 # fi
