@@ -60,22 +60,22 @@ if [ "$PROD_RELEASE" = true ] ; then
     alias gh="env -u GITHUB_TOKEN gh $1"
     gh auth status 
 
-    git config --global user.name "hannahqjiang"
-    git config --global user.email "hannah.jiang@datadoghq.com"
+    # git config --global user.name "hannahqjiang"
+    # git config --global user.email "hannah.jiang@datadoghq.com"
     # if [[ $(command -v gh) ]]; then
-        # gh auth refresh -h github.com -s user
+    gh auth refresh -h github.com -s user
 
-        # user=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user | jq -r .login)
-        # email=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user/emails | jq -r ".[0].email")
-        # echo "Setting $user <$email> as the default Git user..."
-        # git config --global user.name "$user"
-        # git config --global user.email "$email"
+    user=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user | jq -r .login)
+    email=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user/emails | jq -r ".[0].email")
+    echo "Setting $user <$email> as the default Git user..."
+    git config --global user.name "$user"
+    git config --global user.email "$email"
     # fi
 
     # Get the latest code
     # git pull origin main 
     echo "pulling from remote" 
-    git pull origin hannah.jiang/config-github-email
+    git pull origin main
 
     # Bump version number
     echo "Bumping the current version number to the desired"
@@ -91,7 +91,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     git branch --list
     git branch
     echo "pushing to remote branch"
-    git push origin hannah.jiang/config-github-email
+    git push origin main
 
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
