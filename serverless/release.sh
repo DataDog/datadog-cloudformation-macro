@@ -44,8 +44,11 @@ gh auth status
 echo "listing remotes" 
 git remote -v
 echo "setting host to github.com"
-GH_HOST="github.com" 
+# export GH_HOST="github.com" 
+git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
 echo "releasing draft" 
+echo "listing remotes again"
+git remote -v
 gh release create --draft serverless-macro-test --generate-notes
 
 if [ "$PROD_RELEASE" = true ] ; then
