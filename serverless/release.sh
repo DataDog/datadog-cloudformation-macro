@@ -39,6 +39,10 @@ yarn test
 
 echo "$CI_PIPELINE_SOURCE"
 
+# testing gh authentiation
+ gh auth login --with-token <<< "$GH_TOKEN"
+ gh auth status
+
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
         printf "[Error] No CI_COMMIT_TAG found.\n"
@@ -73,8 +77,9 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
     tools/build_zip.sh "${VERSION}"
-    
+
     gh auth login --with-token <<< "$GH_TOKEN"
+
     gh release create serverless-macro-${VERSION} .macro/serverless-macro-${VERSION}.zip --generate-notes
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
