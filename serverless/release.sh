@@ -34,17 +34,11 @@ aws cloudformation validate-template --template-body file://template.yml
 # Build and run test suite
 echo "Running unit tests and build script"
 
-# yarn add --dev @types/jest
+yarn add --dev @types/jest
 # yarn test
 
 echo "$CI_PIPELINE_SOURCE"
 
-# echo "logging in to gh"
-# gh auth login --with-token
-
-# echo "configuring github username and email" 
-# git config user.name "github-actions"
-# git config user.email "github-actions@github.com
 echo "checking github auth status" 
 gh auth status    
 
