@@ -74,6 +74,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     echo "Release serverless-macro-${VERSION} to github"
     tools/build_zip.sh "${VERSION}"
 
+    gh auth login --with-token
     gh release create serverless-macro-${VERSION} .macro/serverless-macro-${VERSION}.zip --generate-notes
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
