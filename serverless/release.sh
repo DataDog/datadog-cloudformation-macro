@@ -42,7 +42,7 @@ echo "$CI_PIPELINE_SOURCE"
 echo "checking github auth status" 
 gh auth status    
 echo "releasing draft" 
-gh release create --draft serverless-macro-test .macro/serverless-macro-test}.zip --generate-notes
+gh release create --draft serverless-macro-test --generate-notes
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
