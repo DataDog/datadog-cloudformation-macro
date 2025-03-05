@@ -40,7 +40,7 @@ yarn test
 echo "$CI_PIPELINE_SOURCE"
 
 # testing gh authentiation
- gh auth login --with-token <<< "$GH_TOKEN"
+ gh auth login --with-token < "$GH_TOKEN"
  gh auth status
 
 if [ "$PROD_RELEASE" = true ] ; then
