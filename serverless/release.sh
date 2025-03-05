@@ -2,7 +2,7 @@
 
 # Usage: ./release.sh <S3_Bucket> <Version>
 
-# set -e
+set -e
 
 # Read the S3 bucket
 if [ -z "$1" ]; then
@@ -39,15 +39,14 @@ yarn test
 
 echo "$CI_PIPELINE_SOURCE"
 
-echo "Release serverless-macro-${VERSION} to github"
-tools/build_zip.sh "${VERSION}"
-
 echo "logging in to gh"
 gh auth login --with-token
 
 echo "configuring github username and email" 
 git config user.name "github-actions"
 git config user.email "github-actions@github.com"
+
+git auth status
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
