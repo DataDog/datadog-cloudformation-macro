@@ -2,7 +2,7 @@
 
 # Usage: ./release.sh <S3_Bucket> <Version>
 
-set -e
+# set -e
 
 # Read the S3 bucket
 if [ -z "$1" ]; then
@@ -73,6 +73,7 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     # Get the latest code
     # git pull origin main 
+    echo "pulling from remote" 
     git pull origin main hannah.jiang/config-github-email
 
     # Bump version number
