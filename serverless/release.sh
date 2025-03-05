@@ -39,17 +39,7 @@ yarn add --dev @types/jest
 
 echo "$CI_PIPELINE_SOURCE"
 
-echo "checking github auth status" 
-gh auth status    
-echo "listing remotes" 
-git remote -v
-echo "setting host to github.com"
-# export GH_HOST="github.com" 
-git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
-echo "releasing draft" 
-echo "listing remotes again"
-git remote -v
-gh release create --draft serverless-macro-test --generate-notes
+
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
@@ -66,6 +56,12 @@ if [ "$PROD_RELEASE" = true ] ; then
         echo "Must use a version greater than the current ($CURRENT_VERSION)"
         exit 1
     fi
+
+    echo "Setting origin to github.com"
+    git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
+    echo "Authenticating with github"
+    gh auth login --with-token
+    gh auth status 
 
     # Get the latest code
     git pull origin main 
@@ -85,14 +81,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
     tools/build_zip.sh "${VERSION}"
-
-    echo "logging in to gh"
-    gh auth login --with-token
-   
-    echo "configuring github username and email" 
-    git config user.name "github-actions"
-    git config user.email "github-actions@github.com"
-
+    
     echo "Releasing to github"
     gh release create serverless-macro-${VERSION} .macro/serverless-macro-${VERSION}.zip --generate-notes
   
