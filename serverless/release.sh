@@ -42,11 +42,11 @@ echo "$CI_PIPELINE_SOURCE"
 echo "logging in to gh"
 gh auth login --with-token
 
-echo "configuring github username and email" 
-git config user.name "github-actions"
-git config user.email "github-actions@github.com"
-
-git auth status
+# echo "configuring github username and email" 
+# git config user.name "github-actions"
+# git config user.email "github-actions@github.com
+echo "checking github auth status" 
+gh auth status    
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
