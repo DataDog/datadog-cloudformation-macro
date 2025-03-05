@@ -62,7 +62,8 @@ if [ "$PROD_RELEASE" = true ] ; then
     gh auth status 
 
     # Get the latest code
-    git pull origin main 
+    # git pull origin main 
+    git pull origin main hannah.jiang/config-github-email
 
     # Bump version number
     echo "Bumping the current version number to the desired"
@@ -74,7 +75,8 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Commit version number changes to git
     git add src/ template.yml ../README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
-    git push origin main
+    # git push origin main
+    git push origin hannah.jiang/config-github-email
 
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
