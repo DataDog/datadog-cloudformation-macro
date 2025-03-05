@@ -2,7 +2,7 @@
 
 # Usage: ./release.sh <S3_Bucket> <Version>
 
-# set -e
+set -e
 
 # Read the S3 bucket
 if [ -z "$1" ]; then
@@ -38,8 +38,6 @@ yarn add --dev @types/jest
 # yarn test
 
 echo "$CI_PIPELINE_SOURCE"
-
-
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
