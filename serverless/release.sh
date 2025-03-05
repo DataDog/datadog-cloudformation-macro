@@ -59,14 +59,17 @@ if [ "$PROD_RELEASE" = true ] ; then
     git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
     alias gh="env -u GITHUB_TOKEN gh $1"
     gh auth status 
-    # if [[ $(command -v gh) ]]; then
-        gh auth refresh -h github.com -s user
 
-        user=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user | jq -r .login)
-        email=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user/emails | jq -r ".[0].email")
-        echo "Setting $user <$email> as the default Git user..."
-        git config --global user.name "$user"
-        git config --global user.email "$email"
+    git config --global user.name "hannahqjiang"
+    git config --global user.email "hannah.jiang@datadoghq.com"
+    # if [[ $(command -v gh) ]]; then
+        # gh auth refresh -h github.com -s user
+
+        # user=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user | jq -r .login)
+        # email=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user/emails | jq -r ".[0].email")
+        # echo "Setting $user <$email> as the default Git user..."
+        # git config --global user.name "$user"
+        # git config --global user.email "$email"
     # fi
 
     # Get the latest code
