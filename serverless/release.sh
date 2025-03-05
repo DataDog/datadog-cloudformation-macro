@@ -91,7 +91,8 @@ if [ "$PROD_RELEASE" = true ] ; then
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
     # git push origin main
     echo "pushing to remote branch"
-    git push --set-upstream origin main
+    git remote set-url origin https://$GH_TOKEN@github.com/hannahqjiang/main.git
+    git push origin main
 
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
