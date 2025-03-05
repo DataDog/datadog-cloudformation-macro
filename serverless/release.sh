@@ -40,15 +40,15 @@ yarn add --dev @types/jest
 echo "$CI_PIPELINE_SOURCE"
 
 if [ "$PROD_RELEASE" = true ] ; then
-    if [ -z "$CI_COMMIT_TAG" ]; then
-        printf "[Error] No CI_COMMIT_TAG found.\n"
-        printf "Exiting script...\n"
-        exit 1
-    else
-        printf "Tag found in environment: $CI_COMMIT_TAG\n"
-    fi
+    # if [ -z "$CI_COMMIT_TAG" ]; then
+    #     printf "[Error] No CI_COMMIT_TAG found.\n"
+    #     printf "Exiting script...\n"
+    #     exit 1
+    # else
+    #     printf "Tag found in environment: $CI_COMMIT_TAG\n"
+    # fi
 
-    VERSION=$(echo "${CI_COMMIT_TAG##*v}" | cut -d'-' -f3-)
+    # VERSION=$(echo "${CI_COMMIT_TAG##*v}" | cut -d'-' -f3-)
 
     if [[ ! $(tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
         echo "Must use a version greater than the current ($CURRENT_VERSION)"
@@ -57,6 +57,7 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     echo "Setting origin to github.com"
     git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
+    alias gh="env -u GITHUB_TOKEN gh $1"
     gh auth status 
 
     # Get the latest code
@@ -69,11 +70,12 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     yarn version --no-git-tag-version --new-version "${VERSION}"
     
-
+    echo "adding changes to git"
     # Commit version number changes to git
     git add src/ template.yml ../README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
     # git push origin main
+    echo "pushing to remote branch"
     git push origin hannah.jiang/config-github-email
 
     # Create a github release
