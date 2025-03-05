@@ -15,6 +15,7 @@ fi
 cd serverless
 # Read the current version
 CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
+echo (grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
 echo "Current version is $CURRENT_VERSION"
 
 # Do a production release (default is staging) - useful for developers
