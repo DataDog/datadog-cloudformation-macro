@@ -16,6 +16,7 @@ cd serverless
 
 # Read the current version
 CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
+echo "Current version is $CURRENT_VERSION"
 
 # Do a production release (default is staging) - useful for developers
 if [[ $# -eq 2 ]] && [[ $2 = "--prod" ]]; then
@@ -62,16 +63,15 @@ if [ "$PROD_RELEASE" = true ] ; then
     echo "Checking git auth status"
     gh auth status 
 
-    git config --global user.name "hannahqjiang"
-    git config --global user.email "hannah.jiang@datadoghq.com"
     # if [[ $(command -v gh) ]]; then
     # gh auth refresh -h github.com -s user
 
-    # user=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user | jq -r .login)
+    user=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user | jq -r .login)
     # email=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user/emails | jq -r ".[0].email")
-    # echo "Setting $user <$email> as the default Git user..."
-    # git config --global user.name "$user"
+    # echo "Setting $user <$email> as the Git user"
+    git config --global user.name "$user"
     # git config --global user.email "$email"
+    git config --global user.email "hannah.jiang@datadoghq.com"
     # fi
 
     # Get the latest code
@@ -80,7 +80,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     git pull origin main
 
     # Bump version number
-    echo "Bumping the current version number to the desired"
+    echo "Bumping the current version number from ${CURRENT_VERSION} to the ${VERSION}"
     perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" template.yml
 
     yarn version --no-git-tag-version --new-version "${VERSION}"
