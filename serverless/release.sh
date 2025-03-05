@@ -88,6 +88,8 @@ if [ "$PROD_RELEASE" = true ] ; then
     git add src/ template.yml ../README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
     # git push origin main
+    git branch --list
+    git branch
     echo "pushing to remote branch"
     git push origin hannah.jiang/config-github-email
 
