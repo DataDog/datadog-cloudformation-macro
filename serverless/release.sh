@@ -39,8 +39,8 @@ echo "Running unit tests and build script"
 
 echo "$CI_PIPELINE_SOURCE"
 
-echo "logging in to gh"
-gh auth login --with-token
+# echo "logging in to gh"
+# gh auth login --with-token
 
 # echo "configuring github username and email" 
 # git config user.name "github-actions"
