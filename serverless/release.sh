@@ -13,7 +13,6 @@ else
 fi
 
 cd serverless
-
 # Read the current version
 CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
 echo "Current version is $CURRENT_VERSION"
@@ -81,6 +80,11 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     # Bump version number
     echo "Bumping the current version number from ${CURRENT_VERSION} to the ${VERSION}"
+    # Check if current version is not empty and then replace the version number in the template.yml
+    if [ -z "$CURRENT_VERSION" ]; then
+        echo "Current version is empty"
+        exit 1
+    fi
     perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" template.yml
 
     yarn version --no-git-tag-version --new-version "${VERSION}"
