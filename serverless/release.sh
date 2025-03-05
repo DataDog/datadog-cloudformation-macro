@@ -15,7 +15,8 @@ fi
 cd serverless
 # Read the current version
 exit_code=0
-CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2) || exit_code=$?
+# CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2) || exit_code=$?
+CURRENT_VERSION=0.15.0
 echo "Exit code was $exit_code"
 cat template.yml
 echo "Extracting version from template.yml"
