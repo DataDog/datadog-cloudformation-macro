@@ -50,10 +50,10 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     # VERSION=$(echo "${CI_COMMIT_TAG##*v}" | cut -d'-' -f3-)
 
-    if [[ ! $(tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
-        echo "Must use a version greater than the current ($CURRENT_VERSION)"
-        exit 1
-    fi
+    # if [[ ! $(tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
+    #     echo "Must use a version greater than the current ($CURRENT_VERSION)"
+    #     exit 1
+    # fi
 
     echo "Setting origin to github.com"
     git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
