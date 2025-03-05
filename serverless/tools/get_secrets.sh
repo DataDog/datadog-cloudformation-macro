@@ -7,6 +7,8 @@
 
 set -e
 
+export GH_TOKEN=$(vault kv get -field="prod_publish_token" kv/k8s/gitlab-runner/datadog-cloudformation-macro/secrets)
+
 if [ -z "$EXTERNAL_ID_NAME" ]; then
     printf "[Error] No EXTERNAL_ID_NAME found.\n"
     printf "Exiting script...\n"
