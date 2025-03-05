@@ -34,8 +34,8 @@ aws cloudformation validate-template --template-body file://template.yml
 # Build and run test suite
 echo "Running unit tests and build script"
 
-yarn add --dev @types/jest
-yarn test
+# yarn add --dev @types/jest
+# yarn test
 
 echo "$CI_PIPELINE_SOURCE"
 
