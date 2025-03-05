@@ -17,8 +17,6 @@ cd serverless
 CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
 cat template.yml
 echo "Extracting version from template.yml"
-cat template.yml | grep 'Version: \d\+\.\d\+\.\d\+'
-cat template.yml | grep 'Version: \d\+\.\d\+\.\d\+' | cut -d' ' -f2
 grep --version
 echo "Current version is $CURRENT_VERSION"
 
