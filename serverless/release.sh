@@ -55,9 +55,11 @@ if [ "$PROD_RELEASE" = true ] ; then
     #     exit 1
     # fi
 
-    echo "Setting origin to github.com"
+    echo "Setting origin to github.com/DataDog/datadog-cloudformation-macro.git"
     git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
-    alias gh="env -u GITHUB_TOKEN gh $1"
+
+    # alias gh="env -u GITHUB_TOKEN gh $1"
+    echo "Checking git auth status"
     gh auth status 
 
     git config --global user.name "hannahqjiang"
@@ -88,10 +90,8 @@ if [ "$PROD_RELEASE" = true ] ; then
     git add src/ template.yml ../README.md package.json
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
     # git push origin main
-    git branch --list
-    git branch
     echo "pushing to remote branch"
-    git push origin main
+    git push --set-upstream origin main
 
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
