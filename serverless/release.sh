@@ -75,7 +75,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     # Get the latest code
     # git pull origin main 
     echo "pulling from remote" 
-    git pull origin main hannah.jiang/config-github-email
+    git pull origin hannah.jiang/config-github-email
 
     # Bump version number
     echo "Bumping the current version number to the desired"
