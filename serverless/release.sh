@@ -57,8 +57,6 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     echo "Setting origin to github.com"
     git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
-    echo "Authenticating with github"
-    gh auth login --with-token
     gh auth status 
 
     # Get the latest code
