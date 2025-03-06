@@ -48,7 +48,7 @@ echo "$CI_PIPELINE_SOURCE"
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
-        printf "[Error] No CI_COMMIT_TAG found. Create a new tag for this prod release in Repo first!\n"
+        printf "[Error] No CI_COMMIT_TAG found. Create a new tag for this prod release in repo first!\n"
         printf "Exiting script...\n"
         exit 1
     else
