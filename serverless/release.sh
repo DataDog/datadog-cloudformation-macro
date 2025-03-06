@@ -23,6 +23,7 @@ CUT_VER=$(echo $GREP_VER | cut -d' ' -f2)
 echo "CUT_VER: $CUT_VER"
 grep --version
 cut --version
+
 # If current version is empty, exit
 if [ -z "$CURRENT_VERSION" ]; then
     echo "Could not extract version from template.yml!"
@@ -76,19 +77,10 @@ if [ "$PROD_RELEASE" = true ] ; then
     echo "Checking git auth status"
     gh auth status 
 
-    # if [[ $(command -v gh) ]]; then
-    # gh auth refresh -h github.com -s user
-
-    user=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user | jq -r .login)
-    # email=$(gh api -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" /user/emails | jq -r ".[0].email")
-    # echo "Setting $user <$email> as the Git user"
-    git config --global user.name "$user"
-    # git config --global user.email "$email"
-    git config --global user.email "hannah.jiang@datadoghq.com"
-    # fi
+    git config --global user.name "gitlab-actions[bot]"
+    git config --global user.email "gitlab-actions[bot]@users.noreply.github.com"
 
     # Get the latest code
-    # git pull origin main 
     echo "pulling from remote" 
     git pull origin main
 
@@ -100,6 +92,9 @@ if [ "$PROD_RELEASE" = true ] ; then
         exit 1
     fi
     perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" template.yml
+    # Validate the updated template
+    echo "Validating template.yml after version bump"
+    aws cloudformation validate-template --template-body file://template.yml
 
     yarn version --no-git-tag-version --new-version "${VERSION}"
     
