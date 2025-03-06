@@ -14,15 +14,7 @@ fi
 
 cd serverless
 # Extract current version from the template so that we can replace it with the new version
-CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
-echo "Debug Start"
-pwd
-GREP_VER=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml)
-echo "GREP_VER: $GREP_VER"
-CUT_VER=$(echo $GREP_VER | cut -d' ' -f2)
-echo "CUT_VER: $CUT_VER"
-grep --version
-cut --version
+CURRENT_VERSION=$(grep -o 'Version: [0-9]\+\.[0-9]\+\.[0-9]\+' template.yml | cut -d' ' -f2)
 
 # If current version is empty, exit
 if [ -z "$CURRENT_VERSION" ]; then
@@ -56,7 +48,7 @@ echo "$CI_PIPELINE_SOURCE"
 
 if [ "$PROD_RELEASE" = true ] ; then
     if [ -z "$CI_COMMIT_TAG" ]; then
-        printf "[Error] No CI_COMMIT_TAG found.\n"
+        printf "[Error] No CI_COMMIT_TAG found. Create a new tag for this prod release in repo first!\n"
         printf "Exiting script...\n"
         exit 1
     else
@@ -73,7 +65,6 @@ if [ "$PROD_RELEASE" = true ] ; then
     echo "Setting origin to github.com/DataDog/datadog-cloudformation-macro.git"
     git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
 
-    # alias gh="env -u GITHUB_TOKEN gh $1"
     echo "Checking git auth status"
     gh auth status 
 
