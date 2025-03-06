@@ -15,6 +15,8 @@ fi
 cd serverless
 # Extract current version from the template so that we can replace it with the new version
 CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
+echo "Debug Start"
+pwd
 GREP_VER=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml)
 echo "GREP_VER: $GREP_VER"
 CUT_VER=$(echo $GREP_VER | cut -d' ' -f2)
