@@ -26,8 +26,8 @@ cd serverless
 # echo "After grep: $(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml)"
 # echo "After cut: $(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)"
 
-# Need -P to use \d, see: https://stackoverflow.com/questions/6901171/is-d-not-supported-by-greps-basic-expressions
-CURRENT_VERSION=$(grep -oP 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
+# \d may be unsupported. See: https://stackoverflow.com/questions/6901171/is-d-not-supported-by-greps-basic-expressions
+CURRENT_VERSION=$(grep -oP 'Version: [0-9]\+\.[0-9]\+\.[0-9]\+' template.yml | cut -d' ' -f2)
 echo "Current version is ${CURRENT_VERSION}"
 
 exit 0
