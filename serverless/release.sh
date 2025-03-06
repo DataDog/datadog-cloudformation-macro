@@ -14,8 +14,13 @@ fi
 
 cd serverless
 # Extract current version from the template so that we can replace it with the new version
-CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2) || exit_code=$?
-
+CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
+GREP_VER=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml)
+echo "GREP_VER: $GREP_VER"
+CUT_VER=$(echo $GREP_VER | cut -d' ' -f2)
+echo "CUT_VER: $CUT_VER"
+grep --version
+cut --version
 # If current version is empty, exit
 if [ -z "$CURRENT_VERSION" ]; then
     echo "Could not extract version from template.yml!"
