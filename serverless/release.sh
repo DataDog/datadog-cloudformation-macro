@@ -14,18 +14,20 @@ fi
 
 cd serverless
 # Read the current version
-exit_code=0
+# exit_code=0
 # CURRENT_VERSION=0.15.0
-echo "Exit code was $exit_code"
-echo "template.yml contents:"
-cat -A template.yml
-echo "grep version: $(grep --version)"
-echo "cut version: $(cut --version)"
-echo "Extracting version from template.yml"
+# echo "Exit code was $exit_code"
+# echo "template.yml contents:"
+# cat -A template.yml
+# echo "grep version: $(grep --version)"
+# echo "cut version: $(cut --version)"
+# echo "Extracting version from template.yml"
 
-echo "After grep: $(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml)"
-echo "After cut: $(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)"
-CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2) || exit_code=$?
+# echo "After grep: $(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml)"
+# echo "After cut: $(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)"
+
+# Need -P to use \d, see: https://stackoverflow.com/questions/6901171/is-d-not-supported-by-greps-basic-expressions
+CURRENT_VERSION=$(grep -oP 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2)
 echo "Current version is ${CURRENT_VERSION}"
 
 exit 0
