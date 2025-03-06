@@ -13,14 +13,16 @@ else
 fi
 
 cd serverless
-# Read the current version
-exit_code=0
-# CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2) || exit_code=$?
-CURRENT_VERSION=0.15.0
-echo "Exit code was $exit_code"
-cat template.yml
-echo "Extracting version from template.yml"
-echo "Current version is ${CURRENT_VERSION}"
+# Extract current version from the template so that we can replace it with the new version
+CURRENT_VERSION=$(grep -o 'Version: \d\+\.\d\+\.\d\+' template.yml | cut -d' ' -f2) || exit_code=$?
+
+# If current version is empty, exit
+if [ -z "$CURRENT_VERSION" ]; then
+    echo "Could not extract version from template.yml!"
+    exit 1
+else
+    echo "Version from template.yml is ${CURRENT_VERSION}"
+fi
 
 # Do a production release (default is staging) - useful for developers
 if [[ $# -eq 2 ]] && [[ $2 = "--prod" ]]; then
