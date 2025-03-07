@@ -48,7 +48,10 @@ export enum TracingMode {
   NONE,
 }
 
-function findIamRole(resources: Resources, lambda: LambdaFunction): IamRoleProperties | undefined {
+function findIamRoleFromCloudFormationTemplate(
+  resources: Resources,
+  lambda: LambdaFunction,
+): IamRoleProperties | undefined {
   const role = lambda.properties.Role;
   let roleKey;
   if (typeof role !== "string") {
@@ -88,12 +91,14 @@ export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[
     log.debug(`Xray policies: ${xrayPolicies}`);
 
     lambdas.forEach((lambda) => {
-      const role = findIamRole(resources, lambda);
+      const role = findIamRoleFromCloudFormationTemplate(resources, lambda);
 
       if (role === undefined) {
-        throw new MissingIamRoleError(
-          `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`,
+        log.warn(
+          `Failed to find the function ${lambda.key}'s role from the CloudFormation template when setting up xray tracing. \
+Please make sure the role already has the xray tracing policy. Follow the instructions to add the policy if you haven't done so. (TODO: add link)`,
         );
+        return;
       }
 
       log.debug(`Using IAM role: ${role}`);
