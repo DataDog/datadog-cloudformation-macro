@@ -48,7 +48,10 @@ export enum TracingMode {
   NONE,
 }
 
-function findIamRole(resources: Resources, lambda: LambdaFunction): IamRoleProperties | undefined {
+function findIamRoleFromCloudFormationTemplate(
+  resources: Resources,
+  lambda: LambdaFunction,
+): IamRoleProperties | undefined {
   const role = lambda.properties.Role;
   let roleKey;
   if (typeof role !== "string") {
@@ -79,58 +82,69 @@ export function getTracingMode(config: Configuration): TracingMode {
 
 export function enableTracing(tracingMode: TracingMode, lambdas: LambdaFunction[], resources: Resources): void {
   if (tracingMode === TracingMode.XRAY || tracingMode === TracingMode.HYBRID) {
-    log.debug("Enabling Xray tracing...");
-    const xrayPolicies = {
-      Effect: ALLOW,
-      Action: [PUT_TRACE_SEGMENTS, PUT_TELEMETRY_RECORDS],
-      Resource: ["*"],
-    };
-    log.debug(`Xray policies: ${xrayPolicies}`);
-
-    lambdas.forEach((lambda) => {
-      const role = findIamRole(resources, lambda);
-
-      if (role === undefined) {
-        throw new MissingIamRoleError(
-          `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`,
-        );
-      }
-
-      log.debug(`Using IAM role: ${role}`);
-
-      if (role.Policies && role.Policies.length > 0) {
-        const policy = role.Policies[0];
-        const policyDocument = policy.PolicyDocument;
-        if (policyDocument.Statement instanceof Array) {
-          policyDocument.Statement.push(xrayPolicies);
-        } else {
-          const statement = policyDocument.Statement;
-          policyDocument.Statement = [statement, xrayPolicies];
-        }
-      } else {
-        const policyName = { [FN_JOIN]: ["-", [lambda.key, POLICY]] };
-        const policyDocument = {
-          Version: POLICY_DOCUMENT_VERSION,
-          Statement: xrayPolicies,
-        };
-        role.Policies = [{ PolicyName: policyName, PolicyDocument: policyDocument }];
-      }
-      lambda.properties.TracingConfig = { Mode: ACTIVE };
-    });
+    enableXrayTracing(lambdas, resources);
   }
   if (tracingMode === TracingMode.HYBRID || tracingMode === TracingMode.DD_TRACE) {
-    log.debug("Enabling ddtrace for all Lambda functions...");
-    lambdas.forEach((lambda) => {
-      const environment = lambda.properties.Environment ?? {};
-      const envVariables = environment.Variables ?? {};
-      if (!(DD_TRACE_ENABLED in envVariables)) {
-        envVariables[DD_TRACE_ENABLED] = true;
-        log.debug(`${lambda.properties.FunctionName} skipped as DD_TRACE_ENABLED was defined on a function level`);
-      }
-      envVariables[DD_MERGE_XRAY_TRACES] = tracingMode === TracingMode.HYBRID;
-
-      environment.Variables = envVariables;
-      lambda.properties.Environment = environment;
-    });
+    enableDatadogTracing(lambdas, tracingMode);
   }
+}
+
+function enableXrayTracing(lambdas: LambdaFunction[], resources: Resources): void {
+  log.debug("Enabling Xray tracing...");
+  const xrayPolicies = {
+    Effect: ALLOW,
+    Action: [PUT_TRACE_SEGMENTS, PUT_TELEMETRY_RECORDS],
+    Resource: ["*"],
+  };
+  log.debug(`Xray policies: ${xrayPolicies}`);
+
+  lambdas.forEach((lambda) => {
+    lambda.properties.TracingConfig = { Mode: ACTIVE };
+
+    const role = findIamRoleFromCloudFormationTemplate(resources, lambda);
+    if (role === undefined) {
+      log.warn(
+        `Failed to find the function ${lambda.key}'s role from the CloudFormation template when setting up xray tracing. \
+Please make sure the role already has the xray tracing policy. Follow the instructions to add the policy if you haven't done so. \
+https://github.com/DataDog/datadog-cloudformation-macro/tree/main/serverless#configuration#setting-up-x-ray-tracing-using-a-predefined-lambda-execution-role`,
+      );
+      return;
+    }
+
+    log.debug(`Using IAM role: ${role}`);
+
+    if (role.Policies && role.Policies.length > 0) {
+      const policy = role.Policies[0];
+      const policyDocument = policy.PolicyDocument;
+      if (policyDocument.Statement instanceof Array) {
+        policyDocument.Statement.push(xrayPolicies);
+      } else {
+        const statement = policyDocument.Statement;
+        policyDocument.Statement = [statement, xrayPolicies];
+      }
+    } else {
+      const policyName = { [FN_JOIN]: ["-", [lambda.key, POLICY]] };
+      const policyDocument = {
+        Version: POLICY_DOCUMENT_VERSION,
+        Statement: xrayPolicies,
+      };
+      role.Policies = [{ PolicyName: policyName, PolicyDocument: policyDocument }];
+    }
+  });
+}
+
+function enableDatadogTracing(lambdas: LambdaFunction[], tracingMode: TracingMode): void {
+  log.debug("Enabling ddtrace for all Lambda functions...");
+  lambdas.forEach((lambda) => {
+    const environment = lambda.properties.Environment ?? {};
+    const envVariables = environment.Variables ?? {};
+    if (!(DD_TRACE_ENABLED in envVariables)) {
+      envVariables[DD_TRACE_ENABLED] = true;
+      log.debug(`${lambda.properties.FunctionName} skipped as DD_TRACE_ENABLED was defined on a function level`);
+    }
+    envVariables[DD_MERGE_XRAY_TRACES] = tracingMode === TracingMode.HYBRID;
+
+    environment.Variables = envVariables;
+    lambda.properties.Environment = environment;
+  });
 }
