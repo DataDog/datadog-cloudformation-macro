@@ -210,7 +210,7 @@ This error can occur if the IAM user executing the command lacks the `lambda:Inv
 
 ### Setting up X-Ray tracing using a predefined Lambda execution role
 
-To enable X-Ray tracing when you use a predefined Lambda execution role (i.e. created outside the CloudFormation template), e.g.
+Complete the following steps to enable X-Ray tracing when using a predefined Lambda execution role (such as one created outside the CloudFormation template, like this example):
 
 ```
 Resources:
@@ -220,9 +220,7 @@ Resources:
       Role: !Sub arn:aws:iam::${AWS::AccountId}:role/PredefinedRole
 ```
 
-please:
-
-1. Set `enableXrayTracing` option to `true` for the macro
+1. Set the `enableXrayTracing` option to `true` for the macro.
 2. Add this inline policy to your Lambda execution role:
 
 ```
