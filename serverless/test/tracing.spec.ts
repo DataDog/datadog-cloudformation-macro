@@ -1,5 +1,6 @@
 import { enableTracing, TracingMode, IamRoleProperties, MissingIamRoleError } from "../src/tracing";
 import { ArchitectureType, LambdaFunction, RuntimeType } from "../src/layer";
+import log from "loglevel";
 
 function mockLambdaFunction() {
   return {
@@ -174,8 +175,11 @@ describe("enableTracing", () => {
     expect(resources.HelloWorldFunctionRole.Properties.Policies).toBeUndefined();
   });
 
-  it("throws MissingIamRoleError if IAM role is not found", () => {
-    const tracingMode = TracingMode.XRAY;
+  it("prints a warning if X-Ray tracing is enabled but IAM role is not found", () => {
+    const warnSpy = jest.spyOn(log, "warn").mockImplementation(() => {
+      /* empty */
+    });
+    const tracingMode = TracingMode.HYBRID;
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
@@ -203,14 +207,18 @@ describe("enableTracing", () => {
       },
     };
 
-    expect.assertions(2);
-    try {
-      enableTracing(tracingMode, [lambda], resources);
-    } catch (err: any) {
-      expect(err).toBeInstanceOf(MissingIamRoleError);
-      expect(err.message).toEqual(
-        `No AWS::IAM::Role resource was found for the function ${lambda.key} when adding xray tracing policies`,
-      );
-    }
+    enableTracing(tracingMode, [lambda], resources);
+    expect(warnSpy).toHaveBeenCalledWith(
+      "Failed to find the function HelloWorldFunction's role from the CloudFormation template when setting up xray tracing. \
+Please make sure the role already has the xray tracing policy. Follow the instructions to add the policy if you haven't done so. \
+https://github.com/DataDog/datadog-cloudformation-macro/tree/main/serverless#configuration#setting-up-x-ray-tracing-using-a-predefined-lambda-execution-role",
+    );
+    expect(lambda.properties.Environment).toMatchObject({
+      Variables: {
+        DD_MERGE_XRAY_TRACES: true,
+      },
+    });
+
+    warnSpy.mockRestore();
   });
 });
