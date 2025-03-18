@@ -73,6 +73,7 @@ describe("findLambdas", () => {
       Python310Function: mockFunctionResource("python3.10", ["x86_64"]),
       Python311Function: mockFunctionResource("python3.11", ["x86_64"]),
       Python312Function: mockFunctionResource("python3.12", ["x86_64"]),
+      Python313Function: mockFunctionResource("python3.13", ["x86_64"]),
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
@@ -100,6 +101,7 @@ describe("findLambdas", () => {
       mockLambdaFunction("Python310Function", "python3.10", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python311Function", "python3.11", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python312Function", "python3.12", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Python313Function", "python3.13", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
@@ -213,7 +215,7 @@ describe("applyLayers", () => {
   });
 
   it("applies the python and extension lambda layers", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "python3.12", RuntimeType.PYTHON, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "python3.13", RuntimeType.PYTHON, "x86_64");
     const region = "us-east-1";
     const pythonLayerVersion = 25;
     const extensionLayerVersion = 6;
@@ -223,7 +225,7 @@ describe("applyLayers", () => {
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python312:${pythonLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python313:${pythonLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
     ]);
   });
