@@ -109,7 +109,6 @@ if [ "$PROD_RELEASE" = true ] ; then
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
 else
     VERSION=$CI_COMMIT_SHA
-    CURRENT_VERSION=$(grep -o 'Version: [0-9]\+\.[0-9]\+\.[0-9]\+' template.yml | cut -d' ' -f2)
     MACRO_SOURCE_URL="s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip"
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro-staging/latest.yml"
     #Replace the current version with the SHA hash of the commit
