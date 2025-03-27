@@ -118,7 +118,7 @@ else
     
     # Replace the default SourceZipUrl to the staging path
     echo "Replacing the default SourceZipUrl to the staging path"
-    perl -pi -e "s/github.com\/DataDog\/datadog-cloudformation-macro\/releases\/download\/serverless-macro-\$\{VERSION\}\//${BUCKET}.s3.amazonaws.com\/aws\/serverless-macro-staging-zip\//g" template.yml
+    perl -pi -e "s/github.com\/DataDog\/datadog-cloudformation-macro\/releases\/download\/serverless-macro-\${VERSION}/${BUCKET}.s3.amazonaws.com\/aws\/serverless-macro-staging-zip\//g" template.yml
     
     # Upload to s3 instead of github
     echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
