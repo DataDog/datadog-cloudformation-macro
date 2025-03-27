@@ -109,12 +109,19 @@ if [ "$PROD_RELEASE" = true ] ; then
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
 else
     VERSION=$CI_COMMIT_SHA
-    echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
-    # Upload to s3 instead of github
-    tools/build_zip.sh "${VERSION}"
-    aws s3 cp .macro/serverless-macro-${VERSION}.zip s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip
-    TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro-staging/latest.yml"
+    CURRENT_VERSION=$(grep -o 'Version: [0-9]\+\.[0-9]\+\.[0-9]\+' template.yml | cut -d' ' -f2)
     MACRO_SOURCE_URL="s3://${BUCKET}/aws/serverless-macro-staging-zip/serverless-macro-${VERSION}.zip"
+    TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro-staging/latest.yml"
+    #Replace the current version with the SHA hash of the commit
+    echo "Setting current version to ${VERSION}"
+    perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" template.yml
+    # Replace the default SourceZipUrl to the staging path
+    echo "Replacing the default SourceZipUrl to the staging path"
+    perl -pi -e "s/github.com\/DataDog\/datadog-cloudformation-macro\/releases\/download\/serverless-macro-\$\{VERSION\}\//${BUCKET}.s3.amazonaws.com\/aws\/serverless-macro-staging-zip\//g" template.yml
+    # Upload to s3 instead of github
+    echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
+    tools/build_zip.sh "${VERSION}"
+    aws s3 cp .macro/serverless-macro-${VERSION}.zip ${MACRO_SOURCE_URL}
 fi
 
 # Upload the template to the S3 bucket
