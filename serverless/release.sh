@@ -12,7 +12,9 @@ else
     BUCKET=$1
 fi
 
-cd serverless
+# Move into the serverless directory, so this script can be called from any directory
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd $DIR
 # Extract current version from the template so that we can replace it with the new version
 CURRENT_VERSION=$(grep -o 'Version: [0-9]\+\.[0-9]\+\.[0-9]\+' template.yml | cut -d' ' -f2)
 
@@ -108,7 +110,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
     MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
 else
-    VERSION=$CI_COMMIT_SHA
+    VERSION=${CI_COMMIT_SHA:-$(whoami)}
     echo "About to release non-public staging version of macro, upload serverless-macro-${VERSION} to s3, and upload the template.yml to s3://${BUCKET}/aws/serverless-macro-staging/${VERSION}.yml"
     # Upload to s3 instead of github
     tools/build_zip.sh "${VERSION}"
