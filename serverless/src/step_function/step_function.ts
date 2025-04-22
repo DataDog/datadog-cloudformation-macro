@@ -11,8 +11,17 @@ const STATE_MACHINE_RESOURCE_TYPE = "AWS::StepFunctions::StateMachine";
 
 export async function instrumentStateMachines(event: InputEvent, config: Configuration): Promise<OutputEvent> {
   const fragment = event.fragment;
-  const resources = fragment.Resources;
 
+  if (!config.stepFunctionForwarderArn) {
+    log.info("stepFunctionForwarderArn is not provided. Step functions will not be instrumented.");
+    return {
+      requestId: event.requestId,
+      status: SUCCESS,
+      fragment,
+    };
+  }
+
+  const resources = fragment.Resources;
   const stateMachines = findStateMachines(resources);
   for (const stateMachine of stateMachines) {
     instrumentStateMachine(resources, config, stateMachine);
@@ -30,11 +39,7 @@ function instrumentStateMachine(resources: Resources, config: Configuration, sta
 
   setUpLogging(resources, config, stateMachine);
 
-  if (config.stepFunctionForwarderArn !== undefined) {
-    addForwarder(resources, config, stateMachine);
-  } else {
-    log.debug("Forwarder ARN not provided, no log group subscriptions will be added");
-  }
+  addForwarder(resources, config, stateMachine);
 
   addTags(config, stateMachine);
 
