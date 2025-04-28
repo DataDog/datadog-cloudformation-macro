@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  SAM Template for Step Function app
+
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 128
+
+Parameters:
+  DdApiKey:
+    Type: String
+    Description: "Datadog API Key"
+    NoEcho: true
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: hello_world_python/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Events:
+        HelloWorld:
+          Type: Api
+          Properties:
+            Path: /hello
+            Method: get
+
+  # Define a state machine without using SAM (i.e. with type AWS::StepFunctions::StateMachine)
+  HelloStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      RoleArn: !GetAtt StepFunctionsExecutionRole.Arn
+      # [Bug Bash] Use "DefinitionString" instead of "Definition". You may ask coding AI to rewrite it.
+      Definition:
+        Comment: "A Hello World example of the Amazon States Language using an AWS Lambda Function"
+        StartAt: "Hello Function"
+        # [Bug Bash] Add other states
+        States:
+          "Hello Function":
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: !Ref HelloWorldFunction
+            End: true
+      # [Bug Bash] Delete this.
+      LoggingConfiguration:
+        # [Bug Bash] Set this to FATAL, ERROR, or ALL. Or delete this.
+        Level: "OFF"
+        # [Bug Bash] Set this to true or delete this.
+        IncludeExecutionData: false
+  # The state machine role needs to be created separately when SAM is not used
+  StepFunctionsExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: StepFunctionsInvokeLambdaPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: !GetAtt HelloWorldFunction.Arn
+
+  # Define a state machine using SAM (i.e. with type AWS::Serverless::StateMachine)
+  HelloStateMachine2:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      # [Bug Bash] Use "DefinitionString" instead of "Definition". You may ask coding AI to rewrite it.
+      Definition:
+        Comment: "A state machine that calls another state machine and a lambda function."
+        StartAt: "Invoke Step Function"
+        # [Bug Bash] Add other states.
+        States:
+          Invoke Step Function:
+            Type: Task
+            Resource: arn:aws:states:::states:startExecution
+            Parameters:
+              StateMachineArn: !GetAtt HelloStateMachine.Arn
+            Next: "Invoke Lambda Function"
+          Invoke Lambda Function:
+            Type: Task
+            Resource: arn:aws:states:::lambda:invoke
+            Parameters:
+              FunctionName: !Ref HelloWorldFunction
+            End: true
+      # [Bug Bash] Delete this.
+      Logging:
+        # [Bug Bash] Set this to FATAL, ERROR, or ALL. Or delete this.
+        Level: "OFF"
+        # [Bug Bash] Set this to true or delete this.
+        IncludeExecutionData: false
+      # One advantage of SAM: easier to define policies for the state machine
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: states:StartExecution
+              Resource: !GetAtt HelloStateMachine.Arn
+            - Effect: Allow
+              Action: lambda:InvokeFunction
+              Resource: !GetAtt HelloWorldFunction.Arn
+
+Transform:
+  - AWS::Serverless-2016-10-31
+  - Name: DatadogServerless
+    Parameters:
+      stackName: !Ref "AWS::StackName"
+      apiKey: !Sub ${DdApiKey}
+      pythonLayerVersion: 107
+      extensionLayerVersion: 77
+      service: my-service
+      env: dev
+      version: 1.0.0
+      tags: tag-key1:tag-value1,tag-key2:tag-value2
+      enableDDTracing: true
+      enableXrayTracing: true
+      stepFunctionForwarderArn: arn:aws:lambda:sa-east-1:425362996713:function:yiming-test-forwarder-Forwarder-slSj3OFIDdjL
