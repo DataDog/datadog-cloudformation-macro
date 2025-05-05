@@ -1,6 +1,7 @@
-import { defaultConfiguration, getConfigFromEnvVars } from "../src/env";
-import { RuntimeType, LambdaFunction } from "../src/layer";
-import { addDDTags, addMacroTag, addCDKTag, addSAMTag } from "../src/tags";
+import { LambdaConfigLoader } from "../../src/lambda/env";
+import { RuntimeType, LambdaFunction } from "../../src/lambda/layer";
+import { addCDKTag, addSAMTag } from "../../src/lambda/tags";
+import { addDDTags, addMacroTag } from "../../src/common/tags";
 
 function mockLambdaFunction(tags: { Key: string; Value: string }[]) {
   return {
@@ -16,10 +17,11 @@ function mockLambdaFunction(tags: { Key: string; Value: string }[]) {
   } as LambdaFunction;
 }
 
+const configLoader = new LambdaConfigLoader();
 describe("addDDTags", () => {
   it("does not override existing tags on function", () => {
     const config = {
-      ...defaultConfiguration,
+      ...configLoader.defaultConfiguration,
       service: "my-other-service",
       env: "test",
       version: "1",
@@ -32,14 +34,14 @@ describe("addDDTags", () => {
       { Key: "team", Value: "serverless" },
     ];
     const lambda = mockLambdaFunction(existingTags);
-    addDDTags([lambda], config);
+    addDDTags(lambda, config);
 
     expect(lambda.properties.Tags).toEqual([...existingTags, { Key: "project", Value: "marvel" }]);
   });
 
   it("does not add tags if provided config doesn't have tags", () => {
     const lambda = mockLambdaFunction([]);
-    addDDTags([lambda], defaultConfiguration);
+    addDDTags(lambda, configLoader.defaultConfiguration);
 
     expect(lambda.properties.Tags).toEqual([]);
   });
@@ -59,11 +61,11 @@ describe("addDDTags", () => {
     it("does add tags from the environment", () => {
       process.env["DD_TAGS"] = "strongest_avenger:hulk";
       const config = {
-        ...getConfigFromEnvVars(),
+        ...configLoader.getConfigFromEnvVars(),
         service: "my-service",
       };
       const lambda = mockLambdaFunction([]);
-      addDDTags([lambda], config);
+      addDDTags(lambda, config);
 
       expect(lambda.properties.Tags).toEqual([
         { Key: "service", Value: "my-service" },
@@ -74,14 +76,14 @@ describe("addDDTags", () => {
 
   it("creates tags property if needed", () => {
     const config = {
-      ...defaultConfiguration,
+      ...configLoader.defaultConfiguration,
       service: "my-service",
       env: "test",
       version: "1",
       tags: "team:avengers,project:marvel",
     };
     const lambda = mockLambdaFunction([]);
-    addDDTags([lambda], config);
+    addDDTags(lambda, config);
 
     expect(lambda.properties.Tags).toEqual([
       { Key: "service", Value: "my-service" },
@@ -94,7 +96,7 @@ describe("addDDTags", () => {
 
   it("adds to existing tags property if needed", () => {
     const config = {
-      ...defaultConfiguration,
+      ...configLoader.defaultConfiguration,
       service: "my-service",
       version: "1",
       tags: "team:avengers",
@@ -104,7 +106,7 @@ describe("addDDTags", () => {
       { Key: "project", Value: "lambda" },
     ];
     const lambda = mockLambdaFunction(existingTags);
-    addDDTags([lambda], config);
+    addDDTags(lambda, config);
 
     expect(lambda.properties.Tags).toEqual([
       { Key: "env", Value: "dev" },
@@ -120,14 +122,14 @@ describe("addMacroTag", () => {
   it("does not update tags if no version is passed in", () => {
     const existingTags = [{ Key: "band", Value: "ironmaiden" }];
     const lambda = mockLambdaFunction(existingTags);
-    addMacroTag([lambda], undefined);
+    addMacroTag(lambda, undefined);
 
     expect(lambda.properties.Tags).toEqual(existingTags);
   });
 
   it("creates tags property if needed", () => {
     const lambda = mockLambdaFunction([]);
-    addMacroTag([lambda], "6.6.6");
+    addMacroTag(lambda, "6.6.6");
 
     expect(lambda.properties.Tags).toEqual([{ Key: "dd_sls_macro", Value: "v6.6.6" }]);
   });
@@ -135,7 +137,7 @@ describe("addMacroTag", () => {
   it("appends version tag if needed", () => {
     const existingTags = [{ Key: "env", Value: "dev" }];
     const lambda = mockLambdaFunction(existingTags);
-    addMacroTag([lambda], "6.6.6");
+    addMacroTag(lambda, "6.6.6");
 
     expect(lambda.properties.Tags).toEqual([
       { Key: "env", Value: "dev" },

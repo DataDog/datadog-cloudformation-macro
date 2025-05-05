@@ -1,14 +1,12 @@
 import {
-  getConfigFromEnvVars,
-  getConfigFromCfnMappings,
-  getConfigFromCfnParams,
-  defaultConfiguration,
+  LambdaConfigLoader,
   setEnvConfiguration,
   validateParameters,
   checkForMultipleApiKeys,
-} from "../src/env";
-import { ArchitectureType, LambdaFunction, RuntimeType } from "../src/layer";
+} from "../../src/lambda/env";
+import { ArchitectureType, LambdaFunction, RuntimeType } from "../../src/lambda/layer";
 
+const loader = new LambdaConfigLoader();
 describe("getConfig", () => {
   it("correctly parses parameters from Mappings", () => {
     const params = {
@@ -16,13 +14,13 @@ describe("getConfig", () => {
       logLevel: "error",
     };
     const mappings = { Datadog: { Parameters: params } };
-    const config = getConfigFromCfnMappings(mappings);
+    const config = loader.getConfigFromCfnMappings(mappings);
     expect(config).toMatchObject(params);
   });
 
   it("gets default configuration when no parameters are specified", () => {
-    const config = getConfigFromCfnParams({});
-    expect(config).toEqual(expect.objectContaining(defaultConfiguration));
+    const config = loader.getConfigFromCfnParams({});
+    expect(config).toEqual(expect.objectContaining(loader.defaultConfiguration));
   });
 
   it("gets a mixed a configuration when some values are present", () => {
@@ -30,7 +28,7 @@ describe("getConfig", () => {
       site: "my-site",
       enableXrayTracing: false,
     };
-    const config = getConfigFromCfnParams(params);
+    const config = loader.getConfigFromCfnParams(params);
     expect(config).toEqual(
       expect.objectContaining({
         addLayers: true,
@@ -63,7 +61,7 @@ describe("getConfig", () => {
       process.env["DD_API_KEY_SECRET_ARN"] =
         "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
       process.env["DD_FLUSH_TO_LOG"] = "false";
-      const config = getConfigFromEnvVars();
+      const config = loader.getConfigFromEnvVars();
       expect(config).toEqual(
         expect.objectContaining({
           addLayers: true,
@@ -94,7 +92,7 @@ describe("getConfig", () => {
         enableEnhancedMetrics: true,
         captureLambdaPayload: false,
       };
-      const config = getConfigFromCfnParams(params);
+      const config = loader.getConfigFromCfnParams(params);
       expect(config).toEqual(
         expect.objectContaining({
           addLayers: true,
@@ -138,7 +136,7 @@ describe("setEnvConfiguration", () => {
       version: "1",
       tags: "team:avengers,project:marvel",
     };
-    setEnvConfiguration({ ...defaultConfiguration, ...config }, [lambda]);
+    setEnvConfiguration({ ...loader.defaultConfiguration, ...config }, [lambda]);
 
     expect(lambda.properties.Environment).toEqual({
       Variables: {
@@ -178,7 +176,7 @@ describe("setEnvConfiguration", () => {
       version: "1",
       tags: "team:avengers,project:marvel",
     };
-    setEnvConfiguration({ ...defaultConfiguration, ...config }, [lambda]);
+    setEnvConfiguration({ ...loader.defaultConfiguration, ...config }, [lambda]);
 
     expect(lambda.properties.Environment).toEqual({
       Variables: {
