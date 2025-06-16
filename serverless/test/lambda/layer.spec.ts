@@ -74,6 +74,7 @@ describe("findLambdas", () => {
       Python311Function: mockFunctionResource("python3.11", ["x86_64"]),
       Python312Function: mockFunctionResource("python3.12", ["x86_64"]),
       Python313Function: mockFunctionResource("python3.13", ["x86_64"]),
+      Python314Function: mockFunctionResource("python3.14", ["x86_64"]),
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
@@ -102,6 +103,7 @@ describe("findLambdas", () => {
       mockLambdaFunction("Python311Function", "python3.11", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python312Function", "python3.12", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python313Function", "python3.13", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Python314Function", "python3.14", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
