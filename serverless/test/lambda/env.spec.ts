@@ -555,7 +555,7 @@ describe("setEnvConfiguration", () => {
 
     expect(() => {
       setEnvConfiguration(config, [lambda]);
-    }).toThrowError(
+    }).toThrow(
       `\`apiKeySecretArn\` is not supported for Node runtimes (${lambda.properties.FunctionName}) when using Synchronous Metrics. Use either \`apiKey\` or \`apiKmsKey\`.`,
     );
   });
