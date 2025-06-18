@@ -100,7 +100,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
     # git push origin main
     echo "pushing to remote branch"
-    git remote set-url origin https://$GH_TOKEN@github.com/DataDog/datadog-cloudformation-macro.git
+    git remote set-url origin https://x-access-token:$GH_TOKEN@github.com/DataDog/datadog-cloudformation-macro.git
     git push origin main
 
     # Create a github release
