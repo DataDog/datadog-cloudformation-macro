@@ -71,7 +71,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
 
     echo "Checking git auth status"
-    gh auth status 
+    gh auth status
 
     git config --global user.name "gitlab-actions[bot]"
     git config --global user.email "gitlab-actions[bot]@users.noreply.github.com"
