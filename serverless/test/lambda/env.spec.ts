@@ -232,6 +232,9 @@ describe("setEnvConfiguration", () => {
       env: "test",
       version: "1",
       tags: "team:avengers,project:marvel",
+      llmObsEnabled: true,
+      llmObsMlApp: "my-llm-app",
+      llmObsAgentlessEnabled: false,
     };
     setEnvConfiguration(config, [lambda]);
 
@@ -256,6 +259,9 @@ describe("setEnvConfiguration", () => {
         DD_PROFILING_ENABLED: true,
         DD_ENCODE_AUTHORIZER_CONTEXT: true,
         DD_DECODE_AUTHORIZER_CONTEXT: true,
+        DD_LLMOBS_ENABLED: true,
+        DD_LLMOBS_ML_APP: "my-llm-app",
+        DD_LLMOBS_AGENTLESS_ENABLED: false,
       },
     });
   });
@@ -668,6 +674,49 @@ describe("validateParameters", () => {
 
     const errors = validateParameters(params);
     expect(errors.includes("`apiKey` and `apiKMSKey` should not be set at the same time.")).toBe(true);
+  });
+
+  it("returns an error when llmObsEnabled is true but llmObsMlApp is not set", () => {
+    const params = {
+      addLayers: true,
+      addExtension: false,
+      apiKey: "1234",
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+      llmObsEnabled: true,
+    };
+
+    const errors = validateParameters(params);
+    expect(errors).toContain("When `llmObsEnabled` is true, `llmObsMlApp` must also be set.");
+  });
+
+  it("returns an error when llmObsMlApp is not a valid value", () => {
+    const params = {
+      addLayers: true,
+      addExtension: false,
+      apiKey: "1234",
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+      llmObsEnabled: true,
+      llmObsMlApp: "bad~!@#$%^&*()_+",
+    };
+
+    const errors = validateParameters(params);
+    expect(errors).toContain(
+      "`llmObsMlApp` must only contain up to 193 alphanumeric characters, hyphens, underscores, periods, and slashes.",
+    );
   });
 
   it("works with ap1", () => {
