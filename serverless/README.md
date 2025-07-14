@@ -160,7 +160,7 @@ To further configure your macro, use the following custom parameters:
 | `stepFunctionForwarderArn`  | When set, the forwarder subscribes to all the State Machine' log groups. It is required for instrumenting Step Functions.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `llmObsEnabled`            | Toggle to enable submitting data to LLM Observability. Defaults to `false`. |
 | `llmObsMlApp`              | The name of your LLM application, service, or project, under which all traces and spans are grouped. This helps distinguish between different applications or experiments. See [Application naming guidelines](https://docs.datadoghq.com/llm_observability/sdk/?tab=nodejs#application-naming-guidelines) for allowed characters and other constraints. To override this value for a given root span, see [Tracing multiple applications](https://docs.datadoghq.com/llm_observability/sdk/?tab=nodejs#tracing-multiple-applications).  Required if `llmObsEnabled` is `true` |
-| `llmObsAgentlessEnabled`   | Only required if you are not using the Datadog Agent, in which case this should be set to `true`.  Defaults to `false`. |
+| `llmObsAgentlessEnabled`   | Only required if you are not using the Datadog Lambda Extension, in which case this should be set to `true`.  Defaults to `false`. |
 
 ## Troubleshooting
 

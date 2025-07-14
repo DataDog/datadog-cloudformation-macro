@@ -206,6 +206,7 @@ const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS
 const ddLlmObsEnabled = "DD_LLMOBS_ENABLED";
 const ddLlmObsMlApp = "DD_LLMOBS_ML_APP";
 const ddLlmObsAgentlessEnabled = "DD_LLMOBS_AGENTLESS_ENABLED";
+const llmObsMlAppRegex = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
 
 export function validateParameters(config: Configuration): string[] {
   log.debug("Validating parameters...");
@@ -248,7 +249,6 @@ export function validateParameters(config: Configuration): string[] {
   }
 
   if (config.llmObsMlApp !== undefined && config.llmObsMlApp !== "") {
-    const llmObsMlAppRegex = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
     if (!llmObsMlAppRegex.test(config.llmObsMlApp)) {
       errors.push(
         "`llmObsMlApp` must only contain up to 193 alphanumeric characters, hyphens, underscores, periods, and slashes.",
