@@ -85,6 +85,16 @@ export interface Configuration extends ConfigurationWithTags {
   // When the remaining time in a Lambda invocation is less than `apmFlushDeadline`, the tracer will
   // attempt to submit the current active spans and all finished spans.
   apmFlushDeadline?: string;
+
+  // When set to `true`, the LLM Observability feature is enabled.
+  llmObsEnabled?: boolean;
+
+  // The name of your LLM application, service, or project, under which all traces and
+  // spans are grouped. This helps distinguish between different applications or experiments.
+  llmObsMlApp?: string;
+
+  // Only required if you are not using the Datadog Agent.
+  llmObsAgentlessEnabled?: boolean;
 }
 
 export class LambdaConfigLoader extends ConfigLoader<Configuration> {
@@ -193,6 +203,10 @@ const ddProfilingEnabledEnvVar = "DD_PROFILING_ENABLED";
 const ddEncodeAuthorizerContextEnvVar = "DD_ENCODE_AUTHORIZER_CONTEXT";
 const ddDecodeAuthorizerContextEnvVar = "DD_DECODE_AUTHORIZER_CONTEXT";
 const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS";
+const ddLlmObsEnabled = "DD_LLMOBS_ENABLED";
+const ddLlmObsMlApp = "DD_LLMOBS_ML_APP";
+const ddLlmObsAgentlessEnabled = "DD_LLMOBS_AGENTLESS_ENABLED";
+const llmObsMlAppRegex = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
 
 export function validateParameters(config: Configuration): string[] {
   log.debug("Validating parameters...");
@@ -227,6 +241,18 @@ export function validateParameters(config: Configuration): string[] {
     }
     if (config.apiKey === undefined && config.apiKeySecretArn === undefined && config.apiKMSKey === undefined) {
       errors.push("When `extensionLayerVersion` is set, `apiKey`, `apiKeySecretArn`, or `apiKmsKey` must also be set.");
+    }
+  }
+
+  if (config.llmObsEnabled === true && (config.llmObsMlApp === undefined || config.llmObsMlApp === "")) {
+    errors.push("When `llmObsEnabled` is true, `llmObsMlApp` must also be set.");
+  }
+
+  if (config.llmObsMlApp !== undefined && config.llmObsMlApp !== "") {
+    if (!llmObsMlAppRegex.test(config.llmObsMlApp)) {
+      errors.push(
+        "`llmObsMlApp` must only contain up to 193 alphanumeric characters, hyphens, underscores, periods, and slashes.",
+      );
     }
   }
 
@@ -344,6 +370,16 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     if (config.apmFlushDeadline !== undefined && envVariables[ddApmFlushDeadlineMillisecondsEnvVar] === undefined) {
       envVariables[ddApmFlushDeadlineMillisecondsEnvVar] = config.apmFlushDeadline;
     }
+    if (config.llmObsEnabled !== undefined && envVariables[ddLlmObsEnabled] === undefined) {
+      envVariables[ddLlmObsEnabled] = config.llmObsEnabled;
+    }
+    if (config.llmObsMlApp !== undefined && envVariables[ddLlmObsMlApp] === undefined) {
+      envVariables[ddLlmObsMlApp] = config.llmObsMlApp;
+    }
+    if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabled] === undefined) {
+      envVariables[ddLlmObsAgentlessEnabled] = config.llmObsAgentlessEnabled;
+    }
+
     environment.Variables = envVariables;
     lambda.properties.Environment = environment;
   });
