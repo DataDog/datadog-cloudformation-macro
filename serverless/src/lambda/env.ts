@@ -95,6 +95,9 @@ export interface Configuration extends ConfigurationWithTags {
 
   // Only required if you are not using the Datadog Agent.
   llmObsAgentlessEnabled?: boolean;
+
+  // When set to `true`, enables FIPS mode for the Lambda function.
+  fipsMode: boolean;
 }
 
 export class LambdaConfigLoader extends ConfigLoader<Configuration> {
@@ -110,6 +113,7 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
     enableDDLogs: true,
     enableEnhancedMetrics: true,
     captureLambdaPayload: false,
+    fipsMode: false,
   };
 
   public getConfigFromEnvVars(): Configuration {
@@ -178,6 +182,9 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
     if (ddApmFlushDeadlineMillisecondsEnvVar in process.env) {
       config.apmFlushDeadline = process.env[ddApmFlushDeadlineMillisecondsEnvVar];
     }
+    if (ddFipsModeEnvVar in process.env) {
+      config.fipsMode = process.env[ddFipsModeEnvVar] === "true";
+    }
 
     return config;
   }
@@ -206,6 +213,7 @@ const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS
 const ddLlmObsEnabled = "DD_LLMOBS_ENABLED";
 const ddLlmObsMlApp = "DD_LLMOBS_ML_APP";
 const ddLlmObsAgentlessEnabled = "DD_LLMOBS_AGENTLESS_ENABLED";
+const ddFipsModeEnvVar = "DD_LAMBDA_FIPS_MODE";
 const llmObsMlAppRegex = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
 
 export function validateParameters(config: Configuration): string[] {
@@ -254,6 +262,13 @@ export function validateParameters(config: Configuration): string[] {
         "`llmObsMlApp` must only contain up to 193 alphanumeric characters, hyphens, underscores, periods, and slashes.",
       );
     }
+  }
+
+  if (config.fipsMode === true && config.site !== "ddog-gov.com") {
+    errors.push(
+      "Warning: FIPS mode is enabled but the site is not set to 'ddog-gov.com'. " +
+      "FIPS compliance typically requires using GovCloud endpoints.",
+    );
   }
 
   return errors;
@@ -378,6 +393,9 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     }
     if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabled] === undefined) {
       envVariables[ddLlmObsAgentlessEnabled] = config.llmObsAgentlessEnabled;
+    }
+    if (envVariables[ddFipsModeEnvVar] === undefined) {
+      envVariables[ddFipsModeEnvVar] = config.fipsMode;
     }
 
     environment.Variables = envVariables;

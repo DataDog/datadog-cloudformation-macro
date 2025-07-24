@@ -41,6 +41,7 @@ describe("getConfig", () => {
         enableDDLogs: true,
         enableEnhancedMetrics: true,
         captureLambdaPayload: false,
+        fipsMode: false,
       }),
     );
   });
@@ -75,6 +76,7 @@ describe("getConfig", () => {
           enableDDLogs: true,
           enableEnhancedMetrics: true,
           captureLambdaPayload: false,
+          fipsMode: false,
           apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
         }),
       );
@@ -105,9 +107,21 @@ describe("getConfig", () => {
           enableDDLogs: true,
           enableEnhancedMetrics: true,
           captureLambdaPayload: false,
+          fipsMode: false,
           apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
         }),
       );
+    });
+
+    it("gets fipsMode from environment variable", () => {
+      process.env["DD_LAMBDA_FIPS_MODE"] = "true";
+      const config = loader.getConfigFromEnvVars();
+      expect(config.fipsMode).toBe(true);
+    });
+
+    it("defaults fipsMode to false when env var not set", () => {
+      const config = loader.getConfigFromEnvVars();
+      expect(config.fipsMode).toBe(false);
     });
   });
 });
@@ -150,6 +164,7 @@ describe("setEnvConfiguration", () => {
         DD_VERSION: "1",
         DD_TAGS: "team:avengers,project:marvel",
         DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -189,6 +204,7 @@ describe("setEnvConfiguration", () => {
         DD_SERVICE: "my-service",
         DD_TAGS: "team:avengers,project:marvel",
         DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -262,6 +278,7 @@ describe("setEnvConfiguration", () => {
         DD_LLMOBS_ENABLED: true,
         DD_LLMOBS_ML_APP: "my-llm-app",
         DD_LLMOBS_AGENTLESS_ENABLED: false,
+        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -326,6 +343,7 @@ describe("setEnvConfiguration", () => {
         DD_PROFILING_ENABLED: true,
         DD_ENCODE_AUTHORIZER_CONTEXT: true,
         DD_DECODE_AUTHORIZER_CONTEXT: true,
+        DD_LAMBDA_FIPS_MODE: false,
         DD_TAGS: "team:avengers,project:marvel",
       },
     });
@@ -438,6 +456,7 @@ describe("setEnvConfiguration", () => {
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -482,6 +501,7 @@ describe("setEnvConfiguration", () => {
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -526,6 +546,7 @@ describe("setEnvConfiguration", () => {
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -737,6 +758,51 @@ describe("validateParameters", () => {
     const errors = validateParameters(params);
     console.log({ errors });
     expect(errors.length).toEqual(0);
+  });
+
+  it("returns a warning when FIPS mode is enabled but site is not ddog-gov.com", () => {
+    const params = {
+      addLayers: true,
+      addExtension: false,
+      apiKey: "1234",
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+      fipsMode: true,
+    };
+
+    const errors = validateParameters(params);
+    expect(
+      errors.includes(
+        "Warning: FIPS mode is enabled but the site is not set to 'ddog-gov.com'. " +
+        "FIPS compliance typically requires using GovCloud endpoints.",
+      ),
+    ).toBe(true);
+  });
+
+  it("does not return a warning when FIPS mode is enabled with ddog-gov.com site", () => {
+    const params = {
+      addLayers: true,
+      addExtension: false,
+      apiKey: "1234",
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "ddog-gov.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+      fipsMode: true,
+    };
+
+    const errors = validateParameters(params);
+    expect(errors.some(error => error.includes("FIPS mode is enabled"))).toBe(false);
   });
 });
 
