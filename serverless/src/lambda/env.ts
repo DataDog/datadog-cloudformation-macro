@@ -97,7 +97,7 @@ export interface Configuration extends ConfigurationWithTags {
   llmObsAgentlessEnabled?: boolean;
 
   // When set to `true`, enables FIPS mode for the Lambda function.
-  fipsMode: boolean;
+  fipsMode?: boolean;
 }
 
 export class LambdaConfigLoader extends ConfigLoader<Configuration> {
@@ -113,7 +113,6 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
     enableDDLogs: true,
     enableEnhancedMetrics: true,
     captureLambdaPayload: false,
-    fipsMode: false,
   };
 
   public getConfigFromEnvVars(): Configuration {
@@ -394,7 +393,7 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabled] === undefined) {
       envVariables[ddLlmObsAgentlessEnabled] = config.llmObsAgentlessEnabled;
     }
-    if (envVariables[ddFipsModeEnvVar] === undefined) {
+    if (config.fipsMode !== undefined && envVariables[ddFipsModeEnvVar] === undefined) {
       envVariables[ddFipsModeEnvVar] = config.fipsMode;
     }
 
