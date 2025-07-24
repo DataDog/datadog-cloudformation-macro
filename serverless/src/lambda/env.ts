@@ -266,7 +266,7 @@ export function validateParameters(config: Configuration): string[] {
   if (config.fipsMode === true && config.site !== "ddog-gov.com") {
     errors.push(
       "Warning: FIPS mode is enabled but the site is not set to 'ddog-gov.com'. " +
-      "FIPS compliance typically requires using GovCloud endpoints.",
+        "FIPS compliance typically requires using GovCloud endpoints.",
     );
   }
 

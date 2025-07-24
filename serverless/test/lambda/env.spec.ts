@@ -765,7 +765,7 @@ describe("validateParameters", () => {
     expect(
       errors.includes(
         "Warning: FIPS mode is enabled but the site is not set to 'ddog-gov.com'. " +
-        "FIPS compliance typically requires using GovCloud endpoints.",
+          "FIPS compliance typically requires using GovCloud endpoints.",
       ),
     ).toBe(true);
   });
@@ -787,7 +787,7 @@ describe("validateParameters", () => {
     };
 
     const errors = validateParameters(params);
-    expect(errors.some(error => error.includes("FIPS mode is enabled"))).toBe(false);
+    expect(errors.some((error) => error.includes("FIPS mode is enabled"))).toBe(false);
   });
 });
 
