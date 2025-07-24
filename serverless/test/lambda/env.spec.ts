@@ -41,7 +41,6 @@ describe("getConfig", () => {
         enableDDLogs: true,
         enableEnhancedMetrics: true,
         captureLambdaPayload: false,
-        fipsMode: false,
       }),
     );
   });
@@ -76,7 +75,6 @@ describe("getConfig", () => {
           enableDDLogs: true,
           enableEnhancedMetrics: true,
           captureLambdaPayload: false,
-          fipsMode: false,
           apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
         }),
       );
@@ -107,7 +105,6 @@ describe("getConfig", () => {
           enableDDLogs: true,
           enableEnhancedMetrics: true,
           captureLambdaPayload: false,
-          fipsMode: false,
           apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
         }),
       );
@@ -117,11 +114,6 @@ describe("getConfig", () => {
       process.env["DD_LAMBDA_FIPS_MODE"] = "true";
       const config = loader.getConfigFromEnvVars();
       expect(config.fipsMode).toBe(true);
-    });
-
-    it("defaults fipsMode to false when env var not set", () => {
-      const config = loader.getConfigFromEnvVars();
-      expect(config.fipsMode).toBe(false);
     });
   });
 });
@@ -164,7 +156,6 @@ describe("setEnvConfiguration", () => {
         DD_VERSION: "1",
         DD_TAGS: "team:avengers,project:marvel",
         DD_SERVERLESS_LOGS_ENABLED: true,
-        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -204,7 +195,6 @@ describe("setEnvConfiguration", () => {
         DD_SERVICE: "my-service",
         DD_TAGS: "team:avengers,project:marvel",
         DD_SERVERLESS_LOGS_ENABLED: true,
-        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -278,7 +268,6 @@ describe("setEnvConfiguration", () => {
         DD_LLMOBS_ENABLED: true,
         DD_LLMOBS_ML_APP: "my-llm-app",
         DD_LLMOBS_AGENTLESS_ENABLED: false,
-        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -343,7 +332,6 @@ describe("setEnvConfiguration", () => {
         DD_PROFILING_ENABLED: true,
         DD_ENCODE_AUTHORIZER_CONTEXT: true,
         DD_DECODE_AUTHORIZER_CONTEXT: true,
-        DD_LAMBDA_FIPS_MODE: false,
         DD_TAGS: "team:avengers,project:marvel",
       },
     });
@@ -456,7 +444,6 @@ describe("setEnvConfiguration", () => {
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
-        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -501,7 +488,6 @@ describe("setEnvConfiguration", () => {
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
-        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
@@ -546,7 +532,6 @@ describe("setEnvConfiguration", () => {
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
-        DD_LAMBDA_FIPS_MODE: false,
       },
     });
   });
