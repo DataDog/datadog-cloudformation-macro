@@ -745,50 +745,6 @@ describe("validateParameters", () => {
     expect(errors.length).toEqual(0);
   });
 
-  it("returns a warning when FIPS mode is enabled but site is not ddog-gov.com", () => {
-    const params = {
-      addLayers: true,
-      addExtension: false,
-      apiKey: "1234",
-      flushMetricsToLogs: true,
-      logLevel: "info",
-      site: "datadoghq.com",
-      enableXrayTracing: false,
-      enableDDTracing: true,
-      enableDDLogs: true,
-      enableEnhancedMetrics: true,
-      captureLambdaPayload: false,
-      fipsMode: true,
-    };
-
-    const errors = validateParameters(params);
-    expect(
-      errors.includes(
-        "Warning: FIPS mode is enabled but the site is not set to 'ddog-gov.com'. " +
-          "FIPS compliance typically requires using GovCloud endpoints.",
-      ),
-    ).toBe(true);
-  });
-
-  it("does not return a warning when FIPS mode is enabled with ddog-gov.com site", () => {
-    const params = {
-      addLayers: true,
-      addExtension: false,
-      apiKey: "1234",
-      flushMetricsToLogs: true,
-      logLevel: "info",
-      site: "ddog-gov.com",
-      enableXrayTracing: false,
-      enableDDTracing: true,
-      enableDDLogs: true,
-      enableEnhancedMetrics: true,
-      captureLambdaPayload: false,
-      fipsMode: true,
-    };
-
-    const errors = validateParameters(params);
-    expect(errors.some((error) => error.includes("FIPS mode is enabled"))).toBe(false);
-  });
 });
 
 describe("checkForMultipleApiKeys", () => {

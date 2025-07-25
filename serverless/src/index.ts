@@ -1,6 +1,6 @@
-import { validateParameters as validateLambdaParameters, LambdaConfigLoader } from "./lambda/env";
+import { LambdaConfigLoader, validateParameters as validateLambdaParameters } from "./lambda/env";
 import { instrumentLambdas } from "./lambda/lambda";
-import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "./common/types";
+import { FAILURE, InputEvent, OutputEvent } from "./common/types";
 import { instrumentStateMachines } from "./step_function/step_function";
 import { StepFunctionConfigLoader } from "./step_function/env";
 import log from "loglevel";
@@ -30,8 +30,7 @@ export const handler = async (event: InputEvent, _: any): Promise<OutputEvent> =
 
     const stepFunctionConfig = new StepFunctionConfigLoader().getConfig(event);
 
-    const stepFunctionOutput = await instrumentStateMachines(event, stepFunctionConfig);
-    return stepFunctionOutput;
+    return await instrumentStateMachines(event, stepFunctionConfig);
   } catch (error: any) {
     return {
       requestId: event.requestId,
