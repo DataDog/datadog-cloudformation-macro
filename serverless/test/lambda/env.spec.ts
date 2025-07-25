@@ -744,7 +744,6 @@ describe("validateParameters", () => {
     console.log({ errors });
     expect(errors.length).toEqual(0);
   });
-
 });
 
 describe("checkForMultipleApiKeys", () => {
