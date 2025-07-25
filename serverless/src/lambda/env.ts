@@ -97,7 +97,7 @@ export interface Configuration extends ConfigurationWithTags {
   llmObsAgentlessEnabled?: boolean;
 
   // When set to `true`, enables FIPS mode for the Lambda function.
-  fipsMode?: boolean;
+  lambdaFips?: boolean;
 }
 
 export class LambdaConfigLoader extends ConfigLoader<Configuration> {
@@ -182,7 +182,7 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
       config.apmFlushDeadline = process.env[ddApmFlushDeadlineMillisecondsEnvVar];
     }
     if (ddFipsModeEnvVar in process.env) {
-      config.fipsMode = process.env[ddFipsModeEnvVar] === "true";
+      config.lambdaFips = process.env[ddFipsModeEnvVar] === "true";
     }
 
     return config;
@@ -263,7 +263,7 @@ export function validateParameters(config: Configuration): string[] {
     }
   }
 
-  if (config.fipsMode === true && config.site !== "ddog-gov.com") {
+  if (config.lambdaFips === true && config.site !== "ddog-gov.com") {
     errors.push(
       "Warning: FIPS mode is enabled but the site is not set to 'ddog-gov.com'. " +
         "FIPS compliance typically requires using GovCloud endpoints.",
@@ -393,8 +393,8 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabledEnvVar] === undefined) {
       envVariables[ddLlmObsAgentlessEnabledEnvVar] = config.llmObsAgentlessEnabled;
     }
-    if (config.fipsMode !== undefined && envVariables[ddFipsModeEnvVar] === undefined) {
-      envVariables[ddFipsModeEnvVar] = config.fipsMode;
+    if (config.lambdaFips !== undefined && envVariables[ddFipsModeEnvVar] === undefined) {
+      envVariables[ddFipsModeEnvVar] = config.lambdaFips;
     }
 
     environment.Variables = envVariables;

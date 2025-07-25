@@ -113,7 +113,7 @@ describe("getConfig", () => {
     it("gets fipsMode from environment variable", () => {
       process.env["DD_LAMBDA_FIPS_MODE"] = "true";
       const config = loader.getConfigFromEnvVars();
-      expect(config.fipsMode).toBe(true);
+      expect(config.lambdaFips).toBe(true);
     });
   });
 });
