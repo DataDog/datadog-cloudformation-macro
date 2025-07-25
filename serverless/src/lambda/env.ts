@@ -209,11 +209,11 @@ const ddProfilingEnabledEnvVar = "DD_PROFILING_ENABLED";
 const ddEncodeAuthorizerContextEnvVar = "DD_ENCODE_AUTHORIZER_CONTEXT";
 const ddDecodeAuthorizerContextEnvVar = "DD_DECODE_AUTHORIZER_CONTEXT";
 const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS";
-const ddLlmObsEnabled = "DD_LLMOBS_ENABLED";
-const ddLlmObsMlApp = "DD_LLMOBS_ML_APP";
-const ddLlmObsAgentlessEnabled = "DD_LLMOBS_AGENTLESS_ENABLED";
+const ddLlmObsEnabledEnvVar = "DD_LLMOBS_ENABLED";
+const ddLlmObsMlAppEnvVar = "DD_LLMOBS_ML_APP";
+const ddLlmObsAgentlessEnabledEnvVar = "DD_LLMOBS_AGENTLESS_ENABLED";
 const ddFipsModeEnvVar = "DD_LAMBDA_FIPS_MODE";
-const llmObsMlAppRegex = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
+const llmObsMlAppRegexEnvVar = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
 
 export function validateParameters(config: Configuration): string[] {
   log.debug("Validating parameters...");
@@ -256,7 +256,7 @@ export function validateParameters(config: Configuration): string[] {
   }
 
   if (config.llmObsMlApp !== undefined && config.llmObsMlApp !== "") {
-    if (!llmObsMlAppRegex.test(config.llmObsMlApp)) {
+    if (!llmObsMlAppRegexEnvVar.test(config.llmObsMlApp)) {
       errors.push(
         "`llmObsMlApp` must only contain up to 193 alphanumeric characters, hyphens, underscores, periods, and slashes.",
       );
@@ -384,14 +384,14 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     if (config.apmFlushDeadline !== undefined && envVariables[ddApmFlushDeadlineMillisecondsEnvVar] === undefined) {
       envVariables[ddApmFlushDeadlineMillisecondsEnvVar] = config.apmFlushDeadline;
     }
-    if (config.llmObsEnabled !== undefined && envVariables[ddLlmObsEnabled] === undefined) {
-      envVariables[ddLlmObsEnabled] = config.llmObsEnabled;
+    if (config.llmObsEnabled !== undefined && envVariables[ddLlmObsEnabledEnvVar] === undefined) {
+      envVariables[ddLlmObsEnabledEnvVar] = config.llmObsEnabled;
     }
-    if (config.llmObsMlApp !== undefined && envVariables[ddLlmObsMlApp] === undefined) {
-      envVariables[ddLlmObsMlApp] = config.llmObsMlApp;
+    if (config.llmObsMlApp !== undefined && envVariables[ddLlmObsMlAppEnvVar] === undefined) {
+      envVariables[ddLlmObsMlAppEnvVar] = config.llmObsMlApp;
     }
-    if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabled] === undefined) {
-      envVariables[ddLlmObsAgentlessEnabled] = config.llmObsAgentlessEnabled;
+    if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabledEnvVar] === undefined) {
+      envVariables[ddLlmObsAgentlessEnabledEnvVar] = config.llmObsAgentlessEnabled;
     }
     if (config.fipsMode !== undefined && envVariables[ddFipsModeEnvVar] === undefined) {
       envVariables[ddFipsModeEnvVar] = config.fipsMode;
