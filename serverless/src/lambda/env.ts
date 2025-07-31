@@ -394,7 +394,7 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
       envVariables[ddLlmObsAgentlessEnabledEnvVar] = config.llmObsAgentlessEnabled;
     }
     if (config.lambdaFips !== undefined && envVariables[ddFipsModeEnvVar] === undefined) {
-      envVariables[ddFipsModeEnvVar] = config.lambdaFips;
+      envVariables[ddFipsModeEnvVar] = config.lambdaFips.toString();
     }
 
     environment.Variables = envVariables;
