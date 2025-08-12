@@ -247,7 +247,7 @@ export function applyExtensionLayer(
   region: string,
   lambdas: LambdaFunction[],
   extensionLayerVersion?: number,
-  fipsMode: boolean = false,
+  lambdaFips: boolean = false,
 ): string[] {
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
@@ -257,7 +257,7 @@ export function applyExtensionLayer(
     }
 
     log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
-    const lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion, lambda.architecture, fipsMode);
+    const lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion, lambda.architecture, lambdaFips);
     addLayer(lambdaExtensionLayerArn, lambda);
   });
   return errors;
@@ -325,9 +325,9 @@ export function getExtensionLayerArn(
   region: string,
   version: number,
   architecture: string,
-  fipsMode: boolean = false,
+  lambdaFips: boolean = false,
 ): string {
-  const layerName = fipsMode
+  const layerName = lambdaFips
     ? architectureToExtensionLayerNameFips[architecture]
     : architectureToExtensionLayerName[architecture];
 

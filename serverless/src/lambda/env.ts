@@ -181,8 +181,8 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
     if (ddApmFlushDeadlineMillisecondsEnvVar in process.env) {
       config.apmFlushDeadline = process.env[ddApmFlushDeadlineMillisecondsEnvVar];
     }
-    if (ddFipsModeEnvVar in process.env) {
-      config.lambdaFips = process.env[ddFipsModeEnvVar] === "true";
+    if (ddLambdaFipsEnvVar in process.env) {
+      config.lambdaFips = process.env[ddLambdaFipsEnvVar] === "true";
     }
 
     return config;
@@ -212,8 +212,8 @@ const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS
 const ddLlmObsEnabledEnvVar = "DD_LLMOBS_ENABLED";
 const ddLlmObsMlAppEnvVar = "DD_LLMOBS_ML_APP";
 const ddLlmObsAgentlessEnabledEnvVar = "DD_LLMOBS_AGENTLESS_ENABLED";
-const ddFipsModeEnvVar = "DD_LAMBDA_FIPS_MODE";
-const llmObsMlAppRegexEnvVar = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
+const ddLambdaFipsEnvVar = "DD_LAMBDA_FIPS_MODE";
+const llmObsMlAppRegex = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
 
 export function validateParameters(config: Configuration): string[] {
   log.debug("Validating parameters...");
@@ -256,7 +256,7 @@ export function validateParameters(config: Configuration): string[] {
   }
 
   if (config.llmObsMlApp !== undefined && config.llmObsMlApp !== "") {
-    if (!llmObsMlAppRegexEnvVar.test(config.llmObsMlApp)) {
+    if (!llmObsMlAppRegex.test(config.llmObsMlApp)) {
       errors.push(
         "`llmObsMlApp` must only contain up to 193 alphanumeric characters, hyphens, underscores, periods, and slashes.",
       );
@@ -393,8 +393,8 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabledEnvVar] === undefined) {
       envVariables[ddLlmObsAgentlessEnabledEnvVar] = config.llmObsAgentlessEnabled;
     }
-    if (config.lambdaFips !== undefined && envVariables[ddFipsModeEnvVar] === undefined) {
-      envVariables[ddFipsModeEnvVar] = config.lambdaFips.toString();
+    if (config.lambdaFips !== undefined && envVariables[ddLambdaFipsEnvVar] === undefined) {
+      envVariables[ddLambdaFipsEnvVar] = config.lambdaFips.toString();
     }
 
     environment.Variables = envVariables;
