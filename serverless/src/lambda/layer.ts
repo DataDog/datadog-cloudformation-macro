@@ -257,7 +257,12 @@ export function applyExtensionLayer(
     }
 
     log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
-    const lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion, lambda.architecture, lambdaFips);
+    const lambdaExtensionLayerArn = getExtensionLayerArn(
+      region,
+      extensionLayerVersion,
+      lambda.architecture,
+      lambdaFips,
+    );
     addLayer(lambdaExtensionLayerArn, lambda);
   });
   return errors;
