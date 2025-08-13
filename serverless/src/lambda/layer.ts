@@ -1,6 +1,5 @@
-import { Resources, Parameters, CFN_IF_FUNCTION_STRING } from "../common/types";
-import { FunctionProperties } from "./types";
-import { LambdaLayersProperty } from "./types";
+import { CFN_IF_FUNCTION_STRING, Parameters, Resources } from "../common/types";
+import { FunctionProperties, LambdaLayersProperty } from "./types";
 import { TaggableResource } from "../common/tags";
 import log from "loglevel";
 
@@ -40,6 +39,11 @@ const architectureLookup: { [key: string]: ArchitectureType } = {
 const architectureToExtensionLayerName: { [key: string]: string } = {
   x86_64: "Datadog-Extension",
   arm64: "Datadog-Extension-ARM",
+};
+
+const architectureToExtensionLayerNameFips: { [key: string]: string } = {
+  x86_64: "Datadog-Extension-FIPS",
+  arm64: "Datadog-Extension-ARM-FIPS",
 };
 
 export const runtimeLookup: { [key: string]: RuntimeType } = {
@@ -243,18 +247,22 @@ export function applyExtensionLayer(
   region: string,
   lambdas: LambdaFunction[],
   extensionLayerVersion?: number,
+  lambdaFips: boolean = false,
 ): string[] {
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
-    let lambdaExtensionLayerArn;
-
     if (extensionLayerVersion === undefined) {
       errors.push(getMissingExtensionLayerVersionErrorMsg(lambda.key));
       return;
     }
 
     log.debug(`Setting Lambda Extension layer for ${lambda.key}`);
-    lambdaExtensionLayerArn = getExtensionLayerArn(region, extensionLayerVersion, lambda.architecture);
+    const lambdaExtensionLayerArn = getExtensionLayerArn(
+      region,
+      extensionLayerVersion,
+      lambda.architecture,
+      lambdaFips,
+    );
     addLayer(lambdaExtensionLayerArn, lambda);
   });
   return errors;
@@ -266,8 +274,7 @@ function addLayer(layerArn: string, lambda: LambdaFunction): void {
   }
 
   const currentLayers = lambda.properties.Layers ?? [];
-  const newLayers = getNewLayers(layerArn, currentLayers);
-  lambda.properties.Layers = newLayers;
+  lambda.properties.Layers = getNewLayers(layerArn, currentLayers);
 }
 
 // Return the layers arr or object with layerArn added
@@ -319,8 +326,15 @@ export function getLambdaLibraryLayerArn(
   return `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:${layerName}:${version}`;
 }
 
-export function getExtensionLayerArn(region: string, version: number, architecture: string): string {
-  const layerName = architectureToExtensionLayerName[architecture];
+export function getExtensionLayerArn(
+  region: string,
+  version: number,
+  architecture: string,
+  lambdaFips: boolean = false,
+): string {
+  const layerName = lambdaFips
+    ? architectureToExtensionLayerNameFips[architecture]
+    : architectureToExtensionLayerName[architecture];
 
   const isGovCloud = region === "us-gov-east-1" || region === "us-gov-west-1";
 

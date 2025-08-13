@@ -441,4 +441,16 @@ describe("getExtensionLayerArn", () => {
       `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${version}`,
     );
   });
+  it("gets the us-east-1 FIPS layer arn for the Datadog Lambda Extension", () => {
+    const region = "us-east-1";
+    const version = 6;
+    const layerArn = getExtensionLayerArn(region, version, "x86_64", true);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-FIPS:${version}`);
+  });
+  it("gets the us-east-1 FIPS layer arn for the ARM Datadog Lambda Extension", () => {
+    const region = "us-east-1";
+    const version = 6;
+    const layerArn = getExtensionLayerArn(region, version, "arm64", true);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM-FIPS:${version}`);
+  });
 });

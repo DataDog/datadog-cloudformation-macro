@@ -95,6 +95,9 @@ export interface Configuration extends ConfigurationWithTags {
 
   // Only required if you are not using the Datadog Agent.
   llmObsAgentlessEnabled?: boolean;
+
+  // When set to `true`, enables FIPS mode for the Lambda function.
+  lambdaFips?: boolean;
 }
 
 export class LambdaConfigLoader extends ConfigLoader<Configuration> {
@@ -178,6 +181,9 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
     if (ddApmFlushDeadlineMillisecondsEnvVar in process.env) {
       config.apmFlushDeadline = process.env[ddApmFlushDeadlineMillisecondsEnvVar];
     }
+    if (ddLambdaFipsEnvVar in process.env) {
+      config.lambdaFips = process.env[ddLambdaFipsEnvVar] === "true";
+    }
 
     return config;
   }
@@ -203,9 +209,10 @@ const ddProfilingEnabledEnvVar = "DD_PROFILING_ENABLED";
 const ddEncodeAuthorizerContextEnvVar = "DD_ENCODE_AUTHORIZER_CONTEXT";
 const ddDecodeAuthorizerContextEnvVar = "DD_DECODE_AUTHORIZER_CONTEXT";
 const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS";
-const ddLlmObsEnabled = "DD_LLMOBS_ENABLED";
-const ddLlmObsMlApp = "DD_LLMOBS_ML_APP";
-const ddLlmObsAgentlessEnabled = "DD_LLMOBS_AGENTLESS_ENABLED";
+const ddLlmObsEnabledEnvVar = "DD_LLMOBS_ENABLED";
+const ddLlmObsMlAppEnvVar = "DD_LLMOBS_ML_APP";
+const ddLlmObsAgentlessEnabledEnvVar = "DD_LLMOBS_AGENTLESS_ENABLED";
+const ddLambdaFipsEnvVar = "DD_LAMBDA_FIPS_MODE";
 const llmObsMlAppRegex = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
 
 export function validateParameters(config: Configuration): string[] {
@@ -254,6 +261,13 @@ export function validateParameters(config: Configuration): string[] {
         "`llmObsMlApp` must only contain up to 193 alphanumeric characters, hyphens, underscores, periods, and slashes.",
       );
     }
+  }
+
+  if (config.lambdaFips === true && config.site !== "ddog-gov.com") {
+    log.warn(
+      "Warning: FIPS mode is enabled but the site is not set to GovCloud. " +
+        "FIPS compliance typically requires using GovCloud endpoints.",
+    );
   }
 
   return errors;
@@ -370,14 +384,17 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     if (config.apmFlushDeadline !== undefined && envVariables[ddApmFlushDeadlineMillisecondsEnvVar] === undefined) {
       envVariables[ddApmFlushDeadlineMillisecondsEnvVar] = config.apmFlushDeadline;
     }
-    if (config.llmObsEnabled !== undefined && envVariables[ddLlmObsEnabled] === undefined) {
-      envVariables[ddLlmObsEnabled] = config.llmObsEnabled;
+    if (config.llmObsEnabled !== undefined && envVariables[ddLlmObsEnabledEnvVar] === undefined) {
+      envVariables[ddLlmObsEnabledEnvVar] = config.llmObsEnabled;
     }
-    if (config.llmObsMlApp !== undefined && envVariables[ddLlmObsMlApp] === undefined) {
-      envVariables[ddLlmObsMlApp] = config.llmObsMlApp;
+    if (config.llmObsMlApp !== undefined && envVariables[ddLlmObsMlAppEnvVar] === undefined) {
+      envVariables[ddLlmObsMlAppEnvVar] = config.llmObsMlApp;
     }
-    if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabled] === undefined) {
-      envVariables[ddLlmObsAgentlessEnabled] = config.llmObsAgentlessEnabled;
+    if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabledEnvVar] === undefined) {
+      envVariables[ddLlmObsAgentlessEnabledEnvVar] = config.llmObsAgentlessEnabled;
+    }
+    if (config.lambdaFips !== undefined && envVariables[ddLambdaFipsEnvVar] === undefined) {
+      envVariables[ddLambdaFipsEnvVar] = config.lambdaFips.toString();
     }
 
     environment.Variables = envVariables;

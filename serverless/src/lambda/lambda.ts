@@ -46,7 +46,7 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
   }
 
   if (config.addExtension || config.extensionLayerVersion !== undefined) {
-    const errors = applyExtensionLayer(region, lambdas, config.extensionLayerVersion);
+    const errors = applyExtensionLayer(region, lambdas, config.extensionLayerVersion, config.lambdaFips ?? false);
     if (errors.length > 0) {
       return {
         requestId: event.requestId,
