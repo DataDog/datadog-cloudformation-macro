@@ -1,8 +1,10 @@
 import { getGitTagsFromParam } from "./git";
 import { LambdaFunction, runtimeLookup, RuntimeType } from "./layer";
+import { ConfigLoader } from "../common/env";
+import { ConfigurationWithTags } from "../common/tags";
 import log from "loglevel";
 
-export interface Configuration {
+export interface Configuration extends ConfigurationWithTags {
   // Whether to add the Datadog Lambda Library layers, or expect the users to bring their own
   addLayers: boolean;
   // Whether to add the Datadog Extension Library layer
@@ -83,11 +85,103 @@ export interface Configuration {
   // When the remaining time in a Lambda invocation is less than `apmFlushDeadline`, the tracer will
   // attempt to submit the current active spans and all finished spans.
   apmFlushDeadline?: string;
+
+  // When set to `true`, the LLM Observability feature is enabled.
+  llmObsEnabled?: boolean;
+
+  // The name of your LLM application, service, or project, under which all traces and
+  // spans are grouped. This helps distinguish between different applications or experiments.
+  llmObsMlApp?: string;
+
+  // Only required if you are not using the Datadog Agent.
+  llmObsAgentlessEnabled?: boolean;
 }
 
-// Same interface as Configuration above, except all parameters are optional, since user does
-// not have to provide the values (in which case we will use the default configuration below).
-interface CfnParams extends Partial<Configuration> {}
+export class LambdaConfigLoader extends ConfigLoader<Configuration> {
+  readonly defaultConfiguration: Configuration = {
+    addLayers: true,
+    addExtension: false,
+    exclude: [],
+    flushMetricsToLogs: true,
+    logLevel: undefined,
+    site: "datadoghq.com",
+    enableXrayTracing: false,
+    enableDDTracing: true,
+    enableDDLogs: true,
+    enableEnhancedMetrics: true,
+    captureLambdaPayload: false,
+  };
+
+  public getConfigFromEnvVars(): Configuration {
+    const config: Configuration = {
+      ...this.defaultConfiguration,
+    };
+
+    if (apiKeyEnvVar in process.env) {
+      config.apiKey = process.env[apiKeyEnvVar];
+    }
+    if (apiKeySecretArnEnvVar in process.env) {
+      config.apiKeySecretArn = process.env[apiKeySecretArnEnvVar];
+    }
+    if (apiKeyKMSEnvVar in process.env) {
+      config.apiKMSKey = process.env[apiKeyKMSEnvVar];
+    }
+    if (siteURLEnvVar in process.env && process.env[siteURLEnvVar] !== undefined) {
+      // Fall back to default site for type safety
+      config.site = process.env[siteURLEnvVar] ?? this.defaultConfiguration.site;
+    }
+    if (logLevelEnvVar in process.env) {
+      config.logLevel = process.env[logLevelEnvVar];
+    }
+    if (logForwardingEnvVar in process.env) {
+      config.flushMetricsToLogs = process.env[logForwardingEnvVar] === "true";
+    }
+    if (enhancedMetricsEnvVar in process.env) {
+      config.enableEnhancedMetrics = process.env[enhancedMetricsEnvVar] === "true";
+    }
+    if (enableDDLogsEnvVar in process.env) {
+      config.enableDDLogs = process.env[enableDDLogsEnvVar] === "true";
+    }
+    if (captureLambdaPayloadEnvVar in process.env) {
+      config.captureLambdaPayload = process.env[captureLambdaPayloadEnvVar] === "true";
+    }
+    if (serviceEnvVar in process.env) {
+      config.service = process.env[serviceEnvVar];
+    }
+    if (envEnvVar in process.env) {
+      config.env = process.env[envEnvVar];
+    }
+    if (versionEnvVar in process.env) {
+      config.version = process.env[versionEnvVar];
+    }
+    if (tagsEnvVar in process.env) {
+      config.tags = process.env[tagsEnvVar];
+    }
+    if (ddColdStartTracingEnabledEnvVar in process.env) {
+      config.enableColdStartTracing = process.env[ddColdStartTracingEnabledEnvVar] === "true";
+    }
+    if (ddMinColdStartDurationEnvVar in process.env) {
+      config.minColdStartTraceDuration = process.env[ddMinColdStartDurationEnvVar];
+    }
+    if (ddColdStartTracingSkipLibsEnvVar in process.env) {
+      config.coldStartTraceSkipLibs = process.env[ddColdStartTracingSkipLibsEnvVar];
+    }
+    if (ddProfilingEnabledEnvVar in process.env) {
+      config.enableProfiling = process.env[ddProfilingEnabledEnvVar] === "true";
+    }
+    if (ddEncodeAuthorizerContextEnvVar in process.env) {
+      config.encodeAuthorizerContext = process.env[ddEncodeAuthorizerContextEnvVar] === "true";
+    }
+    if (ddDecodeAuthorizerContextEnvVar in process.env) {
+      config.decodeAuthorizerContext = process.env[ddDecodeAuthorizerContextEnvVar] === "true";
+    }
+    if (ddApmFlushDeadlineMillisecondsEnvVar in process.env) {
+      config.apmFlushDeadline = process.env[ddApmFlushDeadlineMillisecondsEnvVar];
+    }
+
+    return config;
+  }
+}
 
 const apiKeyEnvVar = "DD_API_KEY";
 const apiKeySecretArnEnvVar = "DD_API_KEY_SECRET_ARN";
@@ -97,8 +191,6 @@ const logLevelEnvVar = "DD_LOG_LEVEL";
 const logForwardingEnvVar = "DD_FLUSH_TO_LOG";
 const enhancedMetricsEnvVar = "DD_ENHANCED_METRICS";
 const enableDDLogsEnvVar = "DD_SERVERLESS_LOGS_ENABLED";
-const DATADOG = "Datadog";
-const PARAMETERS = "Parameters";
 const captureLambdaPayloadEnvVar = "DD_CAPTURE_LAMBDA_PAYLOAD";
 const serviceEnvVar = "DD_SERVICE";
 const envEnvVar = "DD_ENV";
@@ -111,132 +203,10 @@ const ddProfilingEnabledEnvVar = "DD_PROFILING_ENABLED";
 const ddEncodeAuthorizerContextEnvVar = "DD_ENCODE_AUTHORIZER_CONTEXT";
 const ddDecodeAuthorizerContextEnvVar = "DD_DECODE_AUTHORIZER_CONTEXT";
 const ddApmFlushDeadlineMillisecondsEnvVar = "DD_APM_FLUSH_DEADLINE_MILLISECONDS";
-
-export const defaultConfiguration: Configuration = {
-  addLayers: true,
-  addExtension: false,
-  exclude: [],
-  flushMetricsToLogs: true,
-  logLevel: undefined,
-  site: "datadoghq.com",
-  enableXrayTracing: false,
-  enableDDTracing: true,
-  enableDDLogs: true,
-  enableEnhancedMetrics: true,
-  captureLambdaPayload: false,
-};
-
-/**
- * Returns the default configuration with any values overwritten by environment variables.
- */
-export function getConfigFromEnvVars(): Configuration {
-  const config: Configuration = {
-    ...defaultConfiguration,
-  };
-
-  if (apiKeyEnvVar in process.env) {
-    config.apiKey = process.env[apiKeyEnvVar];
-  }
-  if (apiKeySecretArnEnvVar in process.env) {
-    config.apiKeySecretArn = process.env[apiKeySecretArnEnvVar];
-  }
-  if (apiKeyKMSEnvVar in process.env) {
-    config.apiKMSKey = process.env[apiKeyKMSEnvVar];
-  }
-  if (siteURLEnvVar in process.env && process.env[siteURLEnvVar] !== undefined) {
-    // Fall back to default site for type safety
-    config.site = process.env[siteURLEnvVar] ?? defaultConfiguration.site;
-  }
-  if (logLevelEnvVar in process.env) {
-    config.logLevel = process.env[logLevelEnvVar];
-  }
-  if (logForwardingEnvVar in process.env) {
-    config.flushMetricsToLogs = process.env[logForwardingEnvVar] === "true";
-  }
-  if (enhancedMetricsEnvVar in process.env) {
-    config.enableEnhancedMetrics = process.env[enhancedMetricsEnvVar] === "true";
-  }
-  if (enableDDLogsEnvVar in process.env) {
-    config.enableDDLogs = process.env[enableDDLogsEnvVar] === "true";
-  }
-  if (captureLambdaPayloadEnvVar in process.env) {
-    config.captureLambdaPayload = process.env[captureLambdaPayloadEnvVar] === "true";
-  }
-  if (serviceEnvVar in process.env) {
-    config.service = process.env[serviceEnvVar];
-  }
-  if (envEnvVar in process.env) {
-    config.env = process.env[envEnvVar];
-  }
-  if (versionEnvVar in process.env) {
-    config.version = process.env[versionEnvVar];
-  }
-  if (tagsEnvVar in process.env) {
-    config.tags = process.env[tagsEnvVar];
-  }
-  if (ddColdStartTracingEnabledEnvVar in process.env) {
-    config.enableColdStartTracing = process.env[ddColdStartTracingEnabledEnvVar] === "true";
-  }
-  if (ddMinColdStartDurationEnvVar in process.env) {
-    config.minColdStartTraceDuration = process.env[ddMinColdStartDurationEnvVar];
-  }
-  if (ddColdStartTracingSkipLibsEnvVar in process.env) {
-    config.coldStartTraceSkipLibs = process.env[ddColdStartTracingSkipLibsEnvVar];
-  }
-  if (ddProfilingEnabledEnvVar in process.env) {
-    config.enableProfiling = process.env[ddProfilingEnabledEnvVar] === "true";
-  }
-  if (ddEncodeAuthorizerContextEnvVar in process.env) {
-    config.encodeAuthorizerContext = process.env[ddEncodeAuthorizerContextEnvVar] === "true";
-  }
-  if (ddDecodeAuthorizerContextEnvVar in process.env) {
-    config.decodeAuthorizerContext = process.env[ddDecodeAuthorizerContextEnvVar] === "true";
-  }
-  if (ddApmFlushDeadlineMillisecondsEnvVar in process.env) {
-    config.apmFlushDeadline = process.env[ddApmFlushDeadlineMillisecondsEnvVar];
-  }
-
-  return config;
-}
-
-/**
- * Parses the Mappings section for Datadog config parameters.
- * Assumes that the parameters live under the Mappings section in this format:
- *
- * Mappings:
- *  Datadog:
- *    Parameters:
- *      addLayers: true
- *      ...
- */
-export function getConfigFromCfnMappings(mappings: any): Configuration {
-  if (mappings === undefined || mappings[DATADOG] === undefined) {
-    log.debug("No Datadog mappings found in the CloudFormation template, using the default config");
-    return getConfigFromEnvVars();
-  }
-  return getConfigFromCfnParams(mappings[DATADOG][PARAMETERS]);
-}
-
-/**
- * Takes a set of parameters from the CloudFormation template. This could come from either
- * the Mappings section of the template, or directly from the Parameters under the transform/macro
- * as the 'params' property under the original InputEvent to the handler in src/index.ts
- *
- * Uses these parameters as the Datadog configuration, and for values that are required in the
- * configuration but not provided in the parameters, uses the default values from
- * the defaultConfiguration above.
- */
-export function getConfigFromCfnParams(params: CfnParams) {
-  let datadogConfig = params as Partial<Configuration> | undefined;
-  if (datadogConfig === undefined) {
-    log.debug("No Datadog config found, using the default config");
-    datadogConfig = {};
-  }
-  return {
-    ...getConfigFromEnvVars(),
-    ...datadogConfig,
-  };
-}
+const ddLlmObsEnabled = "DD_LLMOBS_ENABLED";
+const ddLlmObsMlApp = "DD_LLMOBS_ML_APP";
+const ddLlmObsAgentlessEnabled = "DD_LLMOBS_AGENTLESS_ENABLED";
+const llmObsMlAppRegex = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
 
 export function validateParameters(config: Configuration): string[] {
   log.debug("Validating parameters...");
@@ -252,12 +222,11 @@ export function validateParameters(config: Configuration): string[] {
     "us3.datadoghq.com",
     "us5.datadoghq.com",
     "ap1.datadoghq.com",
+    "ap2.datadoghq.com",
     "ddog-gov.com",
   ];
   if (config.site !== undefined && !siteList.includes(config.site.toLowerCase())) {
-    errors.push(
-      "Warning: Invalid site URL. Must be either datadoghq.com, datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com, ap1.datadoghq.com, or ddog-gov.com.",
-    );
+    errors.push(`Warning: Invalid site URL. Must be one of ${siteList.join(", ")}.`);
   }
   if (config.addExtension === true) {
     if (config.extensionLayerVersion === undefined) {
@@ -272,6 +241,18 @@ export function validateParameters(config: Configuration): string[] {
     }
     if (config.apiKey === undefined && config.apiKeySecretArn === undefined && config.apiKMSKey === undefined) {
       errors.push("When `extensionLayerVersion` is set, `apiKey`, `apiKeySecretArn`, or `apiKmsKey` must also be set.");
+    }
+  }
+
+  if (config.llmObsEnabled === true && (config.llmObsMlApp === undefined || config.llmObsMlApp === "")) {
+    errors.push("When `llmObsEnabled` is true, `llmObsMlApp` must also be set.");
+  }
+
+  if (config.llmObsMlApp !== undefined && config.llmObsMlApp !== "") {
+    if (!llmObsMlAppRegex.test(config.llmObsMlApp)) {
+      errors.push(
+        "`llmObsMlApp` must only contain up to 193 alphanumeric characters, hyphens, underscores, periods, and slashes.",
+      );
     }
   }
 
@@ -389,6 +370,16 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
     if (config.apmFlushDeadline !== undefined && envVariables[ddApmFlushDeadlineMillisecondsEnvVar] === undefined) {
       envVariables[ddApmFlushDeadlineMillisecondsEnvVar] = config.apmFlushDeadline;
     }
+    if (config.llmObsEnabled !== undefined && envVariables[ddLlmObsEnabled] === undefined) {
+      envVariables[ddLlmObsEnabled] = config.llmObsEnabled;
+    }
+    if (config.llmObsMlApp !== undefined && envVariables[ddLlmObsMlApp] === undefined) {
+      envVariables[ddLlmObsMlApp] = config.llmObsMlApp;
+    }
+    if (config.llmObsAgentlessEnabled !== undefined && envVariables[ddLlmObsAgentlessEnabled] === undefined) {
+      envVariables[ddLlmObsAgentlessEnabled] = config.llmObsAgentlessEnabled;
+    }
+
     environment.Variables = envVariables;
     lambda.properties.Environment = environment;
   });

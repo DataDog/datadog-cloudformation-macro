@@ -1,5 +1,5 @@
-import { enableTracing, TracingMode, IamRoleProperties, MissingIamRoleError } from "../src/tracing";
-import { ArchitectureType, LambdaFunction, RuntimeType } from "../src/layer";
+import { enableTracing, TracingMode, IamRoleProperties } from "../../src/lambda/tracing";
+import { ArchitectureType, LambdaFunction, RuntimeType } from "../../src/lambda/layer";
 import log from "loglevel";
 
 function mockLambdaFunction() {

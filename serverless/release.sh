@@ -43,7 +43,10 @@ aws cloudformation validate-template --template-body file://template.yml
 # Build and run test suite
 echo "Running unit tests and build script"
 
-yarn add --dev @types/jest
+yarn install
+
+# Tests on the gitlab runner fail
+# https://gitlab.ddbuild.io/DataDog/datadog-cloudformation-macro/-/jobs/983419016
 # yarn test
 
 echo "$CI_PIPELINE_SOURCE"
@@ -68,7 +71,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
 
     echo "Checking git auth status"
-    gh auth status 
+    gh auth status
 
     git config --global user.name "gitlab-actions[bot]"
     git config --global user.email "gitlab-actions[bot]@users.noreply.github.com"
@@ -97,7 +100,7 @@ if [ "$PROD_RELEASE" = true ] ; then
     git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
     # git push origin main
     echo "pushing to remote branch"
-    git remote set-url origin https://$GH_TOKEN@github.com/DataDog/datadog-cloudformation-macro.git
+    git remote set-url origin https://x-access-token:$GH_TOKEN@github.com/DataDog/datadog-cloudformation-macro.git
     git push origin main
 
     # Create a github release

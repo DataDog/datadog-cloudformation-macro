@@ -1,4 +1,7 @@
-import { FunctionProperties, Resources, Parameters, LambdaLayersProperty, CFN_IF_FUNCTION_STRING } from "./index";
+import { Resources, Parameters, CFN_IF_FUNCTION_STRING } from "../common/types";
+import { FunctionProperties } from "./types";
+import { LambdaLayersProperty } from "./types";
+import { TaggableResource } from "../common/tags";
 import log from "loglevel";
 
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
@@ -20,7 +23,7 @@ export enum ArchitectureType {
 
 // Self defined interface that only applies to the macro - the FunctionProperties interface
 // defined in index.ts matches the CloudFormation AWS::Lambda::Function Properties interface.
-export interface LambdaFunction {
+export interface LambdaFunction extends TaggableResource {
   properties: FunctionProperties;
   key: string;
   runtimeType: RuntimeType;

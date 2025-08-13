@@ -1,14 +1,12 @@
 import {
-  getConfigFromEnvVars,
-  getConfigFromCfnMappings,
-  getConfigFromCfnParams,
-  defaultConfiguration,
+  LambdaConfigLoader,
   setEnvConfiguration,
   validateParameters,
   checkForMultipleApiKeys,
-} from "../src/env";
-import { ArchitectureType, LambdaFunction, RuntimeType } from "../src/layer";
+} from "../../src/lambda/env";
+import { ArchitectureType, LambdaFunction, RuntimeType } from "../../src/lambda/layer";
 
+const loader = new LambdaConfigLoader();
 describe("getConfig", () => {
   it("correctly parses parameters from Mappings", () => {
     const params = {
@@ -16,13 +14,13 @@ describe("getConfig", () => {
       logLevel: "error",
     };
     const mappings = { Datadog: { Parameters: params } };
-    const config = getConfigFromCfnMappings(mappings);
+    const config = loader.getConfigFromCfnMappings(mappings);
     expect(config).toMatchObject(params);
   });
 
   it("gets default configuration when no parameters are specified", () => {
-    const config = getConfigFromCfnParams({});
-    expect(config).toEqual(expect.objectContaining(defaultConfiguration));
+    const config = loader.getConfigFromCfnParams({});
+    expect(config).toEqual(expect.objectContaining(loader.defaultConfiguration));
   });
 
   it("gets a mixed a configuration when some values are present", () => {
@@ -30,7 +28,7 @@ describe("getConfig", () => {
       site: "my-site",
       enableXrayTracing: false,
     };
-    const config = getConfigFromCfnParams(params);
+    const config = loader.getConfigFromCfnParams(params);
     expect(config).toEqual(
       expect.objectContaining({
         addLayers: true,
@@ -63,7 +61,7 @@ describe("getConfig", () => {
       process.env["DD_API_KEY_SECRET_ARN"] =
         "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
       process.env["DD_FLUSH_TO_LOG"] = "false";
-      const config = getConfigFromEnvVars();
+      const config = loader.getConfigFromEnvVars();
       expect(config).toEqual(
         expect.objectContaining({
           addLayers: true,
@@ -94,7 +92,7 @@ describe("getConfig", () => {
         enableEnhancedMetrics: true,
         captureLambdaPayload: false,
       };
-      const config = getConfigFromCfnParams(params);
+      const config = loader.getConfigFromCfnParams(params);
       expect(config).toEqual(
         expect.objectContaining({
           addLayers: true,
@@ -138,7 +136,7 @@ describe("setEnvConfiguration", () => {
       version: "1",
       tags: "team:avengers,project:marvel",
     };
-    setEnvConfiguration({ ...defaultConfiguration, ...config }, [lambda]);
+    setEnvConfiguration({ ...loader.defaultConfiguration, ...config }, [lambda]);
 
     expect(lambda.properties.Environment).toEqual({
       Variables: {
@@ -178,7 +176,7 @@ describe("setEnvConfiguration", () => {
       version: "1",
       tags: "team:avengers,project:marvel",
     };
-    setEnvConfiguration({ ...defaultConfiguration, ...config }, [lambda]);
+    setEnvConfiguration({ ...loader.defaultConfiguration, ...config }, [lambda]);
 
     expect(lambda.properties.Environment).toEqual({
       Variables: {
@@ -234,6 +232,9 @@ describe("setEnvConfiguration", () => {
       env: "test",
       version: "1",
       tags: "team:avengers,project:marvel",
+      llmObsEnabled: true,
+      llmObsMlApp: "my-llm-app",
+      llmObsAgentlessEnabled: false,
     };
     setEnvConfiguration(config, [lambda]);
 
@@ -258,6 +259,9 @@ describe("setEnvConfiguration", () => {
         DD_PROFILING_ENABLED: true,
         DD_ENCODE_AUTHORIZER_CONTEXT: true,
         DD_DECODE_AUTHORIZER_CONTEXT: true,
+        DD_LLMOBS_ENABLED: true,
+        DD_LLMOBS_ML_APP: "my-llm-app",
+        DD_LLMOBS_AGENTLESS_ENABLED: false,
       },
     });
   });
@@ -557,7 +561,7 @@ describe("setEnvConfiguration", () => {
 
     expect(() => {
       setEnvConfiguration(config, [lambda]);
-    }).toThrowError(
+    }).toThrow(
       `\`apiKeySecretArn\` is not supported for Node runtimes (${lambda.properties.FunctionName}) when using Synchronous Metrics. Use either \`apiKey\` or \`apiKmsKey\`.`,
     );
   });
@@ -581,7 +585,7 @@ describe("validateParameters", () => {
     const errors = validateParameters(params);
     expect(
       errors.includes(
-        "Warning: Invalid site URL. Must be either datadoghq.com, datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com, ap1.datadoghq.com, or ddog-gov.com.",
+        "Warning: Invalid site URL. Must be one of datadoghq.com, datadoghq.eu, us3.datadoghq.com, us5.datadoghq.com, ap1.datadoghq.com, ap2.datadoghq.com, ddog-gov.com.",
       ),
     ).toBe(true);
   });
@@ -670,6 +674,49 @@ describe("validateParameters", () => {
 
     const errors = validateParameters(params);
     expect(errors.includes("`apiKey` and `apiKMSKey` should not be set at the same time.")).toBe(true);
+  });
+
+  it("returns an error when llmObsEnabled is true but llmObsMlApp is not set", () => {
+    const params = {
+      addLayers: true,
+      addExtension: false,
+      apiKey: "1234",
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+      llmObsEnabled: true,
+    };
+
+    const errors = validateParameters(params);
+    expect(errors).toContain("When `llmObsEnabled` is true, `llmObsMlApp` must also be set.");
+  });
+
+  it("returns an error when llmObsMlApp is not a valid value", () => {
+    const params = {
+      addLayers: true,
+      addExtension: false,
+      apiKey: "1234",
+      flushMetricsToLogs: true,
+      logLevel: "info",
+      site: "datadoghq.com",
+      enableXrayTracing: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+      llmObsEnabled: true,
+      llmObsMlApp: "bad~!@#$%^&*()_+",
+    };
+
+    const errors = validateParameters(params);
+    expect(errors).toContain(
+      "`llmObsMlApp` must only contain up to 193 alphanumeric characters, hyphens, underscores, periods, and slashes.",
+    );
   });
 
   it("works with ap1", () => {

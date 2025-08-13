@@ -1,6 +1,6 @@
 import { LambdaFunction } from "./layer";
 import { Configuration } from "./env";
-import { Resources } from "./index";
+import { Resources } from "common/types";
 import log from "loglevel";
 
 const FN_GET_ATT = "Fn::GetAtt";
