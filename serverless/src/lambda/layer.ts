@@ -70,6 +70,7 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.11": RuntimeType.PYTHON,
   "python3.12": RuntimeType.PYTHON,
   "python3.13": RuntimeType.PYTHON,
+  "python3.14": RuntimeType.PYTHON,
 };
 
 export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
@@ -97,6 +98,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "python3.11": "Datadog-Python311",
     "python3.12": "Datadog-Python312",
     "python3.13": "Datadog-Python313",
+    "python3.14": "Datadog-Python314",
   },
   [ArchitectureType.ARM64]: {
     dotnet6: "dd-trace-dotnet-ARM",
@@ -119,6 +121,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "python3.11": "Datadog-Python311-ARM",
     "python3.12": "Datadog-Python312-ARM",
     "python3.13": "Datadog-Python313-ARM",
+    "python3.14": "Datadog-Python314-ARM",
   },
 };
 
