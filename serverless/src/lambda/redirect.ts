@@ -13,9 +13,9 @@ export const JS_HANDLER = "node_modules/datadog-lambda-js/dist/handler.handler";
  * 'DD_LAMBDA_HANDLER' is set to the original handler in the lambda's environment for the
  * replacement handler to find.
  */
-export function redirectHandlers(lambdas: LambdaFunction[], addLayers: boolean): void {
+export function redirectHandlers(lambdas: LambdaFunction[], addLayers: boolean, useExtension: boolean): void {
   lambdas.forEach((lambda) => {
-    if (lambda.runtimeType == RuntimeType.DOTNET || lambda.runtimeType == RuntimeType.JAVA) {
+    if ((lambda.runtimeType == RuntimeType.DOTNET || lambda.runtimeType == RuntimeType.JAVA) && useExtension) {
       setEnvDatadogWrapper(lambda);
       return;
     }

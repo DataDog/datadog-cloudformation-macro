@@ -45,7 +45,8 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
     }
   }
 
-  if (config.addExtension || config.extensionLayerVersion !== undefined) {
+  const useExtension = config.addExtension || config.extensionLayerVersion !== undefined;
+  if (useExtension) {
     const errors = applyExtensionLayer(region, lambdas, config.extensionLayerVersion, config.lambdaFips ?? false);
     if (errors.length > 0) {
       return {
@@ -121,7 +122,7 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
 
   // Redirect handlers
   log.debug("Wrapping Lambda function handlers with Datadog handler...");
-  redirectHandlers(lambdas, config.addLayers);
+  redirectHandlers(lambdas, config.addLayers, useExtension);
 
   return {
     requestId: event.requestId,
