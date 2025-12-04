@@ -66,6 +66,7 @@ describe("findLambdas", () => {
       Node18Function: mockFunctionResource("nodejs18.x", ["x86_64"]),
       Node20Function: mockFunctionResource("nodejs20.x", ["x86_64"]),
       Node22Function: mockFunctionResource("nodejs22.x", ["x86_64"]),
+      Node24Function: mockFunctionResource("nodejs24.x", ["x86_64"]),
       Python27Function: mockFunctionResource("python2.7", ["x86_64"]),
       Python36Function: mockFunctionResource("python3.6", ["x86_64"]),
       Python37Function: mockFunctionResource("python3.7", ["x86_64"]),
@@ -75,6 +76,7 @@ describe("findLambdas", () => {
       Python311Function: mockFunctionResource("python3.11", ["x86_64"]),
       Python312Function: mockFunctionResource("python3.12", ["x86_64"]),
       Python313Function: mockFunctionResource("python3.13", ["x86_64"]),
+      Python314Function: mockFunctionResource("python3.14", ["x86_64"]),
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
@@ -95,6 +97,7 @@ describe("findLambdas", () => {
       mockLambdaFunction("Node18Function", "nodejs18.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node20Function", "nodejs20.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node22Function", "nodejs22.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Node24Function", "nodejs24.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
@@ -104,6 +107,7 @@ describe("findLambdas", () => {
       mockLambdaFunction("Python311Function", "python3.11", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python312Function", "python3.12", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python313Function", "python3.13", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Python314Function", "python3.14", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
@@ -185,7 +189,7 @@ describe("applyLayers", () => {
   });
 
   it("applies the node and extension lambda layers", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs24.x", RuntimeType.NODE, "x86_64");
     const region = "us-east-1";
     const nodeLayerVersion = 25;
     const extensionLayerVersion = 6;
@@ -195,13 +199,13 @@ describe("applyLayers", () => {
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node24-x:${nodeLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
     ]);
   });
 
   it("applies the node and extension lambda layers for arm", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64);
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs24.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64);
     const region = "us-east-1";
     const nodeLayerVersion = 25;
     const extensionLayerVersion = 6;
@@ -211,13 +215,13 @@ describe("applyLayers", () => {
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node24-x:${nodeLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
     ]);
   });
 
   it("applies the python and extension lambda layers", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "python3.13", RuntimeType.PYTHON, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "python3.14", RuntimeType.PYTHON, "x86_64");
     const region = "us-east-1";
     const pythonLayerVersion = 25;
     const extensionLayerVersion = 6;
@@ -227,7 +231,7 @@ describe("applyLayers", () => {
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python313:${pythonLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python314:${pythonLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
     ]);
   });

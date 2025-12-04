@@ -61,6 +61,7 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "nodejs18.x": RuntimeType.NODE,
   "nodejs20.x": RuntimeType.NODE,
   "nodejs22.x": RuntimeType.NODE,
+  "nodejs24.x": RuntimeType.NODE,
   "python2.7": RuntimeType.PYTHON,
   "python3.6": RuntimeType.PYTHON,
   "python3.7": RuntimeType.PYTHON,
@@ -70,6 +71,7 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.11": RuntimeType.PYTHON,
   "python3.12": RuntimeType.PYTHON,
   "python3.13": RuntimeType.PYTHON,
+  "python3.14": RuntimeType.PYTHON,
 };
 
 export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
@@ -88,6 +90,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "nodejs18.x": "Datadog-Node18-x",
     "nodejs20.x": "Datadog-Node20-x",
     "nodejs22.x": "Datadog-Node22-x",
+    "nodejs24.x": "Datadog-Node24-x",
     "python2.7": "Datadog-Python27",
     "python3.6": "Datadog-Python36",
     "python3.7": "Datadog-Python37",
@@ -97,6 +100,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "python3.11": "Datadog-Python311",
     "python3.12": "Datadog-Python312",
     "python3.13": "Datadog-Python313",
+    "python3.14": "Datadog-Python314",
   },
   [ArchitectureType.ARM64]: {
     dotnet6: "dd-trace-dotnet-ARM",
@@ -113,12 +117,14 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "nodejs18.x": "Datadog-Node18-x",
     "nodejs20.x": "Datadog-Node20-x",
     "nodejs22.x": "Datadog-Node22-x",
+    "nodejs24.x": "Datadog-Node24-x",
     "python3.8": "Datadog-Python38-ARM",
     "python3.9": "Datadog-Python39-ARM",
     "python3.10": "Datadog-Python310-ARM",
     "python3.11": "Datadog-Python311-ARM",
     "python3.12": "Datadog-Python312-ARM",
     "python3.13": "Datadog-Python313-ARM",
+    "python3.14": "Datadog-Python314-ARM",
   },
 };
 
