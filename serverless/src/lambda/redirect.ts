@@ -15,8 +15,10 @@ export const JS_HANDLER = "node_modules/datadog-lambda-js/dist/handler.handler";
  */
 export function redirectHandlers(lambdas: LambdaFunction[], addLayers: boolean, useExtension: boolean): void {
   lambdas.forEach((lambda) => {
-    if ((lambda.runtimeType == RuntimeType.DOTNET || lambda.runtimeType == RuntimeType.JAVA) && useExtension) {
-      setEnvDatadogWrapper(lambda);
+    if (lambda.runtimeType == RuntimeType.DOTNET || lambda.runtimeType == RuntimeType.JAVA) {
+      if (useExtension) {
+        setEnvDatadogWrapper(lambda);
+      }
       return;
     }
 

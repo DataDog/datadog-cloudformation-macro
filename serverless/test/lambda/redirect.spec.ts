@@ -31,7 +31,7 @@ interface TestCase {
   addLayers: boolean;
   useExtension: boolean;
   expectedHandler: string;
-  expectedEnvVars: { [key: string]: string };
+  expectedEnvironment?: { Variables: { [key: string]: string } };
 }
 
 const testCases: TestCase[] = [
@@ -42,7 +42,7 @@ const testCases: TestCase[] = [
     addLayers: true,
     useExtension: true,
     expectedHandler: JS_HANDLER_WITH_LAYERS,
-    expectedEnvVars: { [DD_HANDLER_ENV_VAR]: "app.handler" },
+    expectedEnvironment: { Variables: { [DD_HANDLER_ENV_VAR]: "app.handler" } },
   },
   {
     name: "NODE",
@@ -50,7 +50,7 @@ const testCases: TestCase[] = [
     addLayers: true,
     useExtension: false,
     expectedHandler: JS_HANDLER_WITH_LAYERS,
-    expectedEnvVars: { [DD_HANDLER_ENV_VAR]: "app.handler" },
+    expectedEnvironment: { Variables: { [DD_HANDLER_ENV_VAR]: "app.handler" } },
   },
   {
     name: "NODE",
@@ -58,7 +58,7 @@ const testCases: TestCase[] = [
     addLayers: false,
     useExtension: true,
     expectedHandler: JS_HANDLER,
-    expectedEnvVars: { [DD_HANDLER_ENV_VAR]: "app.handler" },
+    expectedEnvironment: { Variables: { [DD_HANDLER_ENV_VAR]: "app.handler" } },
   },
   {
     name: "NODE",
@@ -66,7 +66,7 @@ const testCases: TestCase[] = [
     addLayers: false,
     useExtension: false,
     expectedHandler: JS_HANDLER,
-    expectedEnvVars: { [DD_HANDLER_ENV_VAR]: "app.handler" },
+    expectedEnvironment: { Variables: { [DD_HANDLER_ENV_VAR]: "app.handler" } },
   },
 
   // .NET tests
@@ -76,7 +76,7 @@ const testCases: TestCase[] = [
     addLayers: true,
     useExtension: true,
     expectedHandler: "app.handler",
-    expectedEnvVars: { [AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR]: AWS_LAMBDA_EXEC_WRAPPER },
+    expectedEnvironment: { Variables: { [AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR]: AWS_LAMBDA_EXEC_WRAPPER } },
   },
   {
     name: "DOTNET",
@@ -84,7 +84,7 @@ const testCases: TestCase[] = [
     addLayers: false,
     useExtension: true,
     expectedHandler: "app.handler",
-    expectedEnvVars: { [AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR]: AWS_LAMBDA_EXEC_WRAPPER },
+    expectedEnvironment: { Variables: { [AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR]: AWS_LAMBDA_EXEC_WRAPPER } },
   },
   {
     name: "DOTNET",
@@ -92,7 +92,6 @@ const testCases: TestCase[] = [
     addLayers: true,
     useExtension: false,
     expectedHandler: "app.handler",
-    expectedEnvVars: { [DD_HANDLER_ENV_VAR]: "app.handler" },
   },
   {
     name: "DOTNET",
@@ -100,7 +99,6 @@ const testCases: TestCase[] = [
     addLayers: false,
     useExtension: false,
     expectedHandler: "app.handler",
-    expectedEnvVars: { [DD_HANDLER_ENV_VAR]: "app.handler" },
   },
 
   // Java tests
@@ -110,7 +108,7 @@ const testCases: TestCase[] = [
     addLayers: true,
     useExtension: true,
     expectedHandler: "app.handler",
-    expectedEnvVars: { [AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR]: AWS_LAMBDA_EXEC_WRAPPER },
+    expectedEnvironment: { Variables: { [AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR]: AWS_LAMBDA_EXEC_WRAPPER } },
   },
   {
     name: "JAVA",
@@ -118,7 +116,7 @@ const testCases: TestCase[] = [
     addLayers: false,
     useExtension: true,
     expectedHandler: "app.handler",
-    expectedEnvVars: { [AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR]: AWS_LAMBDA_EXEC_WRAPPER },
+    expectedEnvironment: { Variables: { [AWS_LAMBDA_EXEC_WRAPPER_ENV_VAR]: AWS_LAMBDA_EXEC_WRAPPER } },
   },
   {
     name: "JAVA",
@@ -126,7 +124,6 @@ const testCases: TestCase[] = [
     addLayers: true,
     useExtension: false,
     expectedHandler: "app.handler",
-    expectedEnvVars: { [DD_HANDLER_ENV_VAR]: "app.handler" },
   },
   {
     name: "JAVA",
@@ -134,21 +131,18 @@ const testCases: TestCase[] = [
     addLayers: false,
     useExtension: false,
     expectedHandler: "app.handler",
-    expectedEnvVars: { [DD_HANDLER_ENV_VAR]: "app.handler" },
   },
 ];
 
 describe("redirectHandlers", () => {
   it.each(testCases)(
     "$name with addLayers=$addLayers, useExtension=$useExtension",
-    ({ createLambda, addLayers, useExtension, expectedHandler, expectedEnvVars }) => {
+    ({ createLambda, addLayers, useExtension, expectedHandler, expectedEnvironment }) => {
       const lambda = createLambda();
       redirectHandlers([lambda], addLayers, useExtension);
 
       expect(lambda.properties.Handler).toEqual(expectedHandler);
-      expect(lambda.properties.Environment).toEqual({
-        Variables: expectedEnvVars,
-      });
+      expect(lambda.properties.Environment).toEqual(expectedEnvironment);
     },
   );
 });
