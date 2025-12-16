@@ -17,6 +17,8 @@ export interface Configuration extends ConfigurationWithTags {
   dotnetLayerVersion?: number;
   // Java Lambda Layer version
   javaLayerVersion?: number;
+  // Ruby Lambda Layer version
+  rubyLayerVersion?: number;
   // Datadog Lambda Extension layer version
   extensionLayerVersion?: number;
   // Datadog API Key, only necessary when using metrics without log forwarding

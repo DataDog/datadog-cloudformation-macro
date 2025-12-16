@@ -12,6 +12,7 @@ export enum RuntimeType {
   JAVA,
   NODE,
   PYTHON,
+  RUBY,
   UNSUPPORTED,
 }
 
@@ -72,6 +73,9 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "python3.12": RuntimeType.PYTHON,
   "python3.13": RuntimeType.PYTHON,
   "python3.14": RuntimeType.PYTHON,
+  "ruby3.2": RuntimeType.RUBY,
+  "ruby3.3": RuntimeType.RUBY,
+  "ruby3.4": RuntimeType.RUBY,
 };
 
 export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
@@ -101,6 +105,9 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "python3.12": "Datadog-Python312",
     "python3.13": "Datadog-Python313",
     "python3.14": "Datadog-Python314",
+    "ruby3.2": "Datadog-Ruby3-2",
+    "ruby3.3": "Datadog-Ruby3-3",
+    "ruby3.4": "Datadog-Ruby3-4",
   },
   [ArchitectureType.ARM64]: {
     dotnet6: "dd-trace-dotnet-ARM",
@@ -125,6 +132,9 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "python3.12": "Datadog-Python312-ARM",
     "python3.13": "Datadog-Python313-ARM",
     "python3.14": "Datadog-Python314-ARM",
+    "ruby3.2": "Datadog-Ruby3-2-ARM",
+    "ruby3.3": "Datadog-Ruby3-3-ARM",
+    "ruby3.4": "Datadog-Ruby3-4-ARM",
   },
 };
 
@@ -195,6 +205,7 @@ export function applyLayers(
   nodeLayerVersion?: number,
   dotnetLayerVersion?: number,
   javaLayerVersion?: number,
+  rubyLayerVersion?: number,
 ): string[] {
   const errors: string[] = [];
   lambdas.forEach((lambda) => {
@@ -246,6 +257,17 @@ export function applyLayers(
 
       log.debug(`Setting Java Lambda layer for ${lambda.key}`);
       lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, javaLayerVersion, lambda.runtime, lambda.architecture);
+      addLayer(lambdaLibraryLayerArn, lambda);
+    }
+
+    if (lambda.runtimeType === RuntimeType.RUBY) {
+      if (rubyLayerVersion === undefined) {
+        errors.push(getMissingLayerVersionErrorMsg(lambda.key, "Ruby", "ruby"));
+        return;
+      }
+
+      log.debug(`Setting Ruby Lambda layer for ${lambda.key}`);
+      lambdaLibraryLayerArn = getLambdaLibraryLayerArn(region, rubyLayerVersion, lambda.runtime, lambda.architecture);
       addLayer(lambdaLibraryLayerArn, lambda);
     }
   });

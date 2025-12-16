@@ -55,7 +55,7 @@ Resources:
           - SetFunctionName
           - Ref: FunctionName
           - Ref: AWS::NoValue
-      Description: Processes a CloudFormation template to install Datadog Lambda layers for Python and Node.js Lambda functions.
+      Description: Processes a CloudFormation template to install Datadog Lambda layers for Python, Node.js, .NET, Ruby, and Java Lambda functions.
       Timeout: 10
       Handler: src/index.handler
       Runtime: nodejs24.x

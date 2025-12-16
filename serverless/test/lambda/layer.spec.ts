@@ -77,6 +77,9 @@ describe("findLambdas", () => {
       Python312Function: mockFunctionResource("python3.12", ["x86_64"]),
       Python313Function: mockFunctionResource("python3.13", ["x86_64"]),
       Python314Function: mockFunctionResource("python3.14", ["x86_64"]),
+      Ruby32Function: mockFunctionResource("ruby3.2", ["x86_64"]),
+      Ruby33Function: mockFunctionResource("ruby3.3", ["x86_64"]),
+      Ruby34Function: mockFunctionResource("ruby3.4", ["x86_64"]),
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
@@ -108,6 +111,9 @@ describe("findLambdas", () => {
       mockLambdaFunction("Python312Function", "python3.12", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python313Function", "python3.13", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python314Function", "python3.14", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Ruby32Function", "ruby3.2", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Ruby33Function", "ruby3.3", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Ruby34Function", "ruby3.4", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
@@ -314,6 +320,24 @@ describe("applyLayers", () => {
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:dd-trace-java:${javaLayerVersion}`,
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
     ]);
+  });
+
+  it("applies the ruby and extension lambda layers", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "ruby3.4", RuntimeType.RUBY, "x86_64");
+    const region = "us-east-1";
+    const rubyLayerVersion = 12;
+    const extensionLayerVersion = 6;
+    const errors = applyLayers(region, [lambda], undefined, undefined, undefined, undefined, rubyLayerVersion);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
+  });
+
+  it("applies the ruby and extension lambda layers for arm", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "ruby3.4", RuntimeType.RUBY, "arm64", ArchitectureType.ARM64);
+    const region = "us-east-1";
+    const rubyLayerVersion = 12;
+    const extensionLayerVersion = 6;
+    const errors = applyLayers(region, [lambda], undefined, undefined, undefined, undefined, rubyLayerVersion);
   });
 });
 
