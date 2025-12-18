@@ -1,7 +1,7 @@
 FROM registry.ddbuild.io/images/docker:24.0.5
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget curl gnupg unzip zip jq uuid-runtime
+    wget curl gnupg unzip zip jq uuid-runtime gh
 
 RUN mkdir -p /etc/apt/keyrings && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
 # We are explicitly setting the node_20.x version for the installation
