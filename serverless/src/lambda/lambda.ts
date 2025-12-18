@@ -34,6 +34,7 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
       config.nodeLayerVersion,
       config.dotnetLayerVersion,
       config.javaLayerVersion,
+      config.rubyLayerVersion,
     );
     if (errors.length > 0) {
       return {
