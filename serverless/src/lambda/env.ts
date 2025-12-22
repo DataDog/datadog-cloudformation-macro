@@ -144,6 +144,9 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
     if (enhancedMetricsEnvVar in process.env) {
       config.enableEnhancedMetrics = process.env[enhancedMetricsEnvVar] === "true";
     }
+    if (enableDDTracingEnvVar in process.env) {
+      config.enableDDTracing = process.env[enableDDTracingEnvVar] === "true";
+    }
     if (enableDDLogsEnvVar in process.env) {
       config.enableDDLogs = process.env[enableDDLogsEnvVar] === "true";
     }
@@ -198,6 +201,7 @@ const siteURLEnvVar = "DD_SITE";
 const logLevelEnvVar = "DD_LOG_LEVEL";
 const logForwardingEnvVar = "DD_FLUSH_TO_LOG";
 const enhancedMetricsEnvVar = "DD_ENHANCED_METRICS";
+const enableDDTracingEnvVar = "DD_TRACE_ENABLED";
 const enableDDLogsEnvVar = "DD_SERVERLESS_LOGS_ENABLED";
 const captureLambdaPayloadEnvVar = "DD_CAPTURE_LAMBDA_PAYLOAD";
 const serviceEnvVar = "DD_SERVICE";
@@ -328,6 +332,10 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
 
     if (envVariables[enhancedMetricsEnvVar] === undefined) {
       envVariables[enhancedMetricsEnvVar] = config.enableEnhancedMetrics;
+    }
+
+    if (config.enableDDTracing !== undefined && envVariables[enableDDTracingEnvVar] === undefined) {
+      envVariables[enableDDTracingEnvVar] = config.enableDDTracing;
     }
 
     if (config.enableDDLogs !== undefined && envVariables[enableDDLogsEnvVar] === undefined) {

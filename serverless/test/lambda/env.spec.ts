@@ -115,6 +115,24 @@ describe("getConfig", () => {
       const config = loader.getConfigFromEnvVars();
       expect(config.lambdaFips).toBe(true);
     });
+
+    it("sets enableDDTracing to true when DD_TRACE_ENABLED is 'true'", () => {
+      process.env["DD_TRACE_ENABLED"] = "true";
+      const config = loader.getConfigFromEnvVars();
+      expect(config.enableDDTracing).toBe(true);
+    });
+
+    it("sets enableDDTracing to false when DD_TRACE_ENABLED is 'false'", () => {
+      process.env["DD_TRACE_ENABLED"] = "false";
+      const config = loader.getConfigFromEnvVars();
+      expect(config.enableDDTracing).toBe(false);
+    });
+
+    it("defaults enableDDTracing to true when DD_TRACE_ENABLED is not set", () => {
+      delete process.env["DD_TRACE_ENABLED"];
+      const config = loader.getConfigFromEnvVars();
+      expect(config.enableDDTracing).toBe(true);
+    });
   });
 });
 
@@ -155,6 +173,7 @@ describe("setEnvConfiguration", () => {
         DD_SERVICE: "my-service",
         DD_VERSION: "1",
         DD_TAGS: "team:avengers,project:marvel",
+        DD_TRACE_ENABLED: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
       },
     });
@@ -194,6 +213,7 @@ describe("setEnvConfiguration", () => {
         DD_ENV: "test",
         DD_SERVICE: "my-service",
         DD_TAGS: "team:avengers,project:marvel",
+        DD_TRACE_ENABLED: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
       },
     });
@@ -259,6 +279,7 @@ describe("setEnvConfiguration", () => {
         DD_SERVICE: "my-service",
         DD_VERSION: "1",
         DD_TAGS: "team:avengers,project:marvel",
+        DD_TRACE_ENABLED: true,
         DD_COLD_START_TRACING: true,
         DD_MIN_COLD_START_DURATION: "80",
         DD_COLD_START_TRACE_SKIP_LIB: "lib1,lib2",
@@ -326,6 +347,7 @@ describe("setEnvConfiguration", () => {
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_SERVICE: "my-service",
         DD_CAPTURE_LAMBDA_PAYLOAD: true,
+        DD_TRACE_ENABLED: true,
         DD_COLD_START_TRACING: true,
         DD_MIN_COLD_START_DURATION: "80",
         DD_COLD_START_TRACE_SKIP_LIB: "lib1,lib2",
@@ -350,6 +372,7 @@ describe("setEnvConfiguration", () => {
       DD_SERVICE: "my-service",
       DD_VERSION: "1",
       DD_TAGS: "team:avengers,project:marvel",
+      DD_TRACE_ENABLED: true,
       DD_COLD_START_TRACING: true,
       DD_MIN_COLD_START_DURATION: "80",
       DD_COLD_START_TRACE_SKIP_LIB: "lib1,lib2",
@@ -441,6 +464,7 @@ describe("setEnvConfiguration", () => {
         DD_FLUSH_TO_LOG: true,
         DD_KMS_API_KEY: "5678",
         DD_SITE: "datadoghq.eu",
+        DD_TRACE_ENABLED: true,
         DD_ENHANCED_METRICS: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
@@ -486,8 +510,116 @@ describe("setEnvConfiguration", () => {
         DD_LOG_LEVEL: "info",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_TRACE_ENABLED: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
+      },
+    });
+  });
+
+  it("sets `DD_TRACE_ENABLED` to true when enableDDTracing is true", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        Handler: "app.handler",
+        Runtime: "python2.7",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.PYTHON,
+      runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    const config = {
+      addLayers: false,
+      addExtension: false,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+      site: "datadoghq.eu",
+      logLevel: "info",
+      flushMetricsToLogs: true,
+      enableXrayTracing: true,
+    };
+    setEnvConfiguration(config, [lambda]);
+    expect(lambda.properties.Environment).toEqual({
+      Variables: {
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: true,
+        DD_LOG_LEVEL: "info",
+        DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_SITE: "datadoghq.eu",
+        DD_TRACE_ENABLED: true,
+      },
+    });
+  });
+
+  it("sets `DD_TRACE_ENABLED` to false when enableDDTracing is false", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        Handler: "app.handler",
+        Runtime: "python2.7",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.PYTHON,
+      runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    const config = {
+      addLayers: false,
+      addExtension: false,
+      enableDDTracing: false,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+      site: "datadoghq.eu",
+      logLevel: "info",
+      flushMetricsToLogs: true,
+      enableXrayTracing: true,
+    };
+    setEnvConfiguration(config, [lambda]);
+    expect(lambda.properties.Environment).toEqual({
+      Variables: {
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: true,
+        DD_LOG_LEVEL: "info",
+        DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_SITE: "datadoghq.eu",
+        DD_TRACE_ENABLED: false,
+      },
+    });
+  });
+
+  it("sets `DD_TRACE_ENABLED` to true with default configuration", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        Handler: "app.handler",
+        Runtime: "python2.7",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.PYTHON,
+      runtime: "python2.7",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    setEnvConfiguration(loader.defaultConfiguration, [lambda]);
+    expect(lambda.properties.Environment).toEqual({
+      Variables: {
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
+        DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: true,
+        DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_SITE: "datadoghq.com",
+        DD_TRACE_ENABLED: true,
       },
     });
   });
@@ -530,6 +662,7 @@ describe("setEnvConfiguration", () => {
         DD_LOG_LEVEL: "info",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_TRACE_ENABLED: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
       },
