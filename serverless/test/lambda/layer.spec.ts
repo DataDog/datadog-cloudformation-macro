@@ -106,7 +106,13 @@ describe("findLambdas", () => {
       mockLambdaFunction("Node22Function", "nodejs22.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node24Function", "nodejs24.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("ProvidedAl2Function", "provided.al2", RuntimeType.CUSTOM, "x86_64", ArchitectureType.x86_64),
-      mockLambdaFunction("ProvidedAl2023Function", "provided.al2023", RuntimeType.CUSTOM, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction(
+        "ProvidedAl2023Function",
+        "provided.al2023",
+        RuntimeType.CUSTOM,
+        "x86_64",
+        ArchitectureType.x86_64,
+      ),
       mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
@@ -325,7 +331,13 @@ describe("applyLayers", () => {
   });
 
   it("applies the extension lambda layer for provided.al2023 runtime with arm64", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "provided.al2023", RuntimeType.CUSTOM, "arm64", ArchitectureType.ARM64);
+    const lambda = mockLambdaFunction(
+      "FunctionKey",
+      "provided.al2023",
+      RuntimeType.CUSTOM,
+      "arm64",
+      ArchitectureType.ARM64,
+    );
     const region = "us-east-1";
     const extensionLayerVersion = 91;
     const errors = applyLayers(region, [lambda], undefined, undefined, undefined, undefined);
