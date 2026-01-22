@@ -57,49 +57,49 @@ describe("getConfig", () => {
       process.env = CURRENT_ENV; // Restore environment
     });
 
-  it("gets default values overwritten by environment variables", () => {
-    process.env["DD_API_KEY_SECRET_ARN"] =
-      "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
-    process.env["DD_FLUSH_TO_LOG"] = "false";
-    const config = loader.getConfigFromEnvVars();
-    expect(config).toEqual(
-      expect.objectContaining({
-        addLayers: true,
-        addExtension: false,
-        exclude: [],
-        flushMetricsToLogs: false,
-        logLevel: undefined,
-        site: "datadoghq.com",
-        enableXrayTracing: false,
-        enableDDTracing: true,
-        enableDDLogs: true,
-        enableEnhancedMetrics: true,
-        captureLambdaPayload: false,
-        apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
-      }),
-    );
-  });
+    it("gets default values overwritten by environment variables", () => {
+      process.env["DD_API_KEY_SECRET_ARN"] =
+        "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
+      process.env["DD_FLUSH_TO_LOG"] = "false";
+      const config = loader.getConfigFromEnvVars();
+      expect(config).toEqual(
+        expect.objectContaining({
+          addLayers: true,
+          addExtension: false,
+          exclude: [],
+          flushMetricsToLogs: false,
+          logLevel: undefined,
+          site: "datadoghq.com",
+          enableXrayTracing: false,
+          enableDDTracing: true,
+          enableDDLogs: true,
+          enableEnhancedMetrics: true,
+          captureLambdaPayload: false,
+          apiKeySecretArn: "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234",
+        }),
+      );
+    });
 
-  it("gets apiKeySsmArn from environment variable", () => {
-    process.env["DD_API_KEY_SSM_ARN"] = "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key";
-    const config = loader.getConfigFromEnvVars();
-    expect(config).toEqual(
-      expect.objectContaining({
-        addLayers: true,
-        addExtension: false,
-        exclude: [],
-        flushMetricsToLogs: true,
-        logLevel: undefined,
-        site: "datadoghq.com",
-        enableXrayTracing: false,
-        enableDDTracing: true,
-        enableDDLogs: true,
-        enableEnhancedMetrics: true,
-        captureLambdaPayload: false,
-        apiKeySsmArn: "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key",
-      }),
-    );
-  });
+    it("gets apiKeySsmArn from environment variable", () => {
+      process.env["DD_API_KEY_SSM_ARN"] = "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key";
+      const config = loader.getConfigFromEnvVars();
+      expect(config).toEqual(
+        expect.objectContaining({
+          addLayers: true,
+          addExtension: false,
+          exclude: [],
+          flushMetricsToLogs: true,
+          logLevel: undefined,
+          site: "datadoghq.com",
+          enableXrayTracing: false,
+          enableDDTracing: true,
+          enableDDLogs: true,
+          enableEnhancedMetrics: true,
+          captureLambdaPayload: false,
+          apiKeySsmArn: "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key",
+        }),
+      );
+    });
 
     it("gets a mixed a configuration when some values are present", () => {
       process.env["DD_API_KEY_SECRET_ARN"] =
@@ -806,7 +806,7 @@ describe("setEnvConfiguration", () => {
     }).not.toThrow();
 
     expect(lambda.properties.Environment?.Variables?.DD_API_KEY_SSM_ARN).toEqual(
-      "arn:aws:ssm:us-east-2:425362996713:parameter/dev/DD_API_KEY"
+      "arn:aws:ssm:us-east-2:425362996713:parameter/dev/DD_API_KEY",
     );
   });
 });

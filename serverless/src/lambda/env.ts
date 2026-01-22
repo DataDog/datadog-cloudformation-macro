@@ -258,8 +258,15 @@ export function validateParameters(config: Configuration): string[] {
         "setting `forwarderArn` with `addExtension` and/or `extensionLayerVersion` as these parameters cannot be set at the same time.",
       );
     }
-    if (config.apiKey === undefined && config.apiKeySecretArn === undefined && config.apiKeySsmArn === undefined && config.apiKMSKey === undefined) {
-      errors.push("When `extensionLayerVersion` is set, `apiKey`, `apiKeySecretArn`, `apiKeySsmArn`, or `apiKmsKey` must also be set.");
+    if (
+      config.apiKey === undefined &&
+      config.apiKeySecretArn === undefined &&
+      config.apiKeySsmArn === undefined &&
+      config.apiKMSKey === undefined
+    ) {
+      errors.push(
+        "When `extensionLayerVersion` is set, `apiKey`, `apiKeySecretArn`, `apiKeySsmArn`, or `apiKmsKey` must also be set.",
+      );
     }
   }
 
@@ -300,7 +307,7 @@ export function checkForMultipleApiKeys(config: Configuration): string | undefin
     if (config.apiKMSKey !== undefined) keys.push("`apiKMSKey`");
     if (config.apiKeySecretArn !== undefined) keys.push("`apiKeySecretArn`");
     if (config.apiKeySsmArn !== undefined) keys.push("`apiKeySsmArn`");
-    
+
     if (keys.length === 2) {
       multipleApiKeysMessage = `${keys[0]} and ${keys[1]}`;
     } else if (keys.length === 3) {
