@@ -13,6 +13,7 @@ export enum RuntimeType {
   NODE,
   PYTHON,
   RUBY,
+  CUSTOM,
   UNSUPPORTED,
 }
 
@@ -64,6 +65,8 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "nodejs20.x": RuntimeType.NODE,
   "nodejs22.x": RuntimeType.NODE,
   "nodejs24.x": RuntimeType.NODE,
+  "provided.al2": RuntimeType.CUSTOM,
+  "provided.al2023": RuntimeType.CUSTOM,
   "python2.7": RuntimeType.PYTHON,
   "python3.6": RuntimeType.PYTHON,
   "python3.7": RuntimeType.PYTHON,

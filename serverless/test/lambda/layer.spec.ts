@@ -68,6 +68,8 @@ describe("findLambdas", () => {
       Node20Function: mockFunctionResource("nodejs20.x", ["x86_64"]),
       Node22Function: mockFunctionResource("nodejs22.x", ["x86_64"]),
       Node24Function: mockFunctionResource("nodejs24.x", ["x86_64"]),
+      ProvidedAl2Function: mockFunctionResource("provided.al2", ["x86_64"]),
+      ProvidedAl2023Function: mockFunctionResource("provided.al2023", ["x86_64"]),
       Python27Function: mockFunctionResource("python2.7", ["x86_64"]),
       Python36Function: mockFunctionResource("python3.6", ["x86_64"]),
       Python37Function: mockFunctionResource("python3.7", ["x86_64"]),
@@ -103,6 +105,14 @@ describe("findLambdas", () => {
       mockLambdaFunction("Node20Function", "nodejs20.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node22Function", "nodejs22.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node24Function", "nodejs24.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("ProvidedAl2Function", "provided.al2", RuntimeType.CUSTOM, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction(
+        "ProvidedAl2023Function",
+        "provided.al2023",
+        RuntimeType.CUSTOM,
+        "x86_64",
+        ArchitectureType.x86_64,
+      ),
       mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
@@ -288,6 +298,54 @@ describe("applyLayers", () => {
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:dd-trace-dotnet-ARM:${dotnetLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
+    ]);
+  });
+
+  it("applies the extension lambda layer for provided.al2 runtime", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "provided.al2", RuntimeType.CUSTOM, "x86_64");
+    const region = "us-east-1";
+    const extensionLayerVersion = 91;
+    const errors = applyLayers(region, [lambda], undefined, undefined, undefined, undefined);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
+    ]);
+  });
+
+  it("applies the extension lambda layer for provided.al2023 runtime", () => {
+    const lambda = mockLambdaFunction("FunctionKey", "provided.al2023", RuntimeType.CUSTOM, "x86_64");
+    const region = "us-east-1";
+    const extensionLayerVersion = 91;
+    const errors = applyLayers(region, [lambda], undefined, undefined, undefined, undefined);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension:${extensionLayerVersion}`,
+    ]);
+  });
+
+  it("applies the extension lambda layer for provided.al2023 runtime with arm64", () => {
+    const lambda = mockLambdaFunction(
+      "FunctionKey",
+      "provided.al2023",
+      RuntimeType.CUSTOM,
+      "arm64",
+      ArchitectureType.ARM64,
+    );
+    const region = "us-east-1";
+    const extensionLayerVersion = 91;
+    const errors = applyLayers(region, [lambda], undefined, undefined, undefined, undefined);
+
+    errors.concat(applyExtensionLayer(region, [lambda], extensionLayerVersion));
+
+    expect(errors.length).toEqual(0);
+    expect(lambda.properties.Layers).toEqual([
       `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Extension-ARM:${extensionLayerVersion}`,
     ]);
   });
