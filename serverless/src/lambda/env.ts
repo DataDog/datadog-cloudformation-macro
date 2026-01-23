@@ -293,7 +293,6 @@ export function validateParameters(config: Configuration): string[] {
 }
 
 export function checkForMultipleApiKeys(config: Configuration): string | undefined {
-  let multipleApiKeysMessage;
   const apiKeyCount = [
     config.apiKey !== undefined,
     config.apiKMSKey !== undefined,
@@ -309,15 +308,12 @@ export function checkForMultipleApiKeys(config: Configuration): string | undefin
     if (config.apiKeySsmArn !== undefined) keys.push("`apiKeySsmArn`");
 
     if (keys.length === 2) {
-      multipleApiKeysMessage = `${keys[0]} and ${keys[1]}`;
-    } else if (keys.length === 3) {
-      multipleApiKeysMessage = `${keys[0]}, ${keys[1]}, and ${keys[2]}`;
-    } else if (keys.length === 4) {
-      multipleApiKeysMessage = `${keys[0]}, ${keys[1]}, ${keys[2]}, and ${keys[3]}`;
+      return `${keys[0]} and ${keys[1]}`;
     }
+    return `${keys.slice(0, -1).join(", ")}, and ${keys[keys.length - 1]}`;
   }
 
-  return multipleApiKeysMessage;
+  return undefined;
 }
 
 export function setEnvConfiguration(config: Configuration, lambdas: LambdaFunction[]): void {
@@ -356,8 +352,11 @@ export function setEnvConfiguration(config: Configuration, lambdas: LambdaFuncti
       envVariables[logLevelEnvVar] = config.logLevel;
     }
 
+    // When using the Extension, logs are collected via Telemetry API
+    // DD_FLUSH_TO_LOG is a Forwarder-era flag and should be false when Extension is enabled
+    const useExtension = config.extensionLayerVersion !== undefined;
     if (envVariables[logForwardingEnvVar] === undefined) {
-      envVariables[logForwardingEnvVar] = config.flushMetricsToLogs;
+      envVariables[logForwardingEnvVar] = useExtension ? false : config.flushMetricsToLogs;
     }
 
     if (envVariables[enhancedMetricsEnvVar] === undefined) {

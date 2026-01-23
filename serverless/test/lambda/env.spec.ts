@@ -188,7 +188,7 @@ describe("setEnvConfiguration", () => {
         DD_API_KEY: "1234",
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
         DD_ENHANCED_METRICS: true,
-        DD_FLUSH_TO_LOG: true,
+        DD_FLUSH_TO_LOG: false,
         DD_SITE: "datadoghq.com",
         DD_ENV: "test",
         DD_SERVICE: "my-service",
@@ -289,11 +289,11 @@ describe("setEnvConfiguration", () => {
       Variables: {
         DD_API_KEY: "1234",
         DD_APM_FLUSH_DEADLINE_MILLISECONDS: "20",
-        DD_FLUSH_TO_LOG: true,
         DD_KMS_API_KEY: "5678",
         DD_LOG_LEVEL: "debug",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: false,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: true,
         DD_ENV: "test",
@@ -679,10 +679,10 @@ describe("setEnvConfiguration", () => {
     expect(lambda.properties.Environment).toEqual({
       Variables: {
         DD_API_KEY_SECRET_ARN: "some-resource:from:aws:secrets-manager:arn",
-        DD_FLUSH_TO_LOG: true,
         DD_LOG_LEVEL: "info",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: false,
         DD_TRACE_ENABLED: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
@@ -760,10 +760,10 @@ describe("setEnvConfiguration", () => {
     expect(lambda.properties.Environment).toEqual({
       Variables: {
         DD_API_KEY_SSM_ARN: "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key",
-        DD_FLUSH_TO_LOG: true,
         DD_LOG_LEVEL: "info",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: false,
         DD_TRACE_ENABLED: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
