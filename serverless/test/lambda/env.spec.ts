@@ -80,6 +80,27 @@ describe("getConfig", () => {
       );
     });
 
+    it("gets apiKeySsmArn from environment variable", () => {
+      process.env["DD_API_KEY_SSM_ARN"] = "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key";
+      const config = loader.getConfigFromEnvVars();
+      expect(config).toEqual(
+        expect.objectContaining({
+          addLayers: true,
+          addExtension: false,
+          exclude: [],
+          flushMetricsToLogs: true,
+          logLevel: undefined,
+          site: "datadoghq.com",
+          enableXrayTracing: false,
+          enableDDTracing: true,
+          enableDDLogs: true,
+          enableEnhancedMetrics: true,
+          captureLambdaPayload: false,
+          apiKeySsmArn: "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key",
+        }),
+      );
+    });
+
     it("gets a mixed a configuration when some values are present", () => {
       process.env["DD_API_KEY_SECRET_ARN"] =
         "arn:aws:secretsmanager:my-region-1:123456789012:secret:DdApiKeySecret-abcd1234";
@@ -167,7 +188,7 @@ describe("setEnvConfiguration", () => {
         DD_API_KEY: "1234",
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
         DD_ENHANCED_METRICS: true,
-        DD_FLUSH_TO_LOG: true,
+        DD_FLUSH_TO_LOG: false,
         DD_SITE: "datadoghq.com",
         DD_ENV: "test",
         DD_SERVICE: "my-service",
@@ -268,11 +289,11 @@ describe("setEnvConfiguration", () => {
       Variables: {
         DD_API_KEY: "1234",
         DD_APM_FLUSH_DEADLINE_MILLISECONDS: "20",
-        DD_FLUSH_TO_LOG: true,
         DD_KMS_API_KEY: "5678",
         DD_LOG_LEVEL: "debug",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: false,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: true,
         DD_ENV: "test",
@@ -658,10 +679,10 @@ describe("setEnvConfiguration", () => {
     expect(lambda.properties.Environment).toEqual({
       Variables: {
         DD_API_KEY_SECRET_ARN: "some-resource:from:aws:secrets-manager:arn",
-        DD_FLUSH_TO_LOG: true,
         DD_LOG_LEVEL: "info",
         DD_SITE: "datadoghq.eu",
         DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: false,
         DD_TRACE_ENABLED: true,
         DD_SERVERLESS_LOGS_ENABLED: true,
         DD_CAPTURE_LAMBDA_PAYLOAD: false,
@@ -702,6 +723,90 @@ describe("setEnvConfiguration", () => {
       setEnvConfiguration(config, [lambda]);
     }).toThrow(
       `\`apiKeySecretArn\` is not supported for Node runtimes (${lambda.properties.FunctionName}) when using Synchronous Metrics. Use either \`apiKey\` or \`apiKmsKey\`.`,
+    );
+  });
+
+  it("adds `DD_API_KEY_SSM_ARN` correctly", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        FunctionName: "my-function",
+        Handler: "app.handler",
+        Runtime: "python3.9",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.PYTHON,
+      runtime: "python3.9",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    const config = {
+      addLayers: false,
+      addExtension: false,
+      apiKeySsmArn: "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key",
+      site: "datadoghq.eu",
+      logLevel: "info",
+      flushMetricsToLogs: true,
+      enableXrayTracing: true,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      extensionLayerVersion: 13,
+      captureLambdaPayload: false,
+    };
+    setEnvConfiguration(config, [lambda]);
+
+    expect(lambda.properties.Environment).toEqual({
+      Variables: {
+        DD_API_KEY_SSM_ARN: "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key",
+        DD_LOG_LEVEL: "info",
+        DD_SITE: "datadoghq.eu",
+        DD_ENHANCED_METRICS: true,
+        DD_FLUSH_TO_LOG: false,
+        DD_TRACE_ENABLED: true,
+        DD_SERVERLESS_LOGS_ENABLED: true,
+        DD_CAPTURE_LAMBDA_PAYLOAD: false,
+      },
+    });
+  });
+
+  it("does not throw error when using synchronous metrics in node with `DD_API_KEY_SSM_ARN`", () => {
+    const lambda: LambdaFunction = {
+      properties: {
+        FunctionName: "my-function",
+        Handler: "app.handler",
+        Runtime: "nodejs12.x",
+        Role: "role-arn",
+        Code: {},
+      },
+      key: "FunctionKey",
+      runtimeType: RuntimeType.NODE,
+      runtime: "nodejs12.x",
+      architecture: "x86_64",
+      architectureType: ArchitectureType.x86_64,
+    };
+    const config = {
+      addLayers: false,
+      addExtension: false,
+      apiKeySsmArn: "arn:aws:ssm:us-east-2:425362996713:parameter/dev/DD_API_KEY",
+      site: "datadoghq.eu",
+      logLevel: "info",
+      flushMetricsToLogs: false,
+      enableXrayTracing: true,
+      enableDDTracing: true,
+      enableDDLogs: true,
+      enableEnhancedMetrics: true,
+      captureLambdaPayload: false,
+    };
+
+    // Should not throw - SSM ARN is supported for Node runtimes with synchronous metrics
+    expect(() => {
+      setEnvConfiguration(config, [lambda]);
+    }).not.toThrow();
+
+    expect(lambda.properties.Environment?.Variables?.DD_API_KEY_SSM_ARN).toEqual(
+      "arn:aws:ssm:us-east-2:425362996713:parameter/dev/DD_API_KEY",
     );
   });
 });
@@ -790,7 +895,7 @@ describe("validateParameters", () => {
     const errors = validateParameters(params);
     expect(
       errors.includes(
-        "When `extensionLayerVersion` is set, `apiKey`, `apiKeySecretArn`, or `apiKmsKey` must also be set.",
+        "When `extensionLayerVersion` is set, `apiKey`, `apiKeySecretArn`, `apiKeySsmArn`, or `apiKmsKey` must also be set.",
       ),
     ).toBe(true);
   });
@@ -937,7 +1042,7 @@ describe("checkForMultipleApiKeys", () => {
     ).toMatch("`apiKMSKey` and `apiKeySecretArn`");
   });
 
-  it("throws error if both API key secret ARN and KMS API key are defined", () => {
+  it("throws error if API key, secret ARN, and KMS API key are all defined", () => {
     expect(
       checkForMultipleApiKeys({
         addLayers: false,
@@ -955,5 +1060,63 @@ describe("checkForMultipleApiKeys", () => {
         captureLambdaPayload: false,
       }),
     ).toMatch("`apiKey`, `apiKMSKey`, and `apiKeySecretArn`");
+  });
+
+  it("throws error if both API key and SSM ARN are defined", () => {
+    expect(
+      checkForMultipleApiKeys({
+        addLayers: false,
+        addExtension: false,
+        apiKey: "1234",
+        apiKeySsmArn: "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key",
+        logLevel: "debug",
+        site: "datadoghq.com",
+        flushMetricsToLogs: false,
+        enableEnhancedMetrics: false,
+        enableXrayTracing: false,
+        enableDDTracing: false,
+        enableDDLogs: false,
+        captureLambdaPayload: false,
+      }),
+    ).toMatch("`apiKey` and `apiKeySsmArn`");
+  });
+
+  it("throws error if both API key secret ARN and SSM ARN are defined", () => {
+    expect(
+      checkForMultipleApiKeys({
+        addLayers: false,
+        addExtension: false,
+        apiKeySecretArn: "some-resource:from:aws:secrets-manager:arn",
+        apiKeySsmArn: "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key",
+        logLevel: "debug",
+        site: "datadoghq.com",
+        flushMetricsToLogs: false,
+        enableEnhancedMetrics: false,
+        enableXrayTracing: false,
+        enableDDTracing: false,
+        enableDDLogs: false,
+        captureLambdaPayload: false,
+      }),
+    ).toMatch("`apiKeySecretArn` and `apiKeySsmArn`");
+  });
+
+  it("throws error if API key, SSM ARN, and KMS API key are all defined", () => {
+    expect(
+      checkForMultipleApiKeys({
+        addLayers: false,
+        addExtension: false,
+        apiKey: "1234",
+        apiKeySsmArn: "arn:aws:ssm:us-east-1:123456789012:parameter/datadog/api_key",
+        apiKMSKey: "5678",
+        logLevel: "debug",
+        site: "datadoghq.com",
+        flushMetricsToLogs: false,
+        enableEnhancedMetrics: false,
+        enableXrayTracing: false,
+        enableDDTracing: false,
+        enableDDLogs: false,
+        captureLambdaPayload: false,
+      }),
+    ).toMatch("`apiKey`, `apiKMSKey`, and `apiKeySsmArn`");
   });
 });
