@@ -210,9 +210,7 @@ export async function findExistingLogGroupWithFunctionName(
   functionName: string,
 ): Promise<CWLogGroup | undefined> {
   const logGroupName = `${LAMBDA_LOG_GROUP_PREFIX}${functionName}`;
-  const response = await cloudWatchLogs.send(
-    new DescribeLogGroupsCommand({ logGroupNamePrefix: logGroupName }),
-  );
+  const response = await cloudWatchLogs.send(new DescribeLogGroupsCommand({ logGroupNamePrefix: logGroupName }));
   const { logGroups } = response;
   if (logGroups === undefined) {
     return;
@@ -225,15 +223,16 @@ export async function getExistingLambdaLogGroupsOnStack(
   stackName: string,
 ): Promise<CWLogGroup[]> {
   const logGroupNamePrefix = `${LAMBDA_LOG_GROUP_PREFIX}${stackName}-`;
-  const response = await cloudWatchLogs.send(
-    new DescribeLogGroupsCommand({ logGroupNamePrefix }),
-  );
+  const response = await cloudWatchLogs.send(new DescribeLogGroupsCommand({ logGroupNamePrefix }));
   const { logGroups } = response;
 
   return logGroups ?? [];
 }
 
-export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogsClient, logGroupName: string): Promise<boolean> {
+export async function shouldSubscribeLogGroup(
+  cloudWatchLogs: CloudWatchLogsClient,
+  logGroupName: string,
+): Promise<boolean> {
   const subscriptionFilters = await describeSubscriptionFilters(cloudWatchLogs, logGroupName);
   const numberOfActiveSubscriptionFilters = subscriptionFilters.length;
   if (numberOfActiveSubscriptionFilters >= MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS) {
@@ -252,9 +251,7 @@ export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogsClie
 }
 
 async function describeSubscriptionFilters(cloudWatchLogs: CloudWatchLogsClient, logGroupName: string) {
-  const response = await cloudWatchLogs.send(
-    new DescribeSubscriptionFiltersCommand({ logGroupName }),
-  );
+  const response = await cloudWatchLogs.send(new DescribeSubscriptionFiltersCommand({ logGroupName }));
   return response.subscriptionFilters ?? [];
 }
 

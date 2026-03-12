@@ -4,12 +4,6 @@ import { getMissingLayerVersionErrorMsg } from "../../src/lambda/layer";
 import { IamRoleProperties } from "../../src/lambda/tracing";
 import { FunctionProperties } from "../../src/lambda/types";
 import { mockInputEvent, LAMBDA_KEY, mockGovCloudInputEvent, VERSION_REGEX } from "../index.spec";
-import {
-  DescribeLogGroupsCommand,
-  DescribeSubscriptionFiltersCommand,
-  PutSubscriptionFilterCommand,
-  CreateLogGroupCommand,
-} from "@aws-sdk/client-cloudwatch-logs";
 
 jest.mock("@aws-sdk/client-cloudwatch-logs", () => {
   const actual = jest.requireActual("@aws-sdk/client-cloudwatch-logs");

@@ -116,12 +116,14 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{ logGroupNamePrefix: logGroupName }]);
     expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toEqual([{ logGroupName }]);
     expect(getSendCalls(cloudWatchLogs, CreateLogGroupCommand)).toHaveLength(0);
-    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toEqual([{
-      destinationArn: forwarder,
-      filterName: SUBSCRIPTION_FILTER_NAME,
-      filterPattern: "",
-      logGroupName,
-    }]);
+    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toEqual([
+      {
+        destinationArn: forwarder,
+        filterName: SUBSCRIPTION_FILTER_NAME,
+        filterPattern: "",
+        logGroupName,
+      },
+    ]);
     expect(resources).toEqual(mockResources([lambda])); // template should not be modified
   });
 
@@ -138,15 +140,19 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     });
     await addCloudWatchForwarderSubscriptions(resources, [lambda], "stack-name", forwarder, cloudWatchLogs as any);
 
-    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{ logGroupNamePrefix: "/aws/lambda/stack-name-" }]);
+    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([
+      { logGroupNamePrefix: "/aws/lambda/stack-name-" },
+    ]);
     expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toEqual([{ logGroupName }]);
     expect(getSendCalls(cloudWatchLogs, CreateLogGroupCommand)).toHaveLength(0);
-    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toEqual([{
-      destinationArn: forwarder,
-      filterName: SUBSCRIPTION_FILTER_NAME,
-      filterPattern: "",
-      logGroupName,
-    }]);
+    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toEqual([
+      {
+        destinationArn: forwarder,
+        filterName: SUBSCRIPTION_FILTER_NAME,
+        filterPattern: "",
+        logGroupName,
+      },
+    ]);
     expect(resources).toEqual(mockResources([lambda])); // template should not be modified
   });
 
@@ -207,9 +213,11 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       "Found a declared log group for FunctionKey but no subscription filter declared for forwarder-arn." +
         " To allow the macro to automatically create a log group and subscription, please remove the log group declaration.",
     );
-    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{
-      logGroupNamePrefix: "/aws/lambda/stack-name-",
-    }]);
+    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([
+      {
+        logGroupNamePrefix: "/aws/lambda/stack-name-",
+      },
+    ]);
     expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toHaveLength(0);
   });
 
@@ -228,12 +236,14 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{ logGroupNamePrefix: logGroupName }]);
     expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toHaveLength(0);
     expect(getSendCalls(cloudWatchLogs, CreateLogGroupCommand)).toEqual([{ logGroupName }]);
-    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toEqual([{
-      destinationArn: forwarder,
-      filterName: SUBSCRIPTION_FILTER_NAME,
-      filterPattern: "",
-      logGroupName,
-    }]);
+    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toEqual([
+      {
+        destinationArn: forwarder,
+        filterName: SUBSCRIPTION_FILTER_NAME,
+        filterPattern: "",
+        logGroupName,
+      },
+    ]);
     expect(resources).toEqual(mockResources([lambda])); // template should not be modified
   });
 
