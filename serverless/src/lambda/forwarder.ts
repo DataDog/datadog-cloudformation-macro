@@ -1,4 +1,11 @@
-import { CloudWatchLogs } from "aws-sdk";
+import {
+  CloudWatchLogsClient,
+  DescribeLogGroupsCommand,
+  DescribeSubscriptionFiltersCommand,
+  PutSubscriptionFilterCommand,
+  CreateLogGroupCommand,
+  type LogGroup as CWLogGroup,
+} from "@aws-sdk/client-cloudwatch-logs";
 import { LambdaFunction } from "./layer";
 import { Resources, LogGroup } from "common/types";
 import log from "loglevel";
@@ -71,15 +78,15 @@ export async function addCloudWatchForwarderSubscriptions(
   lambdas: LambdaFunction[],
   stackName: string | undefined,
   forwarderArn: string,
-  cloudWatchLogs: CloudWatchLogs,
+  cloudWatchLogs: CloudWatchLogsClient,
 ): Promise<void> {
-  let logGroupsOnStack: CloudWatchLogs.LogGroups | undefined;
+  let logGroupsOnStack: CWLogGroup[] | undefined;
   let logGroupsInTemplate: LogGroupDefinition[] | undefined;
   let subscriptionsInTemplate: SubscriptionDefinition[] | undefined;
   let functionNamePrefix: string;
 
   for (const lambda of lambdas) {
-    let logGroup: CloudWatchLogs.LogGroup | undefined;
+    let logGroup: CWLogGroup | undefined;
     let logGroupName: string | { [fn: string]: any } | undefined;
     let logGroupKey: string | undefined;
 
@@ -199,14 +206,13 @@ export async function addCloudWatchForwarderSubscriptions(
 }
 
 export async function findExistingLogGroupWithFunctionName(
-  cloudWatchLogs: CloudWatchLogs,
+  cloudWatchLogs: CloudWatchLogsClient,
   functionName: string,
-): Promise<any> {
+): Promise<CWLogGroup | undefined> {
   const logGroupName = `${LAMBDA_LOG_GROUP_PREFIX}${functionName}`;
-  const args = {
-    logGroupNamePrefix: logGroupName,
-  };
-  const response = await cloudWatchLogs.describeLogGroups(args).promise();
+  const response = await cloudWatchLogs.send(
+    new DescribeLogGroupsCommand({ logGroupNamePrefix: logGroupName }),
+  );
   const { logGroups } = response;
   if (logGroups === undefined) {
     return;
@@ -215,18 +221,19 @@ export async function findExistingLogGroupWithFunctionName(
 }
 
 export async function getExistingLambdaLogGroupsOnStack(
-  cloudWatchLogs: CloudWatchLogs,
+  cloudWatchLogs: CloudWatchLogsClient,
   stackName: string,
-): Promise<any> {
+): Promise<CWLogGroup[]> {
   const logGroupNamePrefix = `${LAMBDA_LOG_GROUP_PREFIX}${stackName}-`;
-  const args = { logGroupNamePrefix };
-  const response = await cloudWatchLogs.describeLogGroups(args).promise();
+  const response = await cloudWatchLogs.send(
+    new DescribeLogGroupsCommand({ logGroupNamePrefix }),
+  );
   const { logGroups } = response;
 
   return logGroups ?? [];
 }
 
-export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogs, logGroupName: string): Promise<boolean> {
+export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogsClient, logGroupName: string): Promise<boolean> {
   const subscriptionFilters = await describeSubscriptionFilters(cloudWatchLogs, logGroupName);
   const numberOfActiveSubscriptionFilters = subscriptionFilters.length;
   if (numberOfActiveSubscriptionFilters >= MAX_ALLOWABLE_LOG_GROUP_SUBSCRIPTIONS) {
@@ -244,9 +251,10 @@ export async function shouldSubscribeLogGroup(cloudWatchLogs: CloudWatchLogs, lo
   return true;
 }
 
-async function describeSubscriptionFilters(cloudWatchLogs: CloudWatchLogs, logGroupName: string): Promise<any> {
-  const request = { logGroupName };
-  const response = await cloudWatchLogs.describeSubscriptionFilters(request).promise();
+async function describeSubscriptionFilters(cloudWatchLogs: CloudWatchLogsClient, logGroupName: string) {
+  const response = await cloudWatchLogs.send(
+    new DescribeSubscriptionFiltersCommand({ logGroupName }),
+  );
   return response.subscriptionFilters ?? [];
 }
 
@@ -316,20 +324,20 @@ function findDeclaredSub(
 }
 
 async function putSubscriptionFilter(
-  cloudWatchLogs: CloudWatchLogs,
+  cloudWatchLogs: CloudWatchLogsClient,
   forwarderArn: string,
   logGroupName: string,
 ): Promise<void> {
-  const args = {
-    destinationArn: forwarderArn,
-    filterName: SUBSCRIPTION_FILTER_NAME,
-    filterPattern: "",
-    logGroupName,
-  };
-  await cloudWatchLogs.putSubscriptionFilter(args).promise();
+  await cloudWatchLogs.send(
+    new PutSubscriptionFilterCommand({
+      destinationArn: forwarderArn,
+      filterName: SUBSCRIPTION_FILTER_NAME,
+      filterPattern: "",
+      logGroupName,
+    }),
+  );
 }
 
-async function createLogGroup(cloudWatchLogs: CloudWatchLogs, logGroupName: string): Promise<void> {
-  const args = { logGroupName };
-  await cloudWatchLogs.createLogGroup(args).promise();
+async function createLogGroup(cloudWatchLogs: CloudWatchLogsClient, logGroupName: string): Promise<void> {
+  await cloudWatchLogs.send(new CreateLogGroupCommand({ logGroupName }));
 }

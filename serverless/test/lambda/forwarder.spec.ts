@@ -1,4 +1,11 @@
-import { CloudWatchLogs } from "aws-sdk";
+import {
+  DescribeLogGroupsCommand,
+  DescribeSubscriptionFiltersCommand,
+  PutSubscriptionFilterCommand,
+  CreateLogGroupCommand,
+  type LogGroup as CWLogGroup,
+  type DescribeSubscriptionFiltersCommandOutput,
+} from "@aws-sdk/client-cloudwatch-logs";
 import {
   findExistingLogGroupWithFunctionName,
   getExistingLambdaLogGroupsOnStack,
@@ -14,37 +21,42 @@ function mockCloudWatchLogs(
   logGroups: Record<
     string,
     {
-      logGroup: CloudWatchLogs.LogGroup;
-      filters?: CloudWatchLogs.DescribeSubscriptionFiltersResponse;
+      logGroup: CWLogGroup;
+      filters?: Pick<DescribeSubscriptionFiltersCommandOutput, "subscriptionFilters">;
     }
   >,
 ) {
-  return {
-    describeLogGroups: jest.fn().mockImplementation(({ logGroupNamePrefix }) => {
-      const response: CloudWatchLogs.DescribeLogGroupsResponse = {};
+  const sendMock = jest.fn().mockImplementation((command: unknown) => {
+    if (command instanceof DescribeLogGroupsCommand) {
+      const { logGroupNamePrefix } = command.input;
+      const matched: CWLogGroup[] = [];
       for (const logGroupName of Object.keys(logGroups)) {
-        if (logGroupName.startsWith(logGroupNamePrefix)) {
-          const lg = logGroups[logGroupName].logGroup;
-          if (response.logGroups === undefined) {
-            response.logGroups = [lg];
-          } else {
-            response.logGroups.push(lg);
-          }
+        if (logGroupNamePrefix && logGroupName.startsWith(logGroupNamePrefix)) {
+          matched.push(logGroups[logGroupName].logGroup);
         }
       }
-      return { promise: () => Promise.resolve(response) };
-    }),
-    describeSubscriptionFilters: jest.fn().mockImplementation(({ logGroupName }) => {
-      const response = logGroups[logGroupName]?.filters ?? {};
-      return { promise: () => Promise.resolve(response) };
-    }),
-    putSubscriptionFilter: jest.fn().mockImplementation(() => {
-      return { promise: () => Promise.resolve() };
-    }),
-    createLogGroup: jest.fn().mockImplementation(() => {
-      return { promise: () => Promise.resolve() };
-    }),
-  };
+      return Promise.resolve({ logGroups: matched.length > 0 ? matched : undefined });
+    }
+    if (command instanceof DescribeSubscriptionFiltersCommand) {
+      const { logGroupName } = command.input;
+      return Promise.resolve(logGroups[logGroupName!]?.filters ?? {});
+    }
+    if (command instanceof PutSubscriptionFilterCommand) {
+      return Promise.resolve({});
+    }
+    if (command instanceof CreateLogGroupCommand) {
+      return Promise.resolve({});
+    }
+    return Promise.reject(new Error(`Unexpected command: ${command}`));
+  });
+
+  return { send: sendMock };
+}
+
+function getSendCalls(mock: { send: jest.Mock }, CommandClass: new (...args: any[]) => any) {
+  return mock.send.mock.calls
+    .filter(([cmd]: [unknown]) => cmd instanceof CommandClass)
+    .map(([cmd]: [any]) => cmd.input);
 }
 
 function mockResources(lambdas: LambdaFunction[], logGroups?: LogGroupDefinition[]) {
@@ -101,15 +113,15 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     });
     await addCloudWatchForwarderSubscriptions(resources, [lambda], undefined, forwarder, cloudWatchLogs as any);
 
-    expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({ logGroupNamePrefix: logGroupName });
-    expect(cloudWatchLogs.describeSubscriptionFilters).toHaveBeenCalledWith({ logGroupName });
-    expect(cloudWatchLogs.createLogGroup).not.toHaveBeenCalled();
-    expect(cloudWatchLogs.putSubscriptionFilter).toHaveBeenCalledWith({
+    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{ logGroupNamePrefix: logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toEqual([{ logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, CreateLogGroupCommand)).toHaveLength(0);
+    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toEqual([{
       destinationArn: forwarder,
       filterName: SUBSCRIPTION_FILTER_NAME,
       filterPattern: "",
       logGroupName,
-    });
+    }]);
     expect(resources).toEqual(mockResources([lambda])); // template should not be modified
   });
 
@@ -126,15 +138,15 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     });
     await addCloudWatchForwarderSubscriptions(resources, [lambda], "stack-name", forwarder, cloudWatchLogs as any);
 
-    expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({ logGroupNamePrefix: "/aws/lambda/stack-name-" });
-    expect(cloudWatchLogs.describeSubscriptionFilters).toHaveBeenCalledWith({ logGroupName });
-    expect(cloudWatchLogs.createLogGroup).not.toHaveBeenCalled();
-    expect(cloudWatchLogs.putSubscriptionFilter).toHaveBeenCalledWith({
+    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{ logGroupNamePrefix: "/aws/lambda/stack-name-" }]);
+    expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toEqual([{ logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, CreateLogGroupCommand)).toHaveLength(0);
+    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toEqual([{
       destinationArn: forwarder,
       filterName: SUBSCRIPTION_FILTER_NAME,
       filterPattern: "",
       logGroupName,
-    });
+    }]);
     expect(resources).toEqual(mockResources([lambda])); // template should not be modified
   });
 
@@ -163,10 +175,10 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       },
     });
     await addCloudWatchForwarderSubscriptions(resources, [lambda], undefined, "forwarder-arn", cloudWatchLogs as any);
-    expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({ logGroupNamePrefix: logGroupName });
-    expect(cloudWatchLogs.describeSubscriptionFilters).toHaveBeenCalledWith({ logGroupName });
-    expect(cloudWatchLogs.createLogGroup).not.toHaveBeenCalled();
-    expect(cloudWatchLogs.putSubscriptionFilter).not.toHaveBeenCalled();
+    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{ logGroupNamePrefix: logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toEqual([{ logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, CreateLogGroupCommand)).toHaveLength(0);
+    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toHaveLength(0);
   });
 
   it("errors if log group does not exist, but is declared in template", async () => {
@@ -195,10 +207,10 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       "Found a declared log group for FunctionKey but no subscription filter declared for forwarder-arn." +
         " To allow the macro to automatically create a log group and subscription, please remove the log group declaration.",
     );
-    expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({
+    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{
       logGroupNamePrefix: "/aws/lambda/stack-name-",
-    });
-    expect(cloudWatchLogs.describeSubscriptionFilters).not.toHaveBeenCalled();
+    }]);
+    expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toHaveLength(0);
   });
 
   it("macro creates log group and subscription when function name is provided", async () => {
@@ -213,15 +225,15 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     const cloudWatchLogs = mockCloudWatchLogs({});
     await addCloudWatchForwarderSubscriptions(resources, [lambda], undefined, forwarder, cloudWatchLogs as any);
 
-    expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({ logGroupNamePrefix: logGroupName });
-    expect(cloudWatchLogs.describeSubscriptionFilters).not.toHaveBeenCalled();
-    expect(cloudWatchLogs.createLogGroup).toHaveBeenCalledWith({ logGroupName });
-    expect(cloudWatchLogs.putSubscriptionFilter).toHaveBeenCalledWith({
+    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{ logGroupNamePrefix: logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toHaveLength(0);
+    expect(getSendCalls(cloudWatchLogs, CreateLogGroupCommand)).toEqual([{ logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toEqual([{
       destinationArn: forwarder,
       filterName: SUBSCRIPTION_FILTER_NAME,
       filterPattern: "",
       logGroupName,
-    });
+    }]);
     expect(resources).toEqual(mockResources([lambda])); // template should not be modified
   });
 
@@ -246,10 +258,10 @@ describe("addCloudWatchForwarderSubscriptions", () => {
     });
     await addCloudWatchForwarderSubscriptions(resources, [lambda], undefined, forwarder, cloudWatchLogs as any);
 
-    expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({ logGroupNamePrefix: logGroupName });
-    expect(cloudWatchLogs.describeSubscriptionFilters).toHaveBeenCalledWith({ logGroupName });
-    expect(cloudWatchLogs.createLogGroup).not.toHaveBeenCalled();
-    expect(cloudWatchLogs.putSubscriptionFilter).not.toHaveBeenCalled();
+    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{ logGroupNamePrefix: logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toEqual([{ logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, CreateLogGroupCommand)).toHaveLength(0);
+    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toHaveLength(0);
   });
 
   it("log group and subscription are not initialized, but are declared", async () => {
@@ -286,10 +298,10 @@ describe("addCloudWatchForwarderSubscriptions", () => {
       cloudWatchLogs as any,
     );
 
-    expect(cloudWatchLogs.describeLogGroups).toHaveBeenCalledWith({ logGroupNamePrefix: logGroupName });
-    expect(cloudWatchLogs.describeSubscriptionFilters).not.toHaveBeenCalled();
-    expect(cloudWatchLogs.createLogGroup).not.toHaveBeenCalled();
-    expect(cloudWatchLogs.putSubscriptionFilter).not.toHaveBeenCalled();
+    expect(getSendCalls(cloudWatchLogs, DescribeLogGroupsCommand)).toEqual([{ logGroupNamePrefix: logGroupName }]);
+    expect(getSendCalls(cloudWatchLogs, DescribeSubscriptionFiltersCommand)).toHaveLength(0);
+    expect(getSendCalls(cloudWatchLogs, CreateLogGroupCommand)).toHaveLength(0);
+    expect(getSendCalls(cloudWatchLogs, PutSubscriptionFilterCommand)).toHaveLength(0);
     expect(resources).toEqual({
       // log groups and subscriptions are unchanged
       FunctionKey: {

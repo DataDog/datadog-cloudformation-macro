@@ -5,36 +5,35 @@ import { IamRoleProperties } from "../../src/lambda/tracing";
 import { FunctionProperties } from "../../src/lambda/types";
 import { mockInputEvent, LAMBDA_KEY, mockGovCloudInputEvent, VERSION_REGEX } from "../index.spec";
 import {
-  DescribeLogGroupsRequest,
-  DescribeLogGroupsResponse,
-  DescribeSubscriptionFiltersRequest,
-  CreateLogGroupRequest,
-  PutSubscriptionFilterRequest,
-} from "aws-sdk/clients/cloudwatchlogs";
+  DescribeLogGroupsCommand,
+  DescribeSubscriptionFiltersCommand,
+  PutSubscriptionFilterCommand,
+  CreateLogGroupCommand,
+} from "@aws-sdk/client-cloudwatch-logs";
 
-jest.mock("aws-sdk", () => {
+jest.mock("@aws-sdk/client-cloudwatch-logs", () => {
+  const actual = jest.requireActual("@aws-sdk/client-cloudwatch-logs");
   return {
-    CloudWatchLogs: jest.fn().mockImplementation((_) => {
+    ...actual,
+    CloudWatchLogsClient: jest.fn().mockImplementation((_) => {
       return {
-        describeLogGroups: (params: DescribeLogGroupsRequest, callback?: any) => {
-          const response: DescribeLogGroupsResponse = {
-            logGroups: [{ logGroupName: `/aws/lambda/stack-name-${LAMBDA_KEY}` }],
-          };
-          return {
-            promise: jest.fn().mockImplementation(() => Promise.resolve(response)),
-          };
-        },
-        describeSubscriptionFilters: (params: DescribeSubscriptionFiltersRequest, callback?: any) => {
-          return {
-            promise: jest.fn().mockImplementation(() => Promise.resolve([])),
-          };
-        },
-        putSubscriptionFilter: (params: PutSubscriptionFilterRequest, callback?: any) => {
-          return { promise: () => Promise.resolve() };
-        },
-        createLogGroup: (params: CreateLogGroupRequest, callback?: any) => {
-          return { promise: () => Promise.resolve() };
-        },
+        send: jest.fn().mockImplementation((command: unknown) => {
+          if (command instanceof actual.DescribeLogGroupsCommand) {
+            return Promise.resolve({
+              logGroups: [{ logGroupName: `/aws/lambda/stack-name-${LAMBDA_KEY}` }],
+            });
+          }
+          if (command instanceof actual.DescribeSubscriptionFiltersCommand) {
+            return Promise.resolve({});
+          }
+          if (command instanceof actual.PutSubscriptionFilterCommand) {
+            return Promise.resolve({});
+          }
+          if (command instanceof actual.CreateLogGroupCommand) {
+            return Promise.resolve({});
+          }
+          return Promise.reject(new Error(`Unexpected command`));
+        }),
       };
     }),
   };
