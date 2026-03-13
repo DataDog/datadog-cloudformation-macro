@@ -62,56 +62,28 @@ if [ "$PROD_RELEASE" = true ] ; then
 
     VERSION=$(echo "${CI_COMMIT_TAG##*v}" | cut -d'-' -f3-)
 
-    if [[ ! $(tools/semver.sh "$VERSION" "$CURRENT_VERSION") > 0 ]]; then
-        echo "Must use a version greater than the current ($CURRENT_VERSION)"
+    # Validate that template.yml was already bumped to the release version (via PR)
+    if [ "$VERSION" != "$CURRENT_VERSION" ]; then
+        echo "Version mismatch: template.yml has ${CURRENT_VERSION} but tag indicates ${VERSION}"
+        echo "Please create a PR to bump the version in template.yml and package.json before tagging."
         exit 1
     fi
 
     echo "Setting origin to github.com/DataDog/datadog-cloudformation-macro.git"
-    git remote set-url origin https://github.com/DataDog/datadog-cloudformation-macro.git
+    git remote set-url origin https://x-access-token:$GH_TOKEN@github.com/DataDog/datadog-cloudformation-macro.git
 
     echo "Checking git auth status"
     gh auth status
 
-    git config --global user.name "gitlab-actions[bot]"
-    git config --global user.email "gitlab-actions[bot]@users.noreply.github.com"
-
-    # Get the latest code
-    echo "pulling from remote" 
-    git pull origin main
-
-    # Bump version number
-    echo "Bumping the current version number from ${CURRENT_VERSION} to the ${VERSION}"
-    # Check if current version is not empty and then replace the version number in the template.yml
-    if [ -z "$CURRENT_VERSION" ]; then
-        echo "Current version is empty"
-        exit 1
-    fi
-    perl -pi -e "s/Version: ${CURRENT_VERSION}/Version: ${VERSION}/g" template.yml
-    # Validate the updated template
-    echo "Validating template.yml after version bump"
-    aws cloudformation validate-template --template-body file://template.yml
-
-    yarn version --no-git-tag-version --new-version "${VERSION}"
-    
-    echo "adding changes to git"
-    # Commit version number changes to git
-    git add src/ template.yml ../README.md package.json
-    git commit -m "Bump version from ${CURRENT_VERSION} to ${VERSION}"
-    # git push origin main
-    echo "pushing to remote branch"
-    git remote set-url origin https://x-access-token:$GH_TOKEN@github.com/DataDog/datadog-cloudformation-macro.git
-    git push origin main
-
     # Create a github release
     echo "Release serverless-macro-${VERSION} to github"
     tools/build_zip.sh "${VERSION}"
-    
+
     echo "Releasing to github"
     gh release create -d serverless-macro-${VERSION} .macro/serverless-macro-${VERSION}.zip --generate-notes
-  
+
     TEMPLATE_URL="https://${BUCKET}.s3.amazonaws.com/aws/serverless-macro/latest.yml"
-    MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip'"
+    MACRO_SOURCE_URL="https://github.com/DataDog/datadog-cloudformation-macro/releases/download/serverless-macro-${VERSION}/serverless-macro-${VERSION}.zip"
 else
     VERSION=${CI_COMMIT_SHA:-$(whoami)}
     tools/build_zip.sh "${VERSION}"
