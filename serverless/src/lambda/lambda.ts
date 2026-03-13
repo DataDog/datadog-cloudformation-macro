@@ -5,7 +5,7 @@ import { addCDKTag, addSAMTag } from "./tags";
 import { addDDTags, addMacroTag } from "../common/tags";
 import { redirectHandlers } from "./redirect";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
-import { CloudWatchLogs } from "aws-sdk";
+import { CloudWatchLogsClient } from "@aws-sdk/client-cloudwatch-logs";
 import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "../common/types";
 import log from "loglevel";
 import { version } from "../../package.json";
@@ -89,7 +89,7 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
       };
     }
 
-    const cloudWatchLogs = new CloudWatchLogs({ region });
+    const cloudWatchLogs = new CloudWatchLogsClient({ region });
 
     log.debug("Adding Datadog Forwarder CloudWatch subscriptions...");
     await addCloudWatchForwarderSubscriptions(
