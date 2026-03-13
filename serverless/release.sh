@@ -98,10 +98,8 @@ fi
 # Upload the template to the S3 bucket
 if [ "$PROD_RELEASE" = true ] ; then
     echo "Uploading template.yml to s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml"
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml \
-        --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/latest.yml \
-        --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/${VERSION}.yml
+    aws s3 cp template.yml s3://${BUCKET}/aws/serverless-macro/latest.yml
     echo "Version ${VERSION} has been released"
     echo "Update release notes with included PRs: https://github.com/DataDog/datadog-cloudformation-macro/releases/tag/serverless-macro-${VERSION}"
 else
