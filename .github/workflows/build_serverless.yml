@@ -29,7 +29,7 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Check formatting
         run: yarn check-formatting
@@ -72,7 +72,7 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Build
         run: yarn build
@@ -104,7 +104,7 @@ jobs:
           key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
 
       - name: Install dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Run tests
         run: yarn test
