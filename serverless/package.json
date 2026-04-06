@@ -19,13 +19,13 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^22.14.1",
-    "@typescript-eslint/eslint-plugin": "^6.17.0",
-    "@typescript-eslint/parser": "^6.17.0",
-    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^8.58.0",
+    "@typescript-eslint/parser": "^8.58.0",
+    "eslint": "^8.57.1",
     "jest": "^30.3.0",
     "prettier": "^3.8.1",
     "ts-jest": "^29.2.6",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.750.0",
