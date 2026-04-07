@@ -24,11 +24,11 @@
     "eslint": "^8.56.0",
     "jest": "^30.3.0",
     "prettier": "^3.8.1",
-    "ts-jest": "^29.2.6",
+    "ts-jest": "^29.4.9",
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@aws-sdk/client-cloudwatch-logs": "^3.750.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.1024.0",
     "loglevel": "^1.9.2"
   },
   "jest": {
