@@ -17,19 +17,19 @@
     "format": "prettier --write src/** test/**"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
-    "@types/node": "^22.14.1",
-    "@typescript-eslint/eslint-plugin": "^6.17.0",
-    "@typescript-eslint/parser": "^6.17.0",
-    "eslint": "^8.56.0",
-    "jest": "^30.3.0",
-    "prettier": "^3.8.1",
-    "ts-jest": "^29.4.9",
-    "typescript": "^5.3.3"
+    "@types/jest": "30.0.0",
+    "@types/node": "25.5.2",
+    "@typescript-eslint/eslint-plugin": "6.21.0",
+    "@typescript-eslint/parser": "6.21.0",
+    "eslint": "8.57.1",
+    "jest": "30.3.0",
+    "prettier": "3.8.1",
+    "ts-jest": "29.4.9",
+    "typescript": "5.9.3"
   },
   "dependencies": {
-    "@aws-sdk/client-cloudwatch-logs": "^3.1024.0",
-    "loglevel": "^1.9.2"
+    "@aws-sdk/client-cloudwatch-logs": "3.1024.0",
+    "loglevel": "1.9.2"
   },
   "jest": {
     "verbose": true,
@@ -54,5 +54,6 @@
     "collectCoverageFrom": [
       "src/**/*.ts"
     ]
-  }
+  },
+  "packageManager": "yarn@4.12.0"
 }
