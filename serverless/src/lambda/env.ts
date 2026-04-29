@@ -243,6 +243,7 @@ export function validateParameters(config: Configuration): string[] {
     "ap1.datadoghq.com",
     "ap2.datadoghq.com",
     "ddog-gov.com",
+    "us2.ddog-gov.com",
   ];
   if (config.site !== undefined && !siteList.includes(config.site.toLowerCase())) {
     errors.push(`Warning: Invalid site URL. Must be one of ${siteList.join(", ")}.`);
