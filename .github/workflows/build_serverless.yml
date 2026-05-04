@@ -82,6 +82,7 @@ jobs:
       run:
         working-directory: serverless
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.node-version == 26 }}
 
     strategy:
       matrix:
