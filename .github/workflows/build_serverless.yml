@@ -77,8 +77,12 @@ jobs:
       - name: Build
         run: yarn build
 
-      - name: Verify Lambda bundle
-        run: cd dist && node -e "require('./src/index.js')"
+      - name: Verify release zip loads all dependencies
+        run: |
+          cd dist && zip -q -r /tmp/macro-bundle-test.zip ./
+          mkdir -p /tmp/macro-bundle-verify
+          unzip -q /tmp/macro-bundle-test.zip -d /tmp/macro-bundle-verify
+          cd /tmp/macro-bundle-verify && node -e "require('./src/index.js')"
 
   test:
     defaults:
