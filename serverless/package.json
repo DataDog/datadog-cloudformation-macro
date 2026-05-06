@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "main": "dist/src/index.js",
   "scripts": {
-    "build": "tsc && cp package.json dist/package.json && node tools/install-dist-deps.js",
+    "build": "tsc && cp package.json dist/package.json && npm pkg delete packageManager --prefix dist && npm install --omit=dev --prefix dist",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage": "jest --coverage",
