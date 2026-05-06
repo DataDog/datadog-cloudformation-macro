@@ -8,7 +8,7 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",
-    "postbuild": "cp package.json dist/package.json",
+    "postbuild": "cp package.json dist/package.json && node tools/install-dist-deps.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "coverage": "jest --coverage",
