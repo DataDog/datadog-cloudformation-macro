@@ -80,6 +80,7 @@ export const runtimeLookup: { [key: string]: RuntimeType } = {
   "ruby3.2": RuntimeType.RUBY,
   "ruby3.3": RuntimeType.RUBY,
   "ruby3.4": RuntimeType.RUBY,
+  "ruby4.0": RuntimeType.RUBY,
 };
 
 export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
@@ -113,6 +114,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "ruby3.2": "Datadog-Ruby3-2",
     "ruby3.3": "Datadog-Ruby3-3",
     "ruby3.4": "Datadog-Ruby3-4",
+    "ruby4.0": "Datadog-Ruby4-0",
   },
   [ArchitectureType.ARM64]: {
     dotnet6: "dd-trace-dotnet-ARM",
@@ -141,6 +143,7 @@ export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: stri
     "ruby3.2": "Datadog-Ruby3-2-ARM",
     "ruby3.3": "Datadog-Ruby3-3-ARM",
     "ruby3.4": "Datadog-Ruby3-4-ARM",
+    "ruby4.0": "Datadog-Ruby4-0-ARM",
   },
 };
 
