@@ -83,6 +83,7 @@ describe("findLambdas", () => {
       Ruby32Function: mockFunctionResource("ruby3.2", ["x86_64"]),
       Ruby33Function: mockFunctionResource("ruby3.3", ["x86_64"]),
       Ruby34Function: mockFunctionResource("ruby3.4", ["x86_64"]),
+      Ruby40Function: mockFunctionResource("ruby4.0", ["x86_64"]),
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
@@ -126,6 +127,7 @@ describe("findLambdas", () => {
       mockLambdaFunction("Ruby32Function", "ruby3.2", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Ruby33Function", "ruby3.3", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Ruby34Function", "ruby3.4", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Ruby40Function", "ruby4.0", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
