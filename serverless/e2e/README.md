@@ -79,10 +79,10 @@ filter, gated by `SKIP_LAMBDA_TESTS`, with AWS access via OIDC federation (no
 long-lived keys). Datadog keys come from repository secrets.
 
 The live suite runs only when both (a) relevant paths changed and (b) the OIDC role
-var is configured. Otherwise it self-skips so the job stays green on forks and
+var (`AWS_ROLE_ARN_E2E`) is configured. Otherwise it self-skips so the job stays green on forks and
 before the e2e infra is wired. To enable the live run, configure in repo settings:
 
-- `vars.AWS_ROLE_TO_ASSUME_E2E` — OIDC role ARN (deploy perms for CloudFormation,
+- `vars.AWS_ROLE_ARN_E2E` — OIDC role ARN (deploy perms for CloudFormation,
   Lambda, IAM, S3 in a non-prod account; `lambda:InvokeFunction` on the macro fn).
 - `secrets.DATADOG_API_KEY_E2E`, `secrets.DATADOG_APP_KEY_E2E`.
 - Optional: `vars.AWS_REGION_E2E` (default `sa-east-1`), `vars.DD_SITE_E2E`.
