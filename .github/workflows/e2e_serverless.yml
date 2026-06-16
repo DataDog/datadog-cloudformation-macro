@@ -1,0 +1,86 @@
+name: e2e_serverless
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# OIDC federation to AWS requires id-token write; no long-lived credentials.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # Path filter: only spend cloud resources when the macro, its template, or the
+  # suite itself changed. The e2e job always runs (so it reports a status check)
+  # but self-skips via SKIP_LAMBDA_TESTS when nothing relevant changed.
+  check-lambda-changes:
+    name: Check macro/e2e changes
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.filter.outputs.lambda }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
+        id: filter
+        with:
+          filters: |
+            lambda:
+              - 'serverless/src/**'
+              - 'serverless/template.yml'
+              - 'serverless/package.json'
+              - 'serverless/e2e/**'
+              - '.github/workflows/e2e_serverless.yml'
+
+  e2e-test:
+    name: AWS Lambda e2e
+    runs-on: ubuntu-latest
+    needs: [check-lambda-changes]
+    defaults:
+      run:
+        working-directory: serverless
+    env:
+      FORCE_COLOR: 1
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      # The workload runtime under test is pinned in the template (nodejs22.x); the
+      # test runner uses the repo's canonical Node version.
+      - name: Set up Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: 24
+
+      - name: Cache Node modules
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: "**/node_modules"
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Type-check e2e suite
+        run: yarn test:e2e:typecheck
+
+      # OIDC login only when the suite will actually run, so skipped runs don't
+      # require cloud federation to be configured.
+      - name: AWS auth (OIDC)
+        if: needs.check-lambda-changes.outputs.should_run == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_E2E }}
+          aws-region: ${{ vars.AWS_REGION_E2E || 'sa-east-1' }}
+          role-session-name: e2e-cfnmacro-${{ github.run_id }}
+
+      - name: Run e2e tests
+        run: yarn test:e2e
+        env:
+          SKIP_LAMBDA_TESTS: ${{ needs.check-lambda-changes.outputs.should_run != 'true' }}
+          AWS_REGION: ${{ vars.AWS_REGION_E2E || 'sa-east-1' }}
+          # The extension ships telemetry with DD_API_KEY; the suite queries with both.
+          DD_API_KEY: ${{ secrets.DATADOG_API_KEY_E2E }}
+          DD_APP_KEY: ${{ secrets.DATADOG_APP_KEY_E2E }}
+          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY_E2E }}
+          DATADOG_APP_KEY: ${{ secrets.DATADOG_APP_KEY_E2E }}
+          DD_SITE: ${{ vars.DD_SITE_E2E || 'datadoghq.com' }}

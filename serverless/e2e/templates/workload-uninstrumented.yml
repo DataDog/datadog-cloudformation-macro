@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Uninstrumented e2e workload: a minimal Node.js Lambda that logs a line carrying
+  the run id and serves the invoke trigger. This is the provisioned baseline and
+  the post-REMOVE end state -- it contains no Datadog config. The handler mirrors
+  the trivial hello-world handler from serverless-self-monitoring; tracing/log
+  collection are auto-injected by the macro, so no tracer setup is needed here.
+
+Parameters:
+  FunctionName:
+    Type: String
+    Description: Ephemeral function name (one-e2e-cfnmacro-lambda-<runid>).
+  RunId:
+    Type: String
+    Description: Unique run id, logged by the handler and used to correlate telemetry.
+  CreatedTs:
+    Type: String
+    Description: Unix timestamp freshness tag (one_e2e_created) set at creation.
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Handler: index.handler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      Timeout: 30
+      MemorySize: 256
+      InlineCode: |
+        exports.handler = async () => {
+          const runId = process.env.E2E_RUN_ID;
+          // Emit a structured log line so the extension forwards it to Datadog logs,
+          // tagged with the run id for identity assertions.
+          console.log(JSON.stringify({ message: "one-e2e hello world", one_e2e_run_id: runId }));
+          return { statusCode: 200, body: "hello, world" };
+        };
+      Environment:
+        Variables:
+          E2E_RUN_ID: !Ref RunId
+      Tags:
+        one_e2e_created: !Ref CreatedTs
+
+Outputs:
+  FunctionName:
+    Value: !Ref FunctionName
