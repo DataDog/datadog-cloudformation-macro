@@ -1,4 +1,4 @@
-name: e2e_serverless
+name: e2e
 
 on:
   push:
@@ -30,7 +30,7 @@ jobs:
               - 'serverless/template.yml'
               - 'serverless/package.json'
               - 'serverless/e2e/**'
-              - '.github/workflows/e2e_serverless.yml'
+              - '.github/workflows/e2e.yml'
 
   e2e-test:
     name: AWS Lambda e2e

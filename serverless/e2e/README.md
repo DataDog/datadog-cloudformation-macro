@@ -74,7 +74,7 @@ telemetry polling). Type-check the suite without deploying anything via
 
 ## CI
 
-Runs in GitHub Actions (`.github/workflows/e2e_serverless.yml`) behind a path
+Runs in GitHub Actions (`.github/workflows/e2e.yml`) behind a path
 filter, gated by `SKIP_LAMBDA_TESTS`, with AWS access via OIDC federation (no
 long-lived keys). Datadog keys come from repository secrets.
 
