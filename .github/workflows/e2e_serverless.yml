@@ -63,10 +63,12 @@ jobs:
       - name: Type-check e2e suite
         run: yarn test:e2e:typecheck
 
-      # OIDC login only when the suite will actually run, so skipped runs don't
-      # require cloud federation to be configured.
+      # The live suite runs only when (a) relevant paths changed and (b) the cloud
+      # federation is configured (the OIDC role var is set). Otherwise the suite
+      # self-skips so the job is green on forks and before the e2e infra is wired.
+      # OIDC login is gated on the same condition so skipped runs don't require it.
       - name: AWS auth (OIDC)
-        if: needs.check-lambda-changes.outputs.should_run == 'true'
+        if: needs.check-lambda-changes.outputs.should_run == 'true' && vars.AWS_ROLE_TO_ASSUME_E2E != ''
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME_E2E }}
@@ -76,7 +78,7 @@ jobs:
       - name: Run e2e tests
         run: yarn test:e2e
         env:
-          SKIP_LAMBDA_TESTS: ${{ needs.check-lambda-changes.outputs.should_run != 'true' }}
+          SKIP_LAMBDA_TESTS: ${{ needs.check-lambda-changes.outputs.should_run != 'true' || vars.AWS_ROLE_TO_ASSUME_E2E == '' }}
           AWS_REGION: ${{ vars.AWS_REGION_E2E || 'sa-east-1' }}
           # The extension ships telemetry with DD_API_KEY; the suite queries with both.
           DD_API_KEY: ${{ secrets.DATADOG_API_KEY_E2E }}
