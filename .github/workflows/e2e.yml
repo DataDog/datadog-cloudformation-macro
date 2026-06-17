@@ -3,7 +3,25 @@ name: e2e
 on:
   push:
     branches: [main]
+    paths:
+      - 'serverless/src/**'
+      - 'serverless/e2e/**'
+      - 'serverless/template.yml'
+      - 'serverless/package.json'
+      - 'serverless/yarn.lock'
+      - '.github/workflows/e2e.yml'
   pull_request:
+    paths:
+      - 'serverless/src/**'
+      - 'serverless/e2e/**'
+      - 'serverless/template.yml'
+      - 'serverless/package.json'
+      - 'serverless/yarn.lock'
+      - '.github/workflows/e2e.yml'
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
 
 # OIDC federation to AWS requires id-token write; no long-lived credentials.
 permissions:
@@ -67,9 +85,18 @@ jobs:
       # federation is configured (the OIDC role var is set). Otherwise the suite
       # self-skips so the job is green on forks and before the e2e infra is wired.
       # OIDC login is gated on the same condition so skipped runs don't require it.
+      # Short-lived Datadog API + App keys via OIDC federation (dd-sts), governed by the
+      # policy in dd-source. No static Datadog keys are stored in this repo.
+      - name: Get Datadog credentials (dd-sts)
+        id: dd-sts
+        if: needs.check-lambda-changes.outputs.should_run == 'true' && vars.AWS_ROLE_ARN_E2E != ''
+        uses: DataDog/dd-sts-action@2e8187910199bd93129520183c093e19aa585c75 # v1.0.0
+        with:
+          policy: datadog-cloudformation-macro-e2e
+
       - name: AWS auth (OIDC)
         if: needs.check-lambda-changes.outputs.should_run == 'true' && vars.AWS_ROLE_ARN_E2E != ''
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN_E2E }}
           aws-region: ${{ vars.AWS_REGION_E2E || 'sa-east-1' }}
@@ -81,8 +108,8 @@ jobs:
           SKIP_LAMBDA_TESTS: ${{ needs.check-lambda-changes.outputs.should_run != 'true' || vars.AWS_ROLE_ARN_E2E == '' }}
           AWS_REGION: ${{ vars.AWS_REGION_E2E || 'sa-east-1' }}
           # The extension ships telemetry with DD_API_KEY; the suite queries with both.
-          DD_API_KEY: ${{ secrets.DATADOG_API_KEY_E2E }}
-          DD_APP_KEY: ${{ secrets.DATADOG_APP_KEY_E2E }}
-          DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY_E2E }}
-          DATADOG_APP_KEY: ${{ secrets.DATADOG_APP_KEY_E2E }}
+          DD_API_KEY: ${{ steps.dd-sts.outputs.api_key }}
+          DD_APP_KEY: ${{ steps.dd-sts.outputs.app_key }}
+          DATADOG_API_KEY: ${{ steps.dd-sts.outputs.api_key }}
+          DATADOG_APP_KEY: ${{ steps.dd-sts.outputs.app_key }}
           DD_SITE: ${{ vars.DD_SITE_E2E || 'datadoghq.com' }}
