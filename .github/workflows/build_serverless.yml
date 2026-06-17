@@ -120,4 +120,5 @@ jobs:
         if: matrix.node-version == 24
         env:
           DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
-        run: npx --yes @datadog/datadog-ci coverage upload --service datadog-cloudformation-macro coverage/lcov.info
+          DD_SERVICE: datadog-cloudformation-macro
+        run: npx --yes @datadog/datadog-ci coverage upload coverage/lcov.info
