@@ -118,6 +118,7 @@ jobs:
 
       - name: Upload coverage to Datadog
         if: matrix.node-version == 24
+        continue-on-error: true
         env:
           DATADOG_API_KEY: ${{ secrets.DATADOG_API_KEY }}
           DD_SERVICE: datadog-cloudformation-macro
