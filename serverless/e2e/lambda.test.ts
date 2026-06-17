@@ -41,6 +41,7 @@ const IDENTITY: TelemetryIdentity = { service: SERVICE, env: DD_ENV, version: VE
 const prepareInstrumentedTemplate = (): string => {
   const base = readFileSync("e2e/templates/workload-instrumented.yml", "utf-8");
   const out = join(tmpdir(), `workload-instrumented-${RUN_ID}.yml`);
+  // `__MACRO_NAME__` is the literal placeholder token in the template, swapped for the run-unique name.
   writeFileSync(out, base.replaceAll("__MACRO_NAME__", MACRO_NAME));
   return out;
 };

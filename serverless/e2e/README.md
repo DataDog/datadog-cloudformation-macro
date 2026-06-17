@@ -76,15 +76,17 @@ telemetry polling). Type-check the suite without deploying anything via
 
 Runs in GitHub Actions (`.github/workflows/e2e.yml`) behind a path
 filter, gated by `SKIP_LAMBDA_TESTS`, with AWS access via OIDC federation (no
-long-lived keys). Datadog keys come from repository secrets.
+long-lived keys). Datadog credentials are minted at runtime via dd-sts.
 
-The live suite runs only when both (a) relevant paths changed and (b) the OIDC role
-var (`AWS_ROLE_ARN_E2E`) is configured. Otherwise it self-skips so the job stays green on forks and
-before the e2e infra is wired. To enable the live run, configure in repo settings:
+The live suite runs whenever relevant paths change; the dd-sts / AWS OIDC steps must then
+succeed -- an auth or federation failure fails the job loudly rather than skipping green.
+When nothing relevant changed it self-skips via `SKIP_LAMBDA_TESTS`. Required repo config:
 
 - `vars.AWS_ROLE_ARN_E2E` — OIDC role ARN (deploy perms for CloudFormation,
   Lambda, IAM, S3 in a non-prod account; `lambda:InvokeFunction` on the macro fn).
-- `secrets.DATADOG_API_KEY_E2E`, `secrets.DATADOG_APP_KEY_E2E`.
+- Datadog auth (dd-sts): short-lived API + App keys via
+  [`DataDog/dd-sts-action`](https://github.com/DataDog/dd-sts-action) under the
+  `datadog-cloudformation-macro-e2e` policy — no static Datadog keys in this repo.
 - Optional: `vars.AWS_REGION_E2E` (default `sa-east-1`), `vars.DD_SITE_E2E`.
 
 The type-check step always runs, so the suite is compile-checked on every PR.
