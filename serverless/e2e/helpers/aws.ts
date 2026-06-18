@@ -1,5 +1,5 @@
-import { execPromise, execPromiseWithRetries, execSync, ExecResult } from "./exec";
-import { CREATED_TS, FRESHNESS_TAG_KEY } from "./naming";
+import { execPromise, execPromiseWithRetries, ExecResult } from "./exec";
+import { CREATED_TS, execSync, FRESHNESS_TAG_KEY } from "./e2e.config";
 
 // Thin, runner-agnostic wrappers over the `aws` CLI. The CLI inherits AWS creds
 // from the environment (locally via `aws-vault exec ... --`, in CI via OIDC), so

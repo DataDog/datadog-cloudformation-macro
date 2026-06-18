@@ -4,37 +4,33 @@ import { join } from "node:path";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { cfnDeleteAndWait, cfnDeploy, invokeFunction } from "./helpers/aws";
 import {
   AWS_REGION,
-  DD_ENV,
-  DD_SITE,
-  EXTENSION_LAYER_VERSION,
-  LAMBDA_RUNTIME,
-  NODE_LAYER_VERSION,
-} from "./constants";
-import { cfnDeleteAndWait, cfnDeploy, getFunctionConfiguration, invokeFunction } from "./helpers/aws";
-import { verifyInstrumented, verifyUninstrumented } from "./helpers/lambda-verifier";
-import { checkTelemetryFlowing, TelemetryIdentity } from "./helpers/lambda-telemetry-checker";
-import { deployMacroStack, teardownMacroStack } from "./helpers/macro-stack";
-import {
   CREATED_TS,
+  ENV_NAME,
+  ENV_VERSION,
+  EXTENSION_LAYER_VERSION,
+  functionName,
   FUNCTION_NAME,
+  LAMBDA_RUNTIME,
   MACRO_NAME,
+  NODE_LAYER_VERSION,
   RUN_ID,
   RUN_ID_TAG_KEY,
+  VERIFIER,
   WORKLOAD_STACK_NAME,
-} from "./helpers/naming";
+} from "./helpers/e2e.config";
+import { checkTelemetryFlowing } from "./helpers/lambda-telemetry-checker";
+import { functionSnapshot, verifyInstrumented, verifyUninstrumented, type FunctionSnapshot } from "./helpers/lambda-verifier";
+import { deployMacroStack, teardownMacroStack } from "./helpers/macro-stack";
 
 const describeOrSkip = process.env.SKIP_LAMBDA_TESTS === "true" ? describe.skip : describe;
 
-const ORIGINAL_HANDLER = "index.handler";
-const NODE_LAYER_NAME = "Datadog-Node22-x"; // matches LAMBDA_RUNTIME nodejs22.x
 const UNINSTRUMENTED_TEMPLATE = "e2e/templates/workload-uninstrumented.yml";
 
 // Telemetry identity carried through the whole run.
 const SERVICE = FUNCTION_NAME;
-const VERSION = RUN_ID;
-const IDENTITY: TelemetryIdentity = { service: SERVICE, env: DD_ENV, version: VERSION, runId: RUN_ID };
 
 // Prepare the instrumented template: the macro registration name is run-unique and
 // can't be a CloudFormation parameter, so substitute the literal before deploying.
@@ -55,33 +51,20 @@ const baseParams = {
 const instrumentedParams = {
   ...baseParams,
   DDApiKey: process.env.DD_API_KEY ?? process.env.DATADOG_API_KEY ?? "",
-  DDSite: DD_SITE,
+  DDSite: process.env.DD_SITE ?? "datadoghq.com",
   DDService: SERVICE,
-  DDEnv: DD_ENV,
-  DDVersion: VERSION,
+  DDEnv: ENV_NAME,
+  DDVersion: ENV_VERSION,
   DDTags: `${RUN_ID_TAG_KEY}:${RUN_ID}`,
   NodeLayerVersion: String(NODE_LAYER_VERSION),
   ExtensionLayerVersion: String(EXTENSION_LAYER_VERSION),
-};
-
-const instrumentedExpectations = {
-  functionName: FUNCTION_NAME,
-  region: AWS_REGION,
-  originalHandler: ORIGINAL_HANDLER,
-  nodeLayerName: NODE_LAYER_NAME,
-  nodeLayerVersion: NODE_LAYER_VERSION,
-  extensionLayerVersion: EXTENSION_LAYER_VERSION,
-  service: SERVICE,
-  env: DD_ENV,
-  version: VERSION,
-  site: DD_SITE,
-  runId: RUN_ID,
 };
 
 const MINUTE = 60_000;
 
 describeOrSkip(`cfn-macro lambda e2e (${LAMBDA_RUNTIME})`, () => {
   let instrumentedTemplate: string;
+  let firstSnapshot: FunctionSnapshot;
 
   beforeAll(async () => {
     instrumentedTemplate = prepareInstrumentedTemplate();
@@ -114,13 +97,14 @@ describeOrSkip(`cfn-macro lambda e2e (${LAMBDA_RUNTIME})`, () => {
       region: AWS_REGION,
       parameters: instrumentedParams,
     });
-    verifyInstrumented(instrumentedExpectations);
+    await verifyInstrumented(VERIFIER, SERVICE, AWS_REGION);
+    firstSnapshot = await functionSnapshot(VERIFIER, SERVICE, AWS_REGION);
   }, 10 * MINUTE);
 
   it("TRIGGER: telemetry (traces + logs) flows with identifying tags", async () => {
     const invoke = await invokeFunction(FUNCTION_NAME, AWS_REGION);
     expect(invoke.exitCode).toBe(0);
-    await checkTelemetryFlowing(IDENTITY);
+    await checkTelemetryFlowing({ serviceName: SERVICE, env: ENV_NAME, version: ENV_VERSION });
   }, 10 * MINUTE);
 
   it("RE-APPLY: is idempotent (no diff, no duplicate)", async () => {
@@ -130,22 +114,19 @@ describeOrSkip(`cfn-macro lambda e2e (${LAMBDA_RUNTIME})`, () => {
       region: AWS_REGION,
       parameters: instrumentedParams,
     });
-    // Either CloudFormation reports an empty changeset, or the re-expanded template
-    // is a no-op. Re-verify the config is unchanged and, crucially, layers aren't
-    // duplicated -- the macro must not stack a second copy of each layer.
-    verifyInstrumented(instrumentedExpectations);
-    const config = getFunctionConfiguration(FUNCTION_NAME, AWS_REGION);
-    expect((config.Layers ?? []).length).toBe(2);
+    // Still instrumented, and byte-for-byte the same instrumentation as the first apply
+    // -- the macro must not stack a second copy of each layer or otherwise drift.
+    await verifyInstrumented(VERIFIER, SERVICE, AWS_REGION);
+    const secondSnapshot = await functionSnapshot(VERIFIER, SERVICE, AWS_REGION);
+    expect(secondSnapshot).toEqual(firstSnapshot);
     console.log(`Re-apply reported noChanges=${result.noChanges}`);
   }, 10 * MINUTE);
 
-  it("REMOVE: reverts to a clean, uninstrumented end-state", async () => {
-    await cfnDeploy({
-      stackName: WORKLOAD_STACK_NAME,
-      templateFile: UNINSTRUMENTED_TEMPLATE,
-      region: AWS_REGION,
-      parameters: baseParams,
-    });
-    verifyUninstrumented({ functionName: FUNCTION_NAME, region: AWS_REGION, originalHandler: ORIGINAL_HANDLER });
+  it("REMOVE: reverts to a clean end-state (no residue)", async () => {
+    // The CFN-macro remove driver is `delete-stack` (per spec): tearing down the
+    // workload stack removes the function and all its DD config. The clean end-state
+    // is the function (and its instrumentation) being gone.
+    await cfnDeleteAndWait(WORKLOAD_STACK_NAME, AWS_REGION);
+    await verifyUninstrumented(VERIFIER, SERVICE, AWS_REGION);
   }, 10 * MINUTE);
 });

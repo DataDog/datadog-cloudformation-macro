@@ -1,6 +1,5 @@
-import { execSync } from "./exec";
 import { cfnDeleteAndWait, cfnDeploy, createSourceBucket, emptyAndDeleteBucket, uploadFile } from "./aws";
-import { CREATED_TS, MACRO_NAME, MACRO_STACK_NAME, RESOURCE_PREFIX, RUN_ID, SOURCE_BUCKET } from "./naming";
+import { CREATED_TS, execSync, MACRO_NAME, MACRO_STACK_NAME, RESOURCE_PREFIX, RUN_ID, SOURCE_BUCKET } from "./e2e.config";
 
 // Builds the macro from source (the PR's code -- the tool under test) and registers
 // it as a CloudFormation macro in the test region. This is the artifact we pin the
