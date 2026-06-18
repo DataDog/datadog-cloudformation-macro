@@ -48,13 +48,10 @@ Prerequisites:
   aws-vault exec sso-serverless-sandbox-account-admin -- yarn test:e2e
   ```
 
-- **Datadog API + APP keys** for the org telemetry lands in, exported in the
-  environment (the extension uses the API key to ship; the suite uses both to query):
-
-  ```bash
-  export DD_API_KEY=...      # or DATADOG_API_KEY
-  export DD_APP_KEY=...      # or DATADOG_APP_KEY
-  ```
+- **Datadog API + APP keys** for the org telemetry lands in (the extension uses the
+  API key to ship; the suite uses both to query). Mint these with `dd-auth` rather
+  than pasting raw keys -- it injects short-lived `$DD_API_KEY` and `$DD_APP_KEY`
+  into the wrapped subprocess.
 
   `DD_SITE` defaults to `datadoghq.com`; override for other sites.
 
@@ -63,7 +60,13 @@ Then:
 ```bash
 cd serverless
 yarn install
-aws-vault exec sso-serverless-sandbox-account-admin -- yarn test:e2e
+
+# Datadog auth: dd-auth mints short-lived keys for the org -- no pasted keys.
+aws-vault exec sso-serverless-sandbox-account-admin -- \
+  dd-auth --domain app.datadoghq.com -- bash -c '
+    export DATADOG_API_KEY="$DD_API_KEY" DATADOG_APP_KEY="$DD_APP_KEY"
+    yarn test:e2e
+  '
 ```
 
 Optional non-secret overrides go in `e2e/.env.local` (see `.env.local.example`).
