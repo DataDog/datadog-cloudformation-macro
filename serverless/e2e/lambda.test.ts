@@ -104,7 +104,7 @@ describeOrSkip(`cfn-macro lambda e2e (${LAMBDA_RUNTIME})`, () => {
   it("TRIGGER: telemetry (traces + logs) flows with identifying tags", async () => {
     const invoke = await invokeFunction(FUNCTION_NAME, AWS_REGION);
     expect(invoke.exitCode).toBe(0);
-    await checkTelemetryFlowing({ serviceName: SERVICE, env: ENV_NAME, version: ENV_VERSION });
+    await checkTelemetryFlowing({ serviceName: SERVICE, env: ENV_NAME, version: ENV_VERSION, runId: RUN_ID });
   }, 10 * MINUTE);
 
   it("RE-APPLY: is idempotent (no diff, no duplicate)", async () => {
