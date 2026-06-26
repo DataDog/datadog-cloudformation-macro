@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: "2010-09-09"
+# The macro registration name is account+region global and unique per run, so it
+# cannot be a CloudFormation parameter (the Transform name must be a literal).
+# The e2e runner substitutes __MACRO_NAME__ before deploying. Everything else is
+# passed as stack parameters and referenced here, keeping the API key out of the
+# template file.
+Transform:
+  - AWS::Serverless-2016-10-31
+  - Name: __MACRO_NAME__
+    Parameters:
+      apiKey: !Ref DDApiKey
+      site: !Ref DDSite
+      nodeLayerVersion: !Ref NodeLayerVersion
+      extensionLayerVersion: !Ref ExtensionLayerVersion
+      service: !Ref DDService
+      env: !Ref DDEnv
+      version: !Ref DDVersion
+      tags: !Ref DDTags
+Description: >
+  Instrumented e2e workload: the same minimal Node.js Lambda, with the Datadog
+  Serverless macro applied via the Transform above. Deploying this template is the
+  APPLY step -- CloudFormation invokes the macro, which adds the Datadog Node.js +
+  Extension layers, DD_* env vars, the handler redirect, and the dd_sls_macro tag.
+
+Parameters:
+  FunctionName:
+    Type: String
+    Description: Ephemeral function name (one-e2e-cfnmacro-lambda-<runid>).
+  RunId:
+    Type: String
+    Description: Unique run id, logged by the handler and used to correlate telemetry.
+  CreatedTs:
+    Type: String
+    Description: Unix timestamp freshness tag (one_e2e_created) set at creation.
+  DDApiKey:
+    Type: String
+    NoEcho: true
+    Description: Datadog API key wired into the extension to ship telemetry.
+  DDSite:
+    Type: String
+    Description: Datadog site the extension ships telemetry to.
+  DDService:
+    Type: String
+    Description: DD_SERVICE -- identifying tag on ingested telemetry.
+  DDEnv:
+    Type: String
+    Description: DD_ENV -- identifying tag on ingested telemetry.
+  DDVersion:
+    Type: String
+    Description: DD_VERSION -- identifying tag on ingested telemetry.
+  DDTags:
+    Type: String
+    Description: DD_TAGS (comma-separated key:value), carries the run-id marker.
+  NodeLayerVersion:
+    Type: Number
+    Description: Pinned Datadog Node.js layer version.
+  ExtensionLayerVersion:
+    Type: Number
+    Description: Pinned Datadog Lambda Extension layer version.
+
+Resources:
+  HelloWorldFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Handler: index.handler
+      Runtime: nodejs22.x
+      Architectures:
+        - x86_64
+      Timeout: 30
+      MemorySize: 256
+      InlineCode: |
+        exports.handler = async () => {
+          const runId = process.env.E2E_RUN_ID;
+          console.log(JSON.stringify({ message: "one-e2e hello world", one_e2e_run_id: runId }));
+          return { statusCode: 200, body: "hello, world" };
+        };
+      Environment:
+        Variables:
+          E2E_RUN_ID: !Ref RunId
+      Tags:
+        one_e2e_created: !Ref CreatedTs
+
+Outputs:
+  FunctionName:
+    Value: !Ref FunctionName
