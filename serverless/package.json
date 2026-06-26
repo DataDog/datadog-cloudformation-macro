@@ -10,12 +10,15 @@
     "build": "tsc && cp package.json dist/package.json && npm install --omit=dev --prefix dist",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:e2e": "vitest run --config vitest.config.e2e.ts",
+    "test:e2e:typecheck": "tsc --noEmit -p e2e/tsconfig.json",
     "coverage": "jest --coverage",
     "lint": "eslint -c .eslintrc . --ext .ts",
     "check-formatting": "prettier --check src/** test/**",
     "format": "prettier --write src/** test/**"
   },
   "devDependencies": {
+    "@datadog/datadog-api-client": "1.39.0",
     "@types/jest": "30.0.0",
     "@types/node": "25.5.2",
     "@typescript-eslint/eslint-plugin": "6.21.0",
@@ -24,7 +27,8 @@
     "jest": "30.3.0",
     "prettier": "3.8.1",
     "ts-jest": "29.4.9",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^3.2.0"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "3.1024.0",
