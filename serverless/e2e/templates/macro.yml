@@ -58,7 +58,7 @@ Resources:
       Description: Datadog Serverless macro (e2e) -- instruments Lambda functions in a CloudFormation template.
       Handler: src/index.handler
       Runtime: nodejs24.x
-      Timeout: 30
+      Timeout: 10
       Role: !GetAtt MacroExecutionRole.Arn
       Code:
         S3Bucket: !Ref SourceBucket
