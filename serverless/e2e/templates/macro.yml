@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  Registers the Datadog Serverless CloudFormation macro for e2e testing. Mirrors
+  the shipped serverless/template.yml (same macro Lambda code, built from source),
+  but parameterizes the macro registration Name -- which is account+region global --
+  so multiple e2e runs can register the macro in the same region concurrently.
+
+Parameters:
+  MacroName:
+    Type: String
+    Description: Unique registration name for the AWS::CloudFormation::Macro resource.
+  FunctionName:
+    Type: String
+    Description: Name of the macro Lambda function.
+  SourceBucket:
+    Type: String
+    Description: S3 bucket holding the macro zip built from source.
+  SourceKey:
+    Type: String
+    Description: S3 key of the macro zip built from source.
+  CreatedTs:
+    Type: String
+    Description: Unix timestamp freshness tag (one_e2e_created) set at creation.
+
+Resources:
+  MacroExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: macro-logs
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:CreateLogGroup
+                  - logs:DescribeLogGroups
+                  - logs:DescribeSubscriptionFilters
+                  - logs:PutSubscriptionFilter
+                Resource: "*"
+      Tags:
+        - Key: one_e2e_created
+          Value: !Ref CreatedTs
+
+  MacroFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Ref FunctionName
+      Description: Datadog Serverless macro (e2e) -- instruments Lambda functions in a CloudFormation template.
+      Handler: src/index.handler
+      Runtime: nodejs24.x
+      Timeout: 10
+      Role: !GetAtt MacroExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref SourceBucket
+        S3Key: !Ref SourceKey
+      Tags:
+        - Key: one_e2e_created
+          Value: !Ref CreatedTs
+
+  MacroLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${MacroFunction}
+      RetentionInDays: 1
+      Tags:
+        - Key: one_e2e_created
+          Value: !Ref CreatedTs
+
+  Macro:
+    Type: AWS::CloudFormation::Macro
+    Properties:
+      Name: !Ref MacroName
+      FunctionName: !GetAtt MacroFunction.Arn
+
+Outputs:
+  MacroName:
+    Value: !Ref MacroName
+  MacroFunctionArn:
+    Value: !GetAtt MacroFunction.Arn
