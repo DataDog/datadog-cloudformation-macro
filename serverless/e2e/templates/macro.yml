@@ -72,6 +72,9 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/lambda/${MacroFunction}
       RetentionInDays: 1
+      Tags:
+        - Key: one_e2e_created
+          Value: !Ref CreatedTs
 
   Macro:
     Type: AWS::CloudFormation::Macro
