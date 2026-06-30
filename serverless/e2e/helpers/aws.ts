@@ -1,5 +1,5 @@
 import { execPromise, execPromiseWithRetries, ExecResult } from "./exec";
-import { CREATED_TS, execSync, FRESHNESS_TAG_KEY } from "./e2e.config";
+import { CREATED_TS, FRESHNESS_TAG_KEY } from "./e2e.config";
 
 // Thin, runner-agnostic wrappers over the `aws` CLI. The CLI inherits AWS creds
 // from the environment (locally via `aws-vault exec ... --`, in CI via OIDC), so
@@ -64,26 +64,6 @@ export const cfnDeleteAndWait = async (stackName: string, region: string): Promi
   await execPromise(`aws cloudformation delete-stack --stack-name ${stackName} --region ${region}`);
   // Best-effort wait; teardown must not throw and block sibling cleanup.
   await execPromise(`aws cloudformation wait stack-delete-complete --stack-name ${stackName} --region ${region}`);
-};
-
-export interface LambdaConfiguration {
-  Handler: string;
-  Runtime: string;
-  Layers?: { Arn: string }[];
-  Environment?: { Variables?: Record<string, string> };
-  FunctionArn: string;
-}
-
-export const getFunctionConfiguration = (functionName: string, region: string): LambdaConfiguration => {
-  const out = execSync(
-    `aws lambda get-function-configuration --function-name ${functionName} --region ${region} --output json`,
-  );
-  return JSON.parse(out) as LambdaConfiguration;
-};
-
-export const getFunctionTags = (functionArn: string, region: string): Record<string, string> => {
-  const out = execSync(`aws lambda list-tags --resource ${functionArn} --region ${region} --output json`);
-  return (JSON.parse(out).Tags ?? {}) as Record<string, string>;
 };
 
 export const invokeFunction = async (functionName: string, region: string): Promise<ExecResult> => {
