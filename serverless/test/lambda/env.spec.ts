@@ -49,7 +49,7 @@ describe("getConfig", () => {
     const CURRENT_ENV = process.env;
 
     beforeEach(() => {
-      jest.resetModules(); // Clear the cache
+      vi.resetModules(); // Clear the cache
       process.env = { ...CURRENT_ENV }; // Make a copy we can modify
     });
 

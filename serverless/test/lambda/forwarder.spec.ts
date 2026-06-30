@@ -15,6 +15,8 @@ import {
   LogGroupDefinition,
   SUBSCRIPTION_FILTER_NAME,
 } from "../../src/lambda/forwarder";
+import type { Mock } from "vitest";
+
 import { LambdaFunction, RuntimeType } from "../../src/lambda/layer";
 
 function mockCloudWatchLogs(
@@ -26,7 +28,7 @@ function mockCloudWatchLogs(
     }
   >,
 ) {
-  const sendMock = jest.fn().mockImplementation((command: unknown) => {
+  const sendMock = vi.fn().mockImplementation((command: unknown) => {
     if (command instanceof DescribeLogGroupsCommand) {
       const { logGroupNamePrefix } = command.input;
       const matched: CWLogGroup[] = [];
@@ -53,10 +55,8 @@ function mockCloudWatchLogs(
   return { send: sendMock };
 }
 
-function getSendCalls(mock: { send: jest.Mock }, CommandClass: new (...args: any[]) => any) {
-  return mock.send.mock.calls
-    .filter(([cmd]: [unknown]) => cmd instanceof CommandClass)
-    .map(([cmd]: [any]) => cmd.input);
+function getSendCalls(mock: { send: Mock }, CommandClass: new (...args: any[]) => any) {
+  return mock.send.mock.calls.filter(([cmd]: any[]) => cmd instanceof CommandClass).map(([cmd]: any[]) => cmd.input);
 }
 
 function mockResources(lambdas: LambdaFunction[], logGroups?: LogGroupDefinition[]) {

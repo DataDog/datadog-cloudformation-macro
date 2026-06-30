@@ -1,8 +1,9 @@
 import { findStateMachines, instrumentStateMachines } from "../../src/step_function/step_function";
 import { InputEvent } from "../../src/common/types";
 import log from "loglevel";
+import type { Mock } from "vitest";
 
-jest.mock("loglevel");
+vi.mock("loglevel");
 
 describe("findStateMachines", () => {
   it("returns an empty array when no state machines are present", () => {
@@ -46,7 +47,7 @@ describe("findStateMachines", () => {
 
 describe("instrumentStateMachines", () => {
   it("skips instrumentation when stepFunctionForwarderArn is not provided", async () => {
-    (log.info as jest.Mock).mockImplementation(() => {
+    (log.info as Mock).mockImplementation(() => {
       /* empty */
     });
 

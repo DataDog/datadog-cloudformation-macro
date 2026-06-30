@@ -6,12 +6,12 @@ describe("getConfig", () => {
   const originalEnv = process.env;
 
   beforeEach(async () => {
-    jest.resetModules();
+    vi.resetModules();
     process.env = { ...originalEnv };
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     process.env = originalEnv;
   });
 
