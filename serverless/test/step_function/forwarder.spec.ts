@@ -1,8 +1,9 @@
 import { addForwarder, SUBSCRIPTION_FILTER_PREFIX } from "../../src/step_function/forwarder";
 import { findLogGroup } from "../../src/step_function/log";
 import { Resources } from "../../src/common/types";
+import type { Mock } from "vitest";
 
-jest.mock("../../src/step_function/log");
+vi.mock("../../src/step_function/log");
 
 describe("addForwarder", () => {
   it("adds a subscription filter to the log group", () => {
@@ -13,7 +14,7 @@ describe("addForwarder", () => {
     const stateMachine = {
       resourceKey: "MyStateMachine",
     } as any;
-    (findLogGroup as jest.Mock).mockReturnValue([
+    (findLogGroup as Mock).mockReturnValue([
       "MyStateMachineLogGroup",
       {
         Properties: {
