@@ -7,6 +7,13 @@ import { CREATED_TS, FRESHNESS_TAG_KEY } from "./e2e.config";
 
 const shellQuote = (value: string): string => `'${value.replace(/'/g, "'\\''")}'`;
 
+// Transient AWS throttling errors safe to retry on a bounded budget.
+const AWS_RETRY = {
+  retryPatterns: ["Throttling", "Rate exceeded", "RequestThrottled"],
+  maxAttempts: 3,
+  delaySeconds: 15,
+};
+
 export interface DeployArgs {
   stackName: string;
   templateFile: string;
@@ -49,7 +56,7 @@ export interface DeployResult extends ExecResult {
 }
 
 export const cfnDeploy = async (args: DeployArgs): Promise<DeployResult> => {
-  const result = await execPromiseWithRetries(buildDeployCommand(args));
+  const result = await execPromiseWithRetries(buildDeployCommand(args), AWS_RETRY);
   const output = `${result.stdout}\n${result.stderr}`;
   // `aws cloudformation deploy` signals an empty changeset either via a zero exit
   // (CLI v2) or a non-zero exit with this message (older CLI). Treat both as "no diff".
@@ -71,6 +78,7 @@ export const invokeFunction = async (functionName: string, region: string): Prom
   // succeeds and produces telemetry.
   return execPromiseWithRetries(
     `aws lambda invoke --function-name ${functionName} --region ${region} --payload '{}' --cli-binary-format raw-in-base64-out /tmp/${functionName}-invoke.json`,
+    AWS_RETRY,
   );
 };
 
@@ -81,6 +89,7 @@ export const createSourceBucket = async (bucket: string, region: string): Promis
   const locationFlag = region === "us-east-1" ? "" : `--create-bucket-configuration LocationConstraint=${region}`;
   const result = await execPromiseWithRetries(
     `aws s3api create-bucket --bucket ${bucket} --region ${region} ${locationFlag}`,
+    AWS_RETRY,
   );
   if (result.exitCode !== 0 && !/BucketAlreadyOwnedByYou/.test(`${result.stdout}${result.stderr}`)) {
     throw new Error(`Failed to create source bucket ${bucket}: ${result.stderr}`);
@@ -91,7 +100,10 @@ export const createSourceBucket = async (bucket: string, region: string): Promis
 };
 
 export const uploadFile = async (localPath: string, bucket: string, key: string, region: string): Promise<void> => {
-  const result = await execPromiseWithRetries(`aws s3 cp ${shellQuote(localPath)} s3://${bucket}/${key} --region ${region}`);
+  const result = await execPromiseWithRetries(
+    `aws s3 cp ${shellQuote(localPath)} s3://${bucket}/${key} --region ${region}`,
+    AWS_RETRY,
+  );
   if (result.exitCode !== 0) {
     throw new Error(`Failed to upload ${localPath} to s3://${bucket}/${key}: ${result.stderr}`);
   }

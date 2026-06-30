@@ -16,8 +16,9 @@ try {
       process.env[match[1]] = value;
     }
   }
-} catch {
-  // No .env.local -- rely on the ambient environment.
+} catch (e) {
+  // No .env.local -- rely on the ambient environment. Surface anything else.
+  if ((e as NodeJS.ErrnoException).code !== "ENOENT") throw e;
 }
 
 export default defineConfig({
