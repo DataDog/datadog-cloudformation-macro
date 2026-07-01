@@ -20,3 +20,5 @@ coverage/
 packaged.template
 dist/
 .macro
+# e2e local, non-secret overrides
+**/e2e/.env.local

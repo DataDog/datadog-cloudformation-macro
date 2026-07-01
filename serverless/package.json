@@ -8,51 +8,30 @@
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc && cp package.json dist/package.json && npm install --omit=dev --prefix dist",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "coverage": "jest --coverage",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:typecheck": "tsc --noEmit -p test/tsconfig.json",
+    "test:e2e": "vitest run --config vitest.config.e2e.ts",
+    "test:e2e:typecheck": "tsc --noEmit -p e2e/tsconfig.json",
+    "coverage": "vitest run --coverage",
     "lint": "eslint -c .eslintrc . --ext .ts",
     "check-formatting": "prettier --check src/** test/**",
     "format": "prettier --write src/** test/**"
   },
   "devDependencies": {
-    "@types/jest": "30.0.0",
+    "@datadog/datadog-api-client": "1.39.0",
     "@types/node": "25.5.2",
     "@typescript-eslint/eslint-plugin": "6.21.0",
     "@typescript-eslint/parser": "6.21.0",
+    "@vitest/coverage-v8": "^3.2.0",
     "eslint": "8.57.1",
-    "jest": "30.3.0",
     "prettier": "3.8.1",
-    "ts-jest": "29.4.9",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^3.2.0"
   },
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "3.1024.0",
     "loglevel": "1.9.2"
-  },
-  "jest": {
-    "verbose": true,
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ],
-    "transform": {
-      ".(ts|tsx)": "ts-jest"
-    },
-    "collectCoverage": true,
-    "coverageReporters": [
-      "lcovonly",
-      "text-summary"
-    ],
-    "testRegex": "(test\\/).*(\\.spec\\.ts)$",
-    "testPathIgnorePatterns": [
-      "\\.snap$",
-      "<rootDir>/node_modules/"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.ts"
-    ]
   },
   "packageManager": "yarn@4.12.0"
 }

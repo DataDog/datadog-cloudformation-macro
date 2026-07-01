@@ -176,7 +176,7 @@ describe("enableTracing", () => {
   });
 
   it("prints a warning if X-Ray tracing is enabled but IAM role is not found", () => {
-    const warnSpy = jest.spyOn(log, "warn").mockImplementation(() => {
+    const warnSpy = vi.spyOn(log, "warn").mockImplementation(() => {
       /* empty */
     });
     const tracingMode = TracingMode.HYBRID;
