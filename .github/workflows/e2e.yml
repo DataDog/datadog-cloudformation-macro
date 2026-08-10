@@ -47,6 +47,7 @@ jobs:
               - 'serverless/src/**'
               - 'serverless/template.yml'
               - 'serverless/package.json'
+              - 'serverless/yarn.lock'
               - 'serverless/e2e/**'
               - '.github/workflows/e2e.yml'
 
