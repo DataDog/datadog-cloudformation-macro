@@ -61,18 +61,12 @@ describe("findLambdas", () => {
       Java25Function: mockFunctionResource("java25", ["x86_64"]),
       Java8Function: mockFunctionResource("java8", ["x86_64"]),
       Java8al2Function: mockFunctionResource("java8.al2", ["x86_64"]),
-      Node12Function: mockFunctionResource("nodejs12.x", ["x86_64"]),
-      Node14Function: mockFunctionResource("nodejs14.x", ["x86_64"]),
-      Node16Function: mockFunctionResource("nodejs16.x", ["x86_64"]),
       Node18Function: mockFunctionResource("nodejs18.x", ["x86_64"]),
       Node20Function: mockFunctionResource("nodejs20.x", ["x86_64"]),
       Node22Function: mockFunctionResource("nodejs22.x", ["x86_64"]),
       Node24Function: mockFunctionResource("nodejs24.x", ["x86_64"]),
       ProvidedAl2Function: mockFunctionResource("provided.al2", ["x86_64"]),
       ProvidedAl2023Function: mockFunctionResource("provided.al2023", ["x86_64"]),
-      Python27Function: mockFunctionResource("python2.7", ["x86_64"]),
-      Python36Function: mockFunctionResource("python3.6", ["x86_64"]),
-      Python37Function: mockFunctionResource("python3.7", ["x86_64"]),
       Python38Function: mockFunctionResource("python3.8", ["x86_64"]),
       Python39Function: mockFunctionResource("python3.9", ["x86_64"]),
       Python310Function: mockFunctionResource("python3.10", ["x86_64"]),
@@ -87,7 +81,7 @@ describe("findLambdas", () => {
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
-    const lambdas = findLambdas(resources, { ValueRef: "nodejs14.x" });
+    const lambdas = findLambdas(resources, { ValueRef: "nodejs18.x" });
 
     expect(lambdas).toEqual([
       mockLambdaFunction("Dotnet6Function", "dotnet6", RuntimeType.DOTNET, "x86_64", ArchitectureType.x86_64),
@@ -99,9 +93,6 @@ describe("findLambdas", () => {
       mockLambdaFunction("Java25Function", "java25", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java8Function", "java8", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java8al2Function", "java8.al2", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
-      mockLambdaFunction("Node12Function", "nodejs12.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
-      mockLambdaFunction("Node14Function", "nodejs14.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
-      mockLambdaFunction("Node16Function", "nodejs16.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node18Function", "nodejs18.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node20Function", "nodejs20.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node22Function", "nodejs22.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
@@ -114,9 +105,6 @@ describe("findLambdas", () => {
         "x86_64",
         ArchitectureType.x86_64,
       ),
-      mockLambdaFunction("Python27Function", "python2.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
-      mockLambdaFunction("Python36Function", "python3.6", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
-      mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python38Function", "python3.8", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python310Function", "python3.10", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
@@ -129,9 +117,25 @@ describe("findLambdas", () => {
       mockLambdaFunction("Ruby34Function", "ruby3.4", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Ruby40Function", "ruby4.0", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
-      mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
+      mockLambdaFunction("RefFunction", "nodejs18.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
       }),
+    ]);
+  });
+
+  it("marks removed runtimes unsupported while preserving supported neighbors", () => {
+    const resources = {
+      RemovedNodeFunction: mockFunctionResource("nodejs16.x", ["x86_64"]),
+      SupportedNodeFunction: mockFunctionResource("nodejs18.x", ["x86_64"]),
+      RemovedPythonFunction: mockFunctionResource("python3.7", ["x86_64"]),
+      SupportedPythonFunction: mockFunctionResource("python3.8", ["x86_64"]),
+    };
+
+    expect(findLambdas(resources, {})).toEqual([
+      mockLambdaFunction("RemovedNodeFunction", "nodejs16.x", RuntimeType.UNSUPPORTED, "x86_64"),
+      mockLambdaFunction("SupportedNodeFunction", "nodejs18.x", RuntimeType.NODE, "x86_64"),
+      mockLambdaFunction("RemovedPythonFunction", "python3.7", RuntimeType.UNSUPPORTED, "x86_64"),
+      mockLambdaFunction("SupportedPythonFunction", "python3.8", RuntimeType.PYTHON, "x86_64"),
     ]);
   });
 
@@ -149,19 +153,19 @@ describe("findLambdas", () => {
 
 describe("applyLayers", () => {
   it("adds a layer array if none are present", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
     const region = "us-east-1";
     const nodeLayerVersion = 25;
     const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion);
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node18-x:${nodeLayerVersion}`,
     ]);
   });
 
   it("appends to the layer array if already present", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
     lambda.properties.Layers = ["node:2"];
 
     const region = "us-east-1";
@@ -171,15 +175,15 @@ describe("applyLayers", () => {
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
       "node:2",
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node18-x:${nodeLayerVersion}`,
     ]);
   });
 
   it("doesn't add duplicate layers", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
     const region = "us-east-1";
     const nodeLayerVersion = 25;
-    const layerArn = `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node12-x:${nodeLayerVersion}`;
+    const layerArn = `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node18-x:${nodeLayerVersion}`;
     lambda.properties.Layers = [layerArn];
     const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion);
 
@@ -196,8 +200,8 @@ describe("applyLayers", () => {
   });
 
   it("returns errors if layer versions are not provided for corresponding Lambda runtimes", () => {
-    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python2.7", RuntimeType.PYTHON, "x86_64");
-    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs12.x", RuntimeType.NODE, "x86_64");
+    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON, "x86_64");
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
     const errors = applyLayers("us-east-1", [pythonLambda, nodeLambda]);
 
     expect(errors).toEqual([
@@ -446,7 +450,7 @@ describe("getNewLayers", () => {
 describe("isGovCloud", () => {
   it("applies the GovCloud layer", () => {
     const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON, "x86_64");
-    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs16.x", RuntimeType.NODE, "x86_64");
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
     const errors = applyLayers("us-gov-east-1", [pythonLambda, nodeLambda], 21, 30);
 
     expect(errors.length).toEqual(0);
@@ -454,25 +458,25 @@ describe("isGovCloud", () => {
       `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python38:21`,
     ]);
     expect(nodeLambda.properties.Layers).toEqual([
-      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node16-x:30`,
+      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node18-x:30`,
     ]);
   });
 });
 
 describe("getLambdaLibraryLayerArn", () => {
-  it("gets the us-east-1 layer arn for the Datadog Node16 Lambda Library", () => {
+  it("gets the us-east-1 layer arn for the Datadog Node18 Lambda Library", () => {
     const region = "us-east-1";
     const version = 22;
-    const runtime = "nodejs16.x";
+    const runtime = "nodejs18.x";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "x86_64");
-    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node16-x:${version}`);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node18-x:${version}`);
   });
-  it("gets the us-east-1 layer arn for the Datadog Python36 Lambda Library", () => {
+  it("gets the us-east-1 layer arn for the Datadog Python38 Lambda Library", () => {
     const region = "us-east-1";
     const version = 22;
-    const runtime = "python3.6";
+    const runtime = "python3.8";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "x86_64");
-    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python36:${version}`);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python38:${version}`);
   });
   it("gets the us-east-1 ARM layer arn for the Datadog Python38 Lambda Library", () => {
     const region = "us-east-1";
@@ -481,12 +485,12 @@ describe("getLambdaLibraryLayerArn", () => {
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "arm64");
     expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python38-ARM:${version}`);
   });
-  it("gets the us-gov-east-1 layer arn for the Datadog Python36 Lambda Library", () => {
+  it("gets the us-gov-east-1 layer arn for the Datadog Python38 Lambda Library", () => {
     const region = "us-gov-east-1";
     const version = 22;
-    const runtime = "python3.6";
+    const runtime = "python3.8";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "x86_64");
-    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python36:${version}`);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python38:${version}`);
   });
   it("gets the us-gov-east-1 ARM layer arn for the Datadog Python39 Lambda Library", () => {
     const region = "us-gov-east-1";
@@ -497,12 +501,12 @@ describe("getLambdaLibraryLayerArn", () => {
       `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python39-ARM:${version}`,
     );
   });
-  it("gets the us-gov-east-1 layer arn for the Datadog Node16 Lambda Library", () => {
+  it("gets the us-gov-east-1 layer arn for the Datadog Node18 Lambda Library", () => {
     const region = "us-gov-east-1";
     const version = 22;
-    const runtime = "nodejs16.x";
+    const runtime = "nodejs18.x";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "x86_64");
-    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node16-x:${version}`);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node18-x:${version}`);
   });
 });
 
