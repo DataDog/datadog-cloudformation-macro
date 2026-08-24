@@ -1,6 +1,7 @@
 import { CFN_IF_FUNCTION_STRING, Parameters, Resources } from "../common/types";
 import { FunctionProperties, LambdaLayersProperty } from "./types";
 import { TaggableResource } from "../common/tags";
+import { CatalogArchitecture, lambdaLayerCatalog } from "./layer-catalog";
 import log from "loglevel";
 
 const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
@@ -33,119 +34,42 @@ export interface LambdaFunction extends TaggableResource {
   architecture: string;
 }
 
-const architectureLookup: { [key: string]: ArchitectureType } = {
-  x86_64: ArchitectureType.x86_64,
-  arm64: ArchitectureType.ARM64,
-};
+const architectureLookup = Object.fromEntries(
+  Object.entries(lambdaLayerCatalog.architectures).map(([architecture, { architectureType }]) => [
+    architecture,
+    ArchitectureType[architectureType],
+  ]),
+) as { [key: string]: ArchitectureType };
 
-const architectureToExtensionLayerName: { [key: string]: string } = {
-  x86_64: "Datadog-Extension",
-  arm64: "Datadog-Extension-ARM",
-};
+const architectureToExtensionLayerName = Object.fromEntries(
+  Object.entries(lambdaLayerCatalog.architectures).map(([architecture, { extensionLayerNames }]) => [
+    architecture,
+    extensionLayerNames.standard,
+  ]),
+) as { [key: string]: string };
 
-const architectureToExtensionLayerNameFips: { [key: string]: string } = {
-  x86_64: "Datadog-Extension-FIPS",
-  arm64: "Datadog-Extension-ARM-FIPS",
-};
+const architectureToExtensionLayerNameFips = Object.fromEntries(
+  Object.entries(lambdaLayerCatalog.architectures).map(([architecture, { extensionLayerNames }]) => [
+    architecture,
+    extensionLayerNames.fips,
+  ]),
+) as { [key: string]: string };
 
-export const runtimeLookup: { [key: string]: RuntimeType } = {
-  dotnet6: RuntimeType.DOTNET,
-  dotnet8: RuntimeType.DOTNET,
-  dotnet10: RuntimeType.DOTNET,
-  java11: RuntimeType.JAVA,
-  java17: RuntimeType.JAVA,
-  java21: RuntimeType.JAVA,
-  java25: RuntimeType.JAVA,
-  java8: RuntimeType.JAVA,
-  "java8.al2": RuntimeType.JAVA,
-  "nodejs12.x": RuntimeType.NODE,
-  "nodejs14.x": RuntimeType.NODE,
-  "nodejs16.x": RuntimeType.NODE,
-  "nodejs18.x": RuntimeType.NODE,
-  "nodejs20.x": RuntimeType.NODE,
-  "nodejs22.x": RuntimeType.NODE,
-  "nodejs24.x": RuntimeType.NODE,
-  "provided.al2": RuntimeType.CUSTOM,
-  "provided.al2023": RuntimeType.CUSTOM,
-  "python2.7": RuntimeType.PYTHON,
-  "python3.6": RuntimeType.PYTHON,
-  "python3.7": RuntimeType.PYTHON,
-  "python3.8": RuntimeType.PYTHON,
-  "python3.9": RuntimeType.PYTHON,
-  "python3.10": RuntimeType.PYTHON,
-  "python3.11": RuntimeType.PYTHON,
-  "python3.12": RuntimeType.PYTHON,
-  "python3.13": RuntimeType.PYTHON,
-  "python3.14": RuntimeType.PYTHON,
-  "ruby3.2": RuntimeType.RUBY,
-  "ruby3.3": RuntimeType.RUBY,
-  "ruby3.4": RuntimeType.RUBY,
-  "ruby4.0": RuntimeType.RUBY,
-};
+export const runtimeLookup = Object.fromEntries(
+  Object.entries(lambdaLayerCatalog.runtimes).map(([runtime, { runtimeType }]) => [runtime, RuntimeType[runtimeType]]),
+) as { [key: string]: RuntimeType };
 
-export const layerNameLookup: { [key in ArchitectureType]: { [key: string]: string } } = {
-  [ArchitectureType.x86_64]: {
-    dotnet6: "dd-trace-dotnet",
-    dotnet8: "dd-trace-dotnet",
-    dotnet10: "dd-trace-dotnet",
-    java11: "dd-trace-java",
-    java17: "dd-trace-java",
-    java21: "dd-trace-java",
-    java25: "dd-trace-java",
-    java8: "dd-trace-java",
-    "java8.al2": "dd-trace-java",
-    "nodejs12.x": "Datadog-Node12-x",
-    "nodejs14.x": "Datadog-Node14-x",
-    "nodejs16.x": "Datadog-Node16-x",
-    "nodejs18.x": "Datadog-Node18-x",
-    "nodejs20.x": "Datadog-Node20-x",
-    "nodejs22.x": "Datadog-Node22-x",
-    "nodejs24.x": "Datadog-Node24-x",
-    "python2.7": "Datadog-Python27",
-    "python3.6": "Datadog-Python36",
-    "python3.7": "Datadog-Python37",
-    "python3.8": "Datadog-Python38",
-    "python3.9": "Datadog-Python39",
-    "python3.10": "Datadog-Python310",
-    "python3.11": "Datadog-Python311",
-    "python3.12": "Datadog-Python312",
-    "python3.13": "Datadog-Python313",
-    "python3.14": "Datadog-Python314",
-    "ruby3.2": "Datadog-Ruby3-2",
-    "ruby3.3": "Datadog-Ruby3-3",
-    "ruby3.4": "Datadog-Ruby3-4",
-    "ruby4.0": "Datadog-Ruby4-0",
-  },
-  [ArchitectureType.ARM64]: {
-    dotnet6: "dd-trace-dotnet-ARM",
-    dotnet8: "dd-trace-dotnet-ARM",
-    dotnet10: "dd-trace-dotnet-ARM",
-    java11: "dd-trace-java",
-    java17: "dd-trace-java",
-    java21: "dd-trace-java",
-    java25: "dd-trace-java",
-    java8: "dd-trace-java",
-    "java8.al2": "dd-trace-java",
-    "nodejs12.x": "Datadog-Node12-x",
-    "nodejs14.x": "Datadog-Node14-x",
-    "nodejs16.x": "Datadog-Node16-x",
-    "nodejs18.x": "Datadog-Node18-x",
-    "nodejs20.x": "Datadog-Node20-x",
-    "nodejs22.x": "Datadog-Node22-x",
-    "nodejs24.x": "Datadog-Node24-x",
-    "python3.8": "Datadog-Python38-ARM",
-    "python3.9": "Datadog-Python39-ARM",
-    "python3.10": "Datadog-Python310-ARM",
-    "python3.11": "Datadog-Python311-ARM",
-    "python3.12": "Datadog-Python312-ARM",
-    "python3.13": "Datadog-Python313-ARM",
-    "python3.14": "Datadog-Python314-ARM",
-    "ruby3.2": "Datadog-Ruby3-2-ARM",
-    "ruby3.3": "Datadog-Ruby3-3-ARM",
-    "ruby3.4": "Datadog-Ruby3-4-ARM",
-    "ruby4.0": "Datadog-Ruby4-0-ARM",
-  },
-};
+export const layerNameLookup = Object.fromEntries(
+  Object.entries(lambdaLayerCatalog.architectures).map(([architecture, { architectureType }]) => [
+    ArchitectureType[architectureType],
+    Object.fromEntries(
+      Object.entries(lambdaLayerCatalog.runtimes).flatMap(([runtime, { tracerLayerNames }]) => {
+        const layerName = tracerLayerNames[architecture as CatalogArchitecture];
+        return layerName === null ? [] : [[runtime, layerName]];
+      }),
+    ),
+  ]),
+) as { [key in ArchitectureType]: { [key: string]: string } };
 
 /**
  * Parse through the Resources section of the provided CloudFormation template to find all lambda
