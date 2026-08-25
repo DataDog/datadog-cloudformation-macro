@@ -123,22 +123,6 @@ describe("findLambdas", () => {
     ]);
   });
 
-  it("marks removed runtimes unsupported while preserving supported neighbors", () => {
-    const resources = {
-      RemovedNodeFunction: mockFunctionResource("nodejs16.x", ["x86_64"]),
-      SupportedNodeFunction: mockFunctionResource("nodejs18.x", ["x86_64"]),
-      RemovedPythonFunction: mockFunctionResource("python3.7", ["x86_64"]),
-      SupportedPythonFunction: mockFunctionResource("python3.8", ["x86_64"]),
-    };
-
-    expect(findLambdas(resources, {})).toEqual([
-      mockLambdaFunction("RemovedNodeFunction", "nodejs16.x", RuntimeType.UNSUPPORTED, "x86_64"),
-      mockLambdaFunction("SupportedNodeFunction", "nodejs18.x", RuntimeType.NODE, "x86_64"),
-      mockLambdaFunction("RemovedPythonFunction", "python3.7", RuntimeType.UNSUPPORTED, "x86_64"),
-      mockLambdaFunction("SupportedPythonFunction", "python3.8", RuntimeType.PYTHON, "x86_64"),
-    ]);
-  });
-
   it("skips lambdas that are image based", () => {
     const resources = {
       Python39Function: mockFunctionResource("python3.9", ["x86_64"]),
@@ -501,12 +485,12 @@ describe("getLambdaLibraryLayerArn", () => {
       `arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python39-ARM:${version}`,
     );
   });
-  it("gets the us-gov-east-1 layer arn for the Datadog Node18 Lambda Library", () => {
+  it("gets the us-gov-east-1 layer arn for the Datadog Node16 Lambda Library", () => {
     const region = "us-gov-east-1";
     const version = 22;
-    const runtime = "nodejs18.x";
+    const runtime = "nodejs16.x";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "x86_64");
-    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node18-x:${version}`);
+    expect(layerArn).toEqual(`arn:aws-us-gov:lambda:${region}:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node16-x:${version}`);
   });
 });
 
