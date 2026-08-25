@@ -162,13 +162,13 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -204,13 +204,13 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -244,13 +244,13 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -318,13 +318,13 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -405,14 +405,14 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
         Environment: { Variables: originalEnvVars },
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -453,13 +453,13 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -497,13 +497,13 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -542,13 +542,13 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -582,13 +582,13 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -622,13 +622,13 @@ describe("setEnvConfiguration", () => {
     const lambda: LambdaFunction = {
       properties: {
         Handler: "app.handler",
-        Runtime: "python2.7",
+        Runtime: "python3.14",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.PYTHON,
-      runtime: "python2.7",
+      runtime: "python3.14",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -695,13 +695,13 @@ describe("setEnvConfiguration", () => {
       properties: {
         FunctionName: "my-function",
         Handler: "app.handler",
-        Runtime: "nodejs12.x",
+        Runtime: "nodejs24.x",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.NODE,
-      runtime: "nodejs12.x",
+      runtime: "nodejs24.x",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };
@@ -776,13 +776,13 @@ describe("setEnvConfiguration", () => {
       properties: {
         FunctionName: "my-function",
         Handler: "app.handler",
-        Runtime: "nodejs12.x",
+        Runtime: "nodejs24.x",
         Role: "role-arn",
         Code: {},
       },
       key: "FunctionKey",
       runtimeType: RuntimeType.NODE,
-      runtime: "nodejs12.x",
+      runtime: "nodejs24.x",
       architecture: "x86_64",
       architectureType: ArchitectureType.x86_64,
     };

@@ -47,7 +47,7 @@ export function mockInputEvent(
           Role: {
             "Fn::GetAtt": ["HelloWorldFunctionRole", "Arn"],
           },
-          Runtime: "nodejs12.x",
+          Runtime: "nodejs24.x",
         },
       },
     },

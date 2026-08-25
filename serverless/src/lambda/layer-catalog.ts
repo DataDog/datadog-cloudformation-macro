@@ -54,10 +54,6 @@ export const lambdaLayerCatalog = {
       runtimeType: "JAVA",
       tracerLayerNames: { x86_64: "dd-trace-java", arm64: "dd-trace-java" },
     },
-    "nodejs12.x": {
-      runtimeType: "NODE",
-      tracerLayerNames: { x86_64: "Datadog-Node12-x", arm64: "Datadog-Node12-x" },
-    },
     "nodejs14.x": {
       runtimeType: "NODE",
       tracerLayerNames: { x86_64: "Datadog-Node14-x", arm64: "Datadog-Node14-x" },
@@ -89,14 +85,6 @@ export const lambdaLayerCatalog = {
     "provided.al2023": {
       runtimeType: "CUSTOM",
       tracerLayerNames: { x86_64: null, arm64: null },
-    },
-    "python2.7": {
-      runtimeType: "PYTHON",
-      tracerLayerNames: { x86_64: "Datadog-Python27", arm64: null },
-    },
-    "python3.6": {
-      runtimeType: "PYTHON",
-      tracerLayerNames: { x86_64: "Datadog-Python36", arm64: null },
     },
     "python3.7": {
       runtimeType: "PYTHON",
