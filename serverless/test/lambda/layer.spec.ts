@@ -61,12 +61,15 @@ describe("findLambdas", () => {
       Java25Function: mockFunctionResource("java25", ["x86_64"]),
       Java8Function: mockFunctionResource("java8", ["x86_64"]),
       Java8al2Function: mockFunctionResource("java8.al2", ["x86_64"]),
+      Node14Function: mockFunctionResource("nodejs14.x", ["x86_64"]),
+      Node16Function: mockFunctionResource("nodejs16.x", ["x86_64"]),
       Node18Function: mockFunctionResource("nodejs18.x", ["x86_64"]),
       Node20Function: mockFunctionResource("nodejs20.x", ["x86_64"]),
       Node22Function: mockFunctionResource("nodejs22.x", ["x86_64"]),
       Node24Function: mockFunctionResource("nodejs24.x", ["x86_64"]),
       ProvidedAl2Function: mockFunctionResource("provided.al2", ["x86_64"]),
       ProvidedAl2023Function: mockFunctionResource("provided.al2023", ["x86_64"]),
+      Python37Function: mockFunctionResource("python3.7", ["x86_64"]),
       Python38Function: mockFunctionResource("python3.8", ["x86_64"]),
       Python39Function: mockFunctionResource("python3.9", ["x86_64"]),
       Python310Function: mockFunctionResource("python3.10", ["x86_64"]),
@@ -81,7 +84,7 @@ describe("findLambdas", () => {
       GoFunction: mockFunctionResource("go1.10", ["x86_64"]),
       RefFunction: mockFunctionResource({ Ref: "ValueRef" }, ["arm64"]),
     };
-    const lambdas = findLambdas(resources, { ValueRef: "nodejs18.x" });
+    const lambdas = findLambdas(resources, { ValueRef: "nodejs14.x" });
 
     expect(lambdas).toEqual([
       mockLambdaFunction("Dotnet6Function", "dotnet6", RuntimeType.DOTNET, "x86_64", ArchitectureType.x86_64),
@@ -93,6 +96,8 @@ describe("findLambdas", () => {
       mockLambdaFunction("Java25Function", "java25", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java8Function", "java8", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Java8al2Function", "java8.al2", RuntimeType.JAVA, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Node14Function", "nodejs14.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
+      mockLambdaFunction("Node16Function", "nodejs16.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node18Function", "nodejs18.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node20Function", "nodejs20.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Node22Function", "nodejs22.x", RuntimeType.NODE, "x86_64", ArchitectureType.x86_64),
@@ -105,6 +110,7 @@ describe("findLambdas", () => {
         "x86_64",
         ArchitectureType.x86_64,
       ),
+      mockLambdaFunction("Python37Function", "python3.7", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python38Function", "python3.8", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python39Function", "python3.9", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Python310Function", "python3.10", RuntimeType.PYTHON, "x86_64", ArchitectureType.x86_64),
@@ -117,7 +123,7 @@ describe("findLambdas", () => {
       mockLambdaFunction("Ruby34Function", "ruby3.4", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("Ruby40Function", "ruby4.0", RuntimeType.RUBY, "x86_64", ArchitectureType.x86_64),
       mockLambdaFunction("GoFunction", "go1.10", RuntimeType.UNSUPPORTED, "x86_64", ArchitectureType.x86_64),
-      mockLambdaFunction("RefFunction", "nodejs18.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
+      mockLambdaFunction("RefFunction", "nodejs14.x", RuntimeType.NODE, "arm64", ArchitectureType.ARM64, {
         Ref: "ValueRef",
       }),
     ]);
