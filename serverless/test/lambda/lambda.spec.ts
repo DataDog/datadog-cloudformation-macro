@@ -43,9 +43,9 @@ describe("Lambda", () => {
       const output = await handler(inputEvent, {});
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
-      // Mocked Lambda has runtime nodejs18.x, so layer name is Datadog-Node18-x, with provided version number (25) at end
+      // Mocked Lambda has runtime nodejs24.x, so layer name is Datadog-Node24-x, with provided version number (25) at end
       expect(lambdaProperties.Layers).toEqual([
-        expect.stringMatching(/arn:aws:lambda:us-east-1:.*:layer:Datadog-Node18-x:25/),
+        expect.stringMatching(/arn:aws:lambda:us-east-1:.*:layer:Datadog-Node24-x:25/),
       ]);
     });
 
@@ -98,7 +98,7 @@ describe("Lambda", () => {
       const lambdaProperties: FunctionProperties = output.fragment.Resources[LAMBDA_KEY].Properties;
 
       expect(lambdaProperties.Layers).toEqual([
-        expect.stringMatching(/arn:aws-us-gov:lambda:us-gov-east-1:002406178527:layer:Datadog-Node18-x:25/),
+        expect.stringMatching(/arn:aws-us-gov:lambda:us-gov-east-1:002406178527:layer:Datadog-Node24-x:25/),
       ]);
     });
 

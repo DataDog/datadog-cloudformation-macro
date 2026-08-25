@@ -143,19 +143,19 @@ describe("findLambdas", () => {
 
 describe("applyLayers", () => {
   it("adds a layer array if none are present", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs24.x", RuntimeType.NODE, "x86_64");
     const region = "us-east-1";
     const nodeLayerVersion = 25;
     const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion);
 
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node18-x:${nodeLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node24-x:${nodeLayerVersion}`,
     ]);
   });
 
   it("appends to the layer array if already present", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs24.x", RuntimeType.NODE, "x86_64");
     lambda.properties.Layers = ["node:2"];
 
     const region = "us-east-1";
@@ -165,15 +165,15 @@ describe("applyLayers", () => {
     expect(errors.length).toEqual(0);
     expect(lambda.properties.Layers).toEqual([
       "node:2",
-      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node18-x:${nodeLayerVersion}`,
+      `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node24-x:${nodeLayerVersion}`,
     ]);
   });
 
   it("doesn't add duplicate layers", () => {
-    const lambda = mockLambdaFunction("FunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
+    const lambda = mockLambdaFunction("FunctionKey", "nodejs24.x", RuntimeType.NODE, "x86_64");
     const region = "us-east-1";
     const nodeLayerVersion = 25;
-    const layerArn = `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node18-x:${nodeLayerVersion}`;
+    const layerArn = `arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node24-x:${nodeLayerVersion}`;
     lambda.properties.Layers = [layerArn];
     const errors = applyLayers(region, [lambda], undefined, nodeLayerVersion);
 
@@ -190,8 +190,8 @@ describe("applyLayers", () => {
   });
 
   it("returns errors if layer versions are not provided for corresponding Lambda runtimes", () => {
-    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON, "x86_64");
-    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
+    const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.14", RuntimeType.PYTHON, "x86_64");
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs24.x", RuntimeType.NODE, "x86_64");
     const errors = applyLayers("us-east-1", [pythonLambda, nodeLambda]);
 
     expect(errors).toEqual([
@@ -440,7 +440,7 @@ describe("getNewLayers", () => {
 describe("isGovCloud", () => {
   it("applies the GovCloud layer", () => {
     const pythonLambda = mockLambdaFunction("PythonFunctionKey", "python3.8", RuntimeType.PYTHON, "x86_64");
-    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs18.x", RuntimeType.NODE, "x86_64");
+    const nodeLambda = mockLambdaFunction("NodeFunctionKey", "nodejs24.x", RuntimeType.NODE, "x86_64");
     const errors = applyLayers("us-gov-east-1", [pythonLambda, nodeLambda], 21, 30);
 
     expect(errors.length).toEqual(0);
@@ -448,25 +448,25 @@ describe("isGovCloud", () => {
       `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Python38:21`,
     ]);
     expect(nodeLambda.properties.Layers).toEqual([
-      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node18-x:30`,
+      `arn:aws-us-gov:lambda:us-gov-east-1:${DD_GOV_ACCOUNT_ID}:layer:Datadog-Node24-x:30`,
     ]);
   });
 });
 
 describe("getLambdaLibraryLayerArn", () => {
-  it("gets the us-east-1 layer arn for the Datadog Node18 Lambda Library", () => {
+  it("gets the us-east-1 layer arn for the Datadog Node24 Lambda Library", () => {
     const region = "us-east-1";
     const version = 22;
-    const runtime = "nodejs18.x";
+    const runtime = "nodejs24.x";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "x86_64");
-    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node18-x:${version}`);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Node24-x:${version}`);
   });
-  it("gets the us-east-1 layer arn for the Datadog Python38 Lambda Library", () => {
+  it("gets the us-east-1 layer arn for the Datadog Python314 Lambda Library", () => {
     const region = "us-east-1";
     const version = 22;
-    const runtime = "python3.8";
+    const runtime = "python3.14";
     const layerArn = getLambdaLibraryLayerArn(region, version, runtime, "x86_64");
-    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python38:${version}`);
+    expect(layerArn).toEqual(`arn:aws:lambda:${region}:${DD_ACCOUNT_ID}:layer:Datadog-Python314:${version}`);
   });
   it("gets the us-east-1 ARM layer arn for the Datadog Python38 Lambda Library", () => {
     const region = "us-east-1";
