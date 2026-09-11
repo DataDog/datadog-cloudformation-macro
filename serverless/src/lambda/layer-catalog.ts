@@ -78,6 +78,10 @@ export const lambdaLayerCatalog = {
       runtimeType: "NODE",
       tracerLayerNames: { x86_64: "Datadog-Node24-x", arm64: "Datadog-Node24-x" },
     },
+    "nodejs26.x": {
+      runtimeType: "NODE",
+      tracerLayerNames: { x86_64: "Datadog-Node26-x", arm64: "Datadog-Node26-x" },
+    },
     "provided.al2": {
       runtimeType: "CUSTOM",
       tracerLayerNames: { x86_64: null, arm64: null },
