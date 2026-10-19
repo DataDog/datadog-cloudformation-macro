@@ -4102,11 +4102,11 @@ __metadata:
   linkType: hard
 
 "strnum@npm:^2.4.2":
-  version: 2.5.0
-  resolution: "strnum@npm:2.5.0"
+  version: 2.5.1
+  resolution: "strnum@npm:2.5.1"
   dependencies:
     anynum: "npm:^1.0.1"
-  checksum: 10c0/e551ff6fc9db76b98bf7163c9b1192b88aaa6a3574007a8959714087c191e14c5f371f42d0dbff88e70bbc5440e216eb1cc51f65b6ae27a4f4df53a3ca672f95
+  checksum: 10c0/8624abed504759ec6f3e1511823c15f39ab3161a9f7c5905fed54d95c4e5a41e02e2e9fb538da3ed6c6f667a978df9c4456aed8146ddfb7b2790001cd2afda7c
   languageName: node
   linkType: hard
 
