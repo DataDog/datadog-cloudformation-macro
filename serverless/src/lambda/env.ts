@@ -102,6 +102,10 @@ export interface Configuration extends ConfigurationWithTags {
 
   // When set to `true`, enables FIPS mode for the Lambda function.
   lambdaFips?: boolean;
+
+  // When set to `true`, silences the warning logged for instrumented functions with less than
+  // 256 MB of memory (lambda_low_memory). Defaults to `false`.
+  suppressLowMemoryWarning?: boolean;
 }
 
 export class LambdaConfigLoader extends ConfigLoader<Configuration> {
@@ -117,6 +121,7 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
     enableDDLogs: true,
     enableEnhancedMetrics: true,
     captureLambdaPayload: false,
+    suppressLowMemoryWarning: false,
   };
 
   public getConfigFromEnvVars(): Configuration {
@@ -194,6 +199,9 @@ export class LambdaConfigLoader extends ConfigLoader<Configuration> {
     if (ddLambdaFipsEnvVar in process.env) {
       config.lambdaFips = process.env[ddLambdaFipsEnvVar] === "true";
     }
+    if (ddSuppressLowMemoryWarningEnvVar in process.env) {
+      config.suppressLowMemoryWarning = process.env[ddSuppressLowMemoryWarningEnvVar] === "true";
+    }
 
     return config;
   }
@@ -225,6 +233,8 @@ const ddLlmObsEnabledEnvVar = "DD_LLMOBS_ENABLED";
 const ddLlmObsMlAppEnvVar = "DD_LLMOBS_ML_APP";
 const ddLlmObsAgentlessEnabledEnvVar = "DD_LLMOBS_AGENTLESS_ENABLED";
 const ddLambdaFipsEnvVar = "DD_LAMBDA_FIPS_MODE";
+// Only read from the macro's own environment; not propagated to instrumented functions.
+const ddSuppressLowMemoryWarningEnvVar = "DD_SUPPRESS_LOW_MEMORY_WARNING";
 const llmObsMlAppRegex = /^[a-zA-Z0-9_\-:\.\/]{1,193}$/;
 
 export function validateParameters(config: Configuration): string[] {

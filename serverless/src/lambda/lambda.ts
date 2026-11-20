@@ -4,6 +4,7 @@ import { getTracingMode, enableTracing, MissingIamRoleError, TracingMode } from 
 import { addCDKTag, addSAMTag } from "./tags";
 import { addDDTags, addMacroTag } from "../common/tags";
 import { redirectHandlers } from "./redirect";
+import { warnOnLowMemoryLambdas } from "./memory";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 import { CloudWatchLogsClient } from "@aws-sdk/client-cloudwatch-logs";
 import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "../common/types";
@@ -20,6 +21,11 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
     (lambda) => !config.exclude?.includes(lambda.key),
   );
   log.debug(`Lambda resources found: ${JSON.stringify(lambdas)}`);
+
+  // Warn (but still instrument) when a function has less memory than recommended for the
+  // Datadog Extension and tracer overhead.
+  const resourceTypes = Object.fromEntries(lambdas.map((lambda) => [lambda.key, resources[lambda.key]?.Type]));
+  warnOnLowMemoryLambdas(lambdas, config.suppressLowMemoryWarning, resourceTypes, fragment.Globals);
 
   log.debug("Setting environment variables for Lambda function resources");
   setEnvConfiguration(config, lambdas);

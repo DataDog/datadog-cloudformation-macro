@@ -19,4 +19,6 @@ export interface FunctionProperties {
   FunctionName?: string;
   Architectures?: [string];
   PackageType?: string;
+  // Number, numeric string, or an intrinsic function (e.g. Ref, Fn::If)
+  MemorySize?: number | string | { [func: string]: any };
 }

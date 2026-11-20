@@ -14,6 +14,8 @@ export interface Resources {
 
 export interface CfnTemplate {
   Mappings?: any;
+  // SAM Globals section; only present if the SAM transform has not run yet.
+  Globals?: any;
   Resources: Resources;
 }
 
