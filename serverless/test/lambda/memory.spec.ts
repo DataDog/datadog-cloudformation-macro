@@ -97,6 +97,11 @@ describe("low memory warning", () => {
     expect(warnOnLowMemoryLambdas([mockLambda({ MemorySize: "abc" })], false)).toEqual([]);
   });
 
+  it("does not warn when MemorySize is a non-finite number", () => {
+    expect(getEffectiveMemorySize({ MemorySize: NaN })).toBeUndefined();
+    expect(warnOnLowMemoryLambdas([mockLambda({ MemorySize: -Infinity })], false)).toEqual([]);
+  });
+
   describe("SAM Globals", () => {
     const SERVERLESS = "AWS::Serverless::Function";
 
