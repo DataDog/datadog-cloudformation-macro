@@ -2,7 +2,7 @@ import log from "loglevel";
 import { LambdaFunction } from "./layer";
 
 // Functions configured below this amount of memory (in MB) are considered low-memory.
-// The Datadog Lambda Extension and tracer layers add memory overhead (about 69 MB for Python),
+// The Datadog Lambda Extension and tracer layers add memory overhead (about 70 MB for Python),
 // which can cause out-of-memory errors and timeouts on small functions.
 export const LOW_MEMORY_THRESHOLD_MB = 256;
 export const LOW_MEMORY_REASON = "lambda_low_memory";
@@ -54,7 +54,7 @@ export function getEffectiveMemorySize(
 export function getLowMemoryWarningMessage(logicalId: string, memorySize: number): string {
   return (
     `Function ${logicalId} has ${memorySize} MB of memory, below the recommended minimum of ${LOW_MEMORY_THRESHOLD_MB} MB (${LOW_MEMORY_REASON}). ` +
-    "The Datadog Lambda Extension and tracer add memory overhead (about 69 MB for Python), which can cause out-of-memory errors and timeouts. " +
+    "The Datadog Lambda Extension and tracer add memory overhead (about 70 MB for Python), which can cause out-of-memory errors and timeouts. " +
     `Increase the function's memory to at least ${LOW_MEMORY_THRESHOLD_MB} MB, or set suppressLowMemoryWarning to true to silence this warning.`
   );
 }

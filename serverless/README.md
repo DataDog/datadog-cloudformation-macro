@@ -177,7 +177,7 @@ In order to help debug issues, you can look at the CloudWatch Logs for the macro
 
 ### Warning: Function ... has N MB of memory, below the recommended minimum of 256 MB (lambda_low_memory)
 
-The Datadog Lambda Extension and tracer layers add memory overhead (about 69 MB for Python). Functions with less than 256 MB of memory can run out of memory or time out after instrumentation. When the macro instruments a function whose `MemorySize` is below 256 MB, including functions that leave `MemorySize` unset and get the AWS default of 128 MB, it logs this warning to the macro's CloudWatch logs (see [Debug Logs](#debug-logs)). The macro does not skip the function or fail the deployment. It does not warn when `MemorySize` is a CloudFormation intrinsic function such as `!Ref`, because the value is not known at transform time.
+The Datadog Lambda Extension and tracer layers add memory overhead (about 70 MB for Python). Functions with less than 256 MB of memory can run out of memory or time out after instrumentation. When the macro instruments a function whose `MemorySize` is below 256 MB, including functions that leave `MemorySize` unset and get the AWS default of 128 MB, it logs this warning to the macro's CloudWatch logs (see [Debug Logs](#debug-logs)). The macro does not skip the function or fail the deployment. It does not warn when `MemorySize` is a CloudFormation intrinsic function such as `!Ref`, because the value is not known at transform time.
 
 To fix this, set the function's `MemorySize` to at least 256. If you have confirmed that the function works with less memory, set `suppressLowMemoryWarning: true` to silence the warning.
 
