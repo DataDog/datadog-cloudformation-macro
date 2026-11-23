@@ -125,6 +125,21 @@ function useOrRef(value: undefined | string | { Ref: any }, templateParameterVal
   return templateParameterValues[value.Ref] ?? value;
 }
 
+const RUNTIMES_WITH_LIBRARY_LAYER = new Set([
+  RuntimeType.DOTNET,
+  RuntimeType.JAVA,
+  RuntimeType.NODE,
+  RuntimeType.PYTHON,
+  RuntimeType.RUBY,
+]);
+
+/**
+ * Returns whether applyLayers adds a Datadog Lambda Library layer for the given runtime type.
+ */
+export function hasLibraryLayer(runtimeType: RuntimeType): boolean {
+  return RUNTIMES_WITH_LIBRARY_LAYER.has(runtimeType);
+}
+
 /**
  * Apply the provided Lambda layer that corresponds to each Lambda's runtime.
  * If a Lambda layer for a given runtime is required but not provided, store an error message with

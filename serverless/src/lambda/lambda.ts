@@ -1,5 +1,5 @@
 import { Configuration, setEnvConfiguration } from "./env";
-import { findLambdas, applyLayers, applyExtensionLayer, LambdaFunction } from "./layer";
+import { findLambdas, applyLayers, applyExtensionLayer, hasLibraryLayer, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError, TracingMode } from "./tracing";
 import { addCDKTag, addSAMTag } from "./tags";
 import { addDDTags, addMacroTag } from "../common/tags";
@@ -21,11 +21,6 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
     (lambda) => !config.exclude?.includes(lambda.key),
   );
   log.debug(`Lambda resources found: ${JSON.stringify(lambdas)}`);
-
-  // Warn (but still instrument) when a function has less memory than recommended for the
-  // Datadog Extension and tracer overhead.
-  const resourceTypes = Object.fromEntries(lambdas.map((lambda) => [lambda.key, resources[lambda.key]?.Type]));
-  warnOnLowMemoryLambdas(lambdas, config.suppressLowMemoryWarning, resourceTypes, fragment.Globals);
 
   log.debug("Setting environment variables for Lambda function resources");
   setEnvConfiguration(config, lambdas);
@@ -64,6 +59,13 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
       };
     }
   }
+
+  // Warn (but still instrument) when a function that received a Datadog layer or the extension
+  // has less memory than recommended for the Datadog Extension and tracer overhead.
+  const instrumentedLambdas = lambdas.filter(
+    (lambda) => useExtension || (config.addLayers && hasLibraryLayer(lambda.runtimeType)),
+  );
+  warnOnLowMemoryLambdas(instrumentedLambdas, config.suppressLowMemoryWarning);
 
   // Enable tracing
   const tracingMode = getTracingMode(config);

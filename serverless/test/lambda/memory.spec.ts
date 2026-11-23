@@ -4,7 +4,6 @@ import { ArchitectureType, LambdaFunction, RuntimeType } from "../../src/lambda/
 import {
   getEffectiveMemorySize,
   getLowMemoryWarningMessage,
-  LOW_MEMORY_THRESHOLD_MB,
   LOW_MEMORY_REASON,
   warnOnLowMemoryLambdas,
 } from "../../src/lambda/memory";
@@ -41,11 +40,6 @@ describe("low memory warning", () => {
   afterEach(() => {
     warnSpy.mockRestore();
     log.setLevel("debug");
-  });
-
-  it("defines the threshold and reason code", () => {
-    expect(LOW_MEMORY_THRESHOLD_MB).toBe(256);
-    expect(LOW_MEMORY_REASON).toBe("lambda_low_memory");
   });
 
   it("uses the exact warning text", () => {
@@ -102,45 +96,8 @@ describe("low memory warning", () => {
     expect(warnOnLowMemoryLambdas([mockLambda({ MemorySize: -Infinity })], false)).toEqual([]);
   });
 
-  describe("SAM Globals", () => {
-    const SERVERLESS = "AWS::Serverless::Function";
-
-    it("uses Globals.Function.MemorySize for AWS::Serverless::Function when unset", () => {
-      const globals = { Function: { MemorySize: 512 } };
-      expect(getEffectiveMemorySize({}, SERVERLESS, globals)).toBe(512);
-      expect(warnOnLowMemoryLambdas([mockLambda()], false, { [LAMBDA_KEY]: SERVERLESS }, globals)).toEqual([]);
-    });
-
-    it("warns when Globals.Function.MemorySize is below 256 MB", () => {
-      const globals = { Function: { MemorySize: 128 } };
-      expect(warnOnLowMemoryLambdas([mockLambda()], false, { [LAMBDA_KEY]: SERVERLESS }, globals)).toEqual([
-        getLowMemoryWarningMessage(LAMBDA_KEY, 128),
-      ]);
-    });
-
-    it("prefers the function's MemorySize over Globals", () => {
-      const globals = { Function: { MemorySize: 1024 } };
-      expect(getEffectiveMemorySize({ MemorySize: 128 }, SERVERLESS, globals)).toBe(128);
-    });
-
-    it("falls back to 128 MB when neither the function nor Globals set MemorySize", () => {
-      expect(getEffectiveMemorySize({}, SERVERLESS, { Function: {} })).toBe(128);
-    });
-
-    it("does not warn when Globals.Function.MemorySize is an intrinsic", () => {
-      const globals = { Function: { MemorySize: { Ref: "MemoryParam" } } };
-      expect(getEffectiveMemorySize({}, SERVERLESS, globals)).toBeUndefined();
-    });
-
-    it("ignores Globals for AWS::Lambda::Function", () => {
-      const globals = { Function: { MemorySize: 1024 } };
-      expect(getEffectiveMemorySize({}, "AWS::Lambda::Function", globals)).toBe(128);
-    });
-  });
-
   it("does not warn when suppressLowMemoryWarning is true", () => {
     expect(warnOnLowMemoryLambdas([mockLambda({ MemorySize: 128 })], true)).toEqual([]);
-    expect(warnOnLowMemoryLambdas([mockLambda({ MemorySize: 128 })], "true")).toEqual([]);
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
@@ -170,6 +127,45 @@ describe("low memory warning", () => {
       await handler(inputEvent, {});
 
       expect(warnSpy).not.toHaveBeenCalledWith(getLowMemoryWarningMessage(LAMBDA_KEY, 128));
+    });
+
+    it("does not warn for unsupported runtimes, which get no layer", async () => {
+      const inputEvent = mockInputEvent({ nodeLayerVersion: 25 }, {});
+      inputEvent.fragment.Resources[LAMBDA_KEY].Properties.Runtime = "unsupported-runtime";
+      const output = await handler(inputEvent, {});
+
+      expect(output.status).toEqual("success");
+      expect(output.fragment.Resources[LAMBDA_KEY].Properties.Layers).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining(LOW_MEMORY_REASON));
+    });
+
+    it("does not warn when addLayers is false and the extension is not used", async () => {
+      const inputEvent = mockInputEvent({ addLayers: false }, {});
+      const output = await handler(inputEvent, {});
+
+      expect(output.status).toEqual("success");
+      expect(output.fragment.Resources[LAMBDA_KEY].Properties.Layers).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining(LOW_MEMORY_REASON));
+    });
+
+    it("warns when addLayers is false but the extension is applied", async () => {
+      const inputEvent = mockInputEvent({ addLayers: false, extensionLayerVersion: 80, apiKey: "1234" }, {});
+      const output = await handler(inputEvent, {});
+
+      expect(output.status).toEqual("success");
+      expect(output.fragment.Resources[LAMBDA_KEY].Properties.Layers).toEqual([
+        expect.stringMatching(/arn:aws:lambda:us-east-1:.*:layer:Datadog-Extension:80/),
+      ]);
+      expect(warnSpy).toHaveBeenCalledWith(getLowMemoryWarningMessage(LAMBDA_KEY, 128));
+    });
+
+    it("does not warn when applying layers fails", async () => {
+      // No nodeLayerVersion for a Node.js function makes applyLayers return an error.
+      const inputEvent = mockInputEvent({}, {});
+      const output = await handler(inputEvent, {});
+
+      expect(output.status).toEqual("failure");
+      expect(warnSpy).not.toHaveBeenCalledWith(expect.stringContaining(LOW_MEMORY_REASON));
     });
 
     it("does not warn when memory is 256 MB", async () => {

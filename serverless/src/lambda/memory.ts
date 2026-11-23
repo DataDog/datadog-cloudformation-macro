@@ -9,9 +9,6 @@ export const LOW_MEMORY_REASON = "lambda_low_memory";
 // AWS default MemorySize when the property is not set.
 export const AWS_DEFAULT_MEMORY_SIZE_MB = 128;
 
-const LAMBDA_FUNCTION_RESOURCE_TYPE = "AWS::Lambda::Function";
-const SERVERLESS_FUNCTION_RESOURCE_TYPE = "AWS::Serverless::Function";
-
 /**
  * Returns the numeric value of a MemorySize property, or undefined if it is not a number
  * (e.g. an intrinsic function like Ref or Fn::If, or a non-numeric string).
@@ -29,26 +26,12 @@ function parseMemorySize(value: unknown): number | undefined {
 }
 
 /**
- * Returns the effective memory size (in MB) of a function:
- *   the function's MemorySize
- *   ?? (for AWS::Serverless::Function) SAM Globals.Function.MemorySize
- *   ?? the AWS default of 128 MB.
- * Returns undefined when the effective MemorySize is set but is not a number (e.g. an intrinsic),
- * since its value can't be determined at transform time.
+ * Returns the effective memory size (in MB) of a function: its MemorySize, or the AWS default
+ * of 128 MB when unset. Returns undefined when MemorySize is set but is not a number (e.g. an
+ * intrinsic), since its value can't be determined at transform time.
  */
-export function getEffectiveMemorySize(
-  properties: { MemorySize?: unknown } | undefined,
-  resourceType: string = LAMBDA_FUNCTION_RESOURCE_TYPE,
-  globals?: any,
-): number | undefined {
-  let memorySize = properties?.MemorySize;
-  if (memorySize === undefined && resourceType === SERVERLESS_FUNCTION_RESOURCE_TYPE) {
-    memorySize = globals?.Function?.MemorySize;
-  }
-  if (memorySize === undefined) {
-    return AWS_DEFAULT_MEMORY_SIZE_MB;
-  }
-  return parseMemorySize(memorySize);
+export function getEffectiveMemorySize(properties: { MemorySize?: unknown }): number | undefined {
+  return parseMemorySize(properties.MemorySize ?? AWS_DEFAULT_MEMORY_SIZE_MB);
 }
 
 export function getLowMemoryWarningMessage(logicalId: string, memorySize: number): string {
@@ -60,23 +43,21 @@ export function getLowMemoryWarningMessage(logicalId: string, memorySize: number
 }
 
 /**
- * Logs a warning for each instrumented function whose effective memory is below
+ * Logs a warning for each instrumented function (one that received a Datadog layer or the
+ * extension) whose effective memory is below
  * LOW_MEMORY_THRESHOLD_MB. This is warn-only: functions are still instrumented as before.
  * Returns the warning messages that were logged.
  */
 export function warnOnLowMemoryLambdas(
   lambdas: LambdaFunction[],
-  suppressLowMemoryWarning: boolean | string | undefined,
-  resourceTypes: { [logicalId: string]: string } = {},
-  globals?: any,
+  suppressLowMemoryWarning: boolean | undefined,
 ): string[] {
-  if (String(suppressLowMemoryWarning).toLowerCase() === "true") {
+  if (suppressLowMemoryWarning === true) {
     return [];
   }
   const warnings: string[] = [];
   for (const lambda of lambdas) {
-    const resourceType = resourceTypes[lambda.key] ?? LAMBDA_FUNCTION_RESOURCE_TYPE;
-    const memorySize = getEffectiveMemorySize(lambda.properties, resourceType, globals);
+    const memorySize = getEffectiveMemorySize(lambda.properties);
     if (memorySize !== undefined && memorySize < LOW_MEMORY_THRESHOLD_MB) {
       const message = getLowMemoryWarningMessage(lambda.key, memorySize);
       log.warn(message);
