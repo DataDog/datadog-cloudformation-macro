@@ -137,6 +137,18 @@ describe("getConfig", () => {
       expect(config.lambdaFips).toBe(true);
     });
 
+    it("gets suppressLowMemoryWarning from environment variable", () => {
+      process.env["DD_SUPPRESS_LOW_MEMORY_WARNING"] = "true";
+      const config = loader.getConfigFromEnvVars();
+      expect(config.suppressLowMemoryWarning).toBe(true);
+    });
+
+    it("defaults suppressLowMemoryWarning to false", () => {
+      delete process.env["DD_SUPPRESS_LOW_MEMORY_WARNING"];
+      const config = loader.getConfigFromEnvVars();
+      expect(config.suppressLowMemoryWarning).toBe(false);
+    });
+
     it("sets enableDDTracing to true when DD_TRACE_ENABLED is 'true'", () => {
       process.env["DD_TRACE_ENABLED"] = "true";
       const config = loader.getConfigFromEnvVars();

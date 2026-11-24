@@ -1,9 +1,10 @@
 import { Configuration, setEnvConfiguration } from "./env";
-import { findLambdas, applyLayers, applyExtensionLayer, LambdaFunction } from "./layer";
+import { findLambdas, applyLayers, applyExtensionLayer, hasLibraryLayer, LambdaFunction } from "./layer";
 import { getTracingMode, enableTracing, MissingIamRoleError, TracingMode } from "./tracing";
 import { addCDKTag, addSAMTag } from "./tags";
 import { addDDTags, addMacroTag } from "../common/tags";
 import { redirectHandlers } from "./redirect";
+import { warnOnLowMemoryLambdas } from "./memory";
 import { addCloudWatchForwarderSubscriptions } from "./forwarder";
 import { CloudWatchLogsClient } from "@aws-sdk/client-cloudwatch-logs";
 import { InputEvent, OutputEvent, SUCCESS, FAILURE } from "../common/types";
@@ -58,6 +59,13 @@ export async function instrumentLambdas(event: InputEvent, config: Configuration
       };
     }
   }
+
+  // Warn (but still instrument) when a function that received a Datadog layer or the extension
+  // has less memory than recommended for the Datadog Extension and tracer overhead.
+  const instrumentedLambdas = lambdas.filter(
+    (lambda) => useExtension || (config.addLayers && hasLibraryLayer(lambda.runtimeType)),
+  );
+  warnOnLowMemoryLambdas(instrumentedLambdas, config.suppressLowMemoryWarning);
 
   // Enable tracing
   const tracingMode = getTracingMode(config);

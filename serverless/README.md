@@ -164,6 +164,7 @@ To further configure your macro, use the following custom parameters:
 | `llmObsMlApp`               | The name of your LLM application, service, or project, under which all traces and spans are grouped. This helps distinguish between different applications or experiments. See [Application naming guidelines](https://docs.datadoghq.com/llm_observability/sdk/?tab=nodejs#application-naming-guidelines) for allowed characters and other constraints. To override this value for a given root span, see [Tracing multiple applications](https://docs.datadoghq.com/llm_observability/sdk/?tab=nodejs#tracing-multiple-applications).  Required if `llmObsEnabled` is `true` |
 | `llmObsAgentlessEnabled`    | Only required if you are not using the Datadog Lambda Extension, in which case this should be set to `true`.  Defaults to `false`. |
 | `lambdaFips`                | Enable FIPS support for lambda function. Default to `false`. |
+| `suppressLowMemoryWarning`  | Set to `true` to silence the warning the macro logs when it instruments a Lambda function with less than 256 MB of memory (`lambda_low_memory`). The macro still instruments these functions. You can also set this with the `DD_SUPPRESS_LOW_MEMORY_WARNING` environment variable on the macro function. Defaults to `false`. |
 
 ## Troubleshooting
 
@@ -173,6 +174,14 @@ In order to help debug issues, you can look at the CloudWatch Logs for the macro
 
 - Find the macro CloudFormation stack (named `datadog-serverless-macro` if you copied the command under instructions)
 - Click on the resources tab and the CloudWatch Log Group should be available with Logical ID `MacroFunctionLogGroup`
+
+### Warning message: 'Function ... has ... MB of memory, below the recommended minimum of 256 MB'
+
+The Datadog Lambda Extension and tracer add memory overhead (about 70 MB for Python). Functions with less than 256 MB of memory can run out of memory or time out after instrumentation.
+
+When the macro instruments a function with less than 256 MB of `MemorySize`, it logs this warning to the macro's CloudWatch logs. This includes functions that leave `MemorySize` unset and get the AWS default of 128 MB. To find these logs, see the [Debug Logs](#debug-logs) section. The macro does not skip the function or fail the deployment. It does not warn when `MemorySize` is a CloudFormation intrinsic function such as `!Ref`, because the value is not known at transform time.
+
+To resolve the warning, set the function's `MemorySize` to 256 MB or more. If you have confirmed that the function works with less memory, set `suppressLowMemoryWarning: true` to silence the warning.
 
 ### Error message: 'FunctionName' property is undefined for...
 
